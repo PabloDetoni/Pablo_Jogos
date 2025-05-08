@@ -1,0 +1,106 @@
+/* style.css */
+
+/* Reset básico e box-sizing global */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #dfe9f3, #ffffff);
+  margin: 0;
+  position: relative;
+  height: 100vh;
+  overflow: hidden; /* evita scroll */
+}
+
+/* Header fixo no topo */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(30, 58, 138, 0.1);
+  padding: 40px 0;
+  text-align: center;
+  border-bottom: 4px solid #283593;
+  z-index: 1000;
+}
+
+header h1 {
+  font-size: 3.5rem;
+  color: #1e3a8a;
+  margin: 0;
+}
+
+/* Área principal centralizada verticalmente */
+main {
+  position: absolute;
+  top: 84px;   /* altura do header */
+  bottom: 28px; /* altura do footer */
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Grid de jogos */
+.grid-jogos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  justify-content: center;
+  width: 100%;
+  max-width: 800px;
+}
+
+.jogo-btn {
+  padding: 20px;
+  font-size: 1.2rem;
+  color: #ffffff;
+  background-color: #3f51b5;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.jogo-btn:hover {
+  background-color: #283593;
+  transform: translateY(-2px);
+}
+
+/* Footer fixo no fundo da página */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(30, 58, 138, 0.2);
+  border-top: 4px solid #283593;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0;
+  z-index: 1000;
+}
+
+.ver-estatisticas-btn {
+  padding: 20px 50px;
+  font-size: 1rem;
+  color: #ffffff;
+  background-color: #4caf50;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.ver-estatisticas-btn:hover {
+  background-color: #43a047;
+  transform: translateY(-2px);
+}

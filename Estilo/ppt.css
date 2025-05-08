@@ -1,0 +1,147 @@
+/* ppt.css */
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Corpo principal: centraliza o container #menu-inicial */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #d7e1ec, #f8f9fa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 100vh;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Container que agrupa os balões */
+#menu-inicial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 650px;
+  padding: 20px;
+}
+
+/* Balão do título */
+.balao-titulo {
+  background-color: #3949ab;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  width: auto;
+  margin-bottom: 30px;
+}
+
+.balao-titulo h1 {
+  font-size: 2.2rem;
+  color: white;
+}
+
+/* Balão de resultado */
+.balao-resultado {
+  background-color: #f0f4c3;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  font-size: 1.8rem;
+  width: 80%;
+  max-width: 600px;
+  margin-bottom: 30px;
+}
+
+/* Balão das escolhas */
+.balao-escolhas {
+  background-color: #e3f2fd;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  max-width: 600px;
+}
+
+.botoes-ppt {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.botoes-ppt button {
+  font-size: 1.5rem;
+  padding: 12px 24px;
+  border-radius: 8px;
+  background-color: #3949ab;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.botoes-ppt button:hover {
+  background-color: #303f9f;
+}
+
+/* Botão de reiniciar */
+.balao-escolhas > button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 8px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.balao-escolhas > button:hover {
+  background-color: #43a047;
+}
+
+/* Cores de fundo do body conforme resultado */
+body.vitoria {
+  background: #c8f7c5;
+}
+body.derrota {
+  background: #f8c8c8;
+}
+body.empate {
+  background: #dcdcdc;
+}
+
+/* Botões adicionais: Voltar, Reiniciar, Estatísticas */
+.botoes-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+
+.botoes-footer button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #4caf50;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  min-width: 150px;
+}
+
+.botoes-footer button:hover {
+  background-color: #43a047;
+  transform: translateY(-2px);
+}

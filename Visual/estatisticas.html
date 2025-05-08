@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estatísticas de Jogos</title>
+  <link rel="stylesheet" href="../Estilo/stats.css" />
+</head>
+<body onload="carregarStats()">
+  <h1>Estatísticas Gerais</h1>
+  <div id="estatisticas-container">
+    <section>
+      <h2>Jogo da Velha</h2>
+      <p>Tempo total jogado: <span id="velha-tempo">0</span></p>
+      <p>Vitórias: <span id="velha-vitorias">0</span></p>
+      <p>Derrotas: <span id="velha-derrotas">0</span></p>
+      <p>Empates: <span id="velha-empates">0</span></p>
+    </section>
+
+    <section>
+      <h2>Forca</h2>
+      <p>Tempo total jogado: <span id="forca-tempo">0</span></p>
+      <p>Vitórias: <span id="forca-vitorias">0</span></p>
+      <p>Derrotas: <span id="forca-derrotas">0</span></p>
+      <p>Empates: <span id="forca-empates">0</span></p>
+    </section>
+
+    <section>
+      <h2>Pedra, Papel e Tesoura</h2>
+      <p>Tempo total jogado: <span id="ppt-tempo">0</span></p>
+      <p>Vitórias: <span id="ppt-vitorias">0</span></p>
+      <p>Derrotas: <span id="ppt-derrotas">0</span></p>
+      <p>Empates: <span id="ppt-empates">0</span></p>
+    </section>
+  </div>
+
+  <div class="botoes-footer" style="text-align:center; margin-top:20px;">
+    <button onclick="resetarStats()">Limpar Estatísticas</button>
+    <button onclick="window.location.href='index.html'">Voltar ao Início</button>
+  </div>
+
+  <script src="../Scripts/stats.js"></script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+/* forca.css */
+
+/* Reset básico e box-sizing global */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #dfe9f3, #ffffff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 2.5rem;
+  color: #1e3a8a;
+  margin-top: 30px;
+  text-align: center;
+}
+
+#menu-inicial {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 400px;
+}
+
+#menu-inicial select,
+#menu-inicial button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#menu-inicial button {
+  background: #3f51b5;
+  color: #fff;
+  border: none;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#menu-inicial button:hover {
+  background-color: #283593;
+  transform: translateY(-2px);
+}
+
+#jogo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 30px;
+  width: 100%;
+  max-width: 600px;
+}
+
+#dica {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+#forca-desenho {
+  position: relative;
+  width: 200px;
+  height: 250px;
+  margin-bottom: 20px;
+}
+
+.traco {
+  position: absolute;
+  background: #333;
+}
+
+.traco.base { bottom: 0; left: 0; width: 100%; height: 8px; }
+.traco.haste { bottom: 0; left: 40px; width: 8px; height: 100%; }
+.traco.topo { top: 0; left: 40px; width: 80px; height: 8px; }
+.traco.corda { top: 0; left: 118px; width: 4px; height: 40px; background: #999; }
+
+.boneco {
+  position: absolute;
+  background: #333;
+  visibility: hidden;
+  transition: visibility 0s linear 0.2s;
+}
+
+.boneco.cabeca { top: 40px; left: 100px; width: 35px; height: 35px; border-radius: 50%; }
+.boneco.tronco { top: 75px; left: 115px; width: 5px; height: 60px; }
+.boneco.braco-esq { top: 85px; left: 115px; width: 5px; height: 40px; transform: rotate(-45deg); transform-origin: top left; }
+.boneco.braco-dir { top: 85px; left: 115px; width: 5px; height: 40px; transform: rotate(45deg); transform-origin: top right; }
+.boneco.perna-esq { top: 135px; left: 115px; width: 5px; height: 40px; transform: rotate(-30deg); transform-origin: top left; }
+.boneco.perna-dir { top: 135px; left: 115px; width: 5px; height: 40px; transform: rotate(30deg); transform-origin: top right; }
+
+.painel-palavra {
+  font-size: 2rem;
+  letter-spacing: 8px;
+  margin-bottom: 15px;
+  color: #37474f;
+}
+
+#entrada-letra {
+  width: 50px;
+  padding: 8px;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+#btn-tentar{
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #3f51b5;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin: 5px;
+}
+
+#btn-tentar:hover {
+  background-color: #283593;
+  transform: translateY(-2px);
+}
+
+#btn-reiniciar {
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #4caf50;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin: 5px;
+}
+
+#btn-reiniciar:hover {
+  background-color: #43a047;
+  transform: translateY(-2px);
+}
+
+#resultado-forca {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-top: 15px;
+  color: #333;
+}
+
+/* Footer buttons: Voltar, Reiniciar, Estatísticas */
+.botoes-footer {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.botoes-footer button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #4caf50;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.botoes-footer button:hover {
+  background-color: #43a047;
+  transform: translateY(-2px);
+}
+
+/* Cores de fundo conforme resultado */
+body.vitoria { background: #d0f0d0; }
+body.derrota { background: #f8d0d0; }
