@@ -2,124 +2,180 @@
 
 /* Reset e base */
 *, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-  
-  body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #dfe9f3, #ffffff);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    min-height: 100vh;
-  }
-  
-  h1 {
-    font-size: 2.5rem;
-    color: #1e3a8a;
-    margin-top: 30px;
-    text-align: center;
-  }
-  
-  /* Container principal */
-  #menu-inicial {
-    background: #ffffff;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    text-align: center;
-    margin-top: 20px;
-    width: 100%;
-    max-width: 500px;
-  }
-  
-  #menu-inicial select,
-  #menu-inicial button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  
-  #menu-inicial button {
-    background: #3f51b5;
-    color: #fff;
-    border: none;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  #menu-inicial button:hover {
-    background-color: #283593;
-    transform: translateY(-2px);
-  }
-  
-  /* Tabuleiro */
-  #tabuleiro {
-    display: grid;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  
-  .carta {
-    width: 80px;
-    height: 80px;
-    background-color: #333;
-    border-radius: 10px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0;
-    position: relative;
-    transition: transform 0.3s;
-  }
-  
-  .carta img {
-    width: 100%;
-    height: 100%;
-    border-radius: 10px;
-    display: none;
-  }
-  
-  .carta.virada img {
-    display: block;
-  }
-  
-  .carta.virada {
-    background-color: white;
-    transform: scale(1.05);
-  }
-  
-  /* Botões de navegação */
-  .botoes-footer {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 30px;
-    width: 100%;
-    max-width: 500px;
-  }
-  
-  .botoes-footer a {
-    padding: 10px 20px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 6px;
-    background: #4caf50;
-    color: #fff;
-    text-decoration: none;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  .botoes-footer a:hover {
-    background-color: #43a047;
-    transform: translateY(-2px);
-  }
-  
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #dfe9f3, #ffffff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 2.5rem;
+  color: #1e3a8a;
+  margin-top: 30px;
+  text-align: center;
+}
+
+/* Container do menu inicial */
+#menu-inicial {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 400px;
+}
+
+#menu-inicial select,
+#menu-inicial button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#menu-inicial button {
+  background: #3f51b5;
+  color: #fff;
+  border: none;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#menu-inicial button:hover {
+  background-color: #283593;
+  transform: translateY(-2px);
+}
+
+/* Painel de informações: Acertos, Tempo e Erros */
+#info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 500px;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-top: 20px;
+}
+
+/* Itens do painel em coluna */
+#info > .info-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+/* Divisor entre itens */
+#info > .info-item + .info-item {
+  border-left: 1px solid #ccc;
+}
+
+/* Cores personalizadas para cada item */
+#info > .info-item:nth-child(1) { /* Acertos - azul */
+  background: #d0e8ff;
+}
+#info > .info-item:nth-child(2) { /* Tempo - amarelo */
+  background: #fff4c2;
+}
+#info > .info-item:nth-child(3) { /* Erros - vermelho */
+  background: #f8d0d0;
+}
+#info > .info-item + .info-item {
+  border-left: 1px solid #ccc;
+}
+
+/* Rótulo acima do valor */
+#info .label {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+/* Valor destacado */
+#info .value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Tabuleiro do jogo */
+#tabuleiro {
+  display: grid;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.carta {
+  width: 80px;
+  height: 80px;
+  background-color: #444;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0;
+  position: relative;
+  transition: transform 0.3s;
+}
+
+.carta img {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  display: none;
+}
+
+.carta.virada img {
+  display: block;
+}
+
+.carta.virada {
+  background-color: #f9f9f9;
+  transform: scale(1.05);
+}
+
+/* Botões de navegação no rodapé */
+.botoes-footer {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.botoes-footer button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #4caf50;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.botoes-footer button:hover {
+  background-color: #43a047;
+  transform: translateY(-2px);
+}
