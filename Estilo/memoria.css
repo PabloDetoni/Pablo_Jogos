@@ -1,0 +1,125 @@
+/* memoria.css (no estilo da forca.css) */
+
+/* Reset e base */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #dfe9f3, #ffffff);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    min-height: 100vh;
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    color: #1e3a8a;
+    margin-top: 30px;
+    text-align: center;
+  }
+  
+  /* Container principal */
+  #menu-inicial {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 500px;
+  }
+  
+  #menu-inicial select,
+  #menu-inicial button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  #menu-inicial button {
+    background: #3f51b5;
+    color: #fff;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  #menu-inicial button:hover {
+    background-color: #283593;
+    transform: translateY(-2px);
+  }
+  
+  /* Tabuleiro */
+  #tabuleiro {
+    display: grid;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .carta {
+    width: 80px;
+    height: 80px;
+    background-color: #333;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+    position: relative;
+    transition: transform 0.3s;
+  }
+  
+  .carta img {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    display: none;
+  }
+  
+  .carta.virada img {
+    display: block;
+  }
+  
+  .carta.virada {
+    background-color: white;
+    transform: scale(1.05);
+  }
+  
+  /* Botões de navegação */
+  .botoes-footer {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+    width: 100%;
+    max-width: 500px;
+  }
+  
+  .botoes-footer a {
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    background: #4caf50;
+    color: #fff;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .botoes-footer a:hover {
+    background-color: #43a047;
+    transform: translateY(-2px);
+  }
+  
