@@ -67,6 +67,30 @@ function reiniciarJogo() {
   gameInterval = setInterval(atualizar, 1000 / 60);
 }
 
+// Adiciona esta função para resetar as raquetes para o centro
+function resetarRaquetes() {
+  raquete1.y = altura / 2 - alturaRaquete / 2;
+  raquete2.y = altura / 2 - alturaRaquete / 2;
+}
+
+// Altere a função resetarBola para pausar e centralizar
+function resetarBola(direcao) {
+  bola.x = largura / 2;
+  bola.y = altura / 2;
+  bola.vx = 0;
+  bola.vy = 0;
+  resetarRaquetes();
+  desenhar();
+
+  clearInterval(gameInterval);
+
+  setTimeout(() => {
+    bola.vx = direcao;
+    bola.vy = (Math.random() * 4 - 2);
+    gameInterval = setInterval(atualizar, 1000 / 60);
+  }, 1000);
+}
+
 // Atualiza o jogo
 function atualizar() {
   moverRaquetes();
@@ -148,14 +172,6 @@ function moverBola() {
   }
 }
 
-// Reseta bola após ponto
-function resetarBola(direcao) {
-  bola.x = largura / 2;
-  bola.y = altura / 2;
-  bola.vx = direcao;
-  bola.vy = (Math.random() * 4 - 2);
-}
-
 // Renderiza jogo
 function desenhar() {
   if (!ctx) return;
@@ -192,16 +208,16 @@ function desenhar() {
   ctx.fillText(`${pontos1}   ${pontos2}`, largura / 2, 50);
 }
 
-// Checa vencedor (primeiro a 10 pontos)
+// Checa vencedor (primeiro a 5 pontos)
 function checarVencedor() {
-  if (!jogoEncerrado && (pontos1 >= 10 || pontos2 >= 10)) {
+  if (!jogoEncerrado && (pontos1 >= 5 || pontos2 >= 5)) {
     jogoEncerrado = true;
     clearInterval(gameInterval);
     let resultado = '';
-    if (pontos1 >= 10) {
+    if (pontos1 >= 5) {
       resultado = modoIA ? "Você venceu!" : "Jogador 1 venceu!";
       endGameSession('pong', 'vitoria');
-    } else if (pontos2 >= 10) {
+    } else if (pontos2 >= 5) {
       resultado = modoIA ? "IA venceu!" : "Jogador 2 venceu!";
       endGameSession('pong', modoIA ? 'derrota' : 'derrota');
     }
