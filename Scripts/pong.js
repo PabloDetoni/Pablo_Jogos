@@ -1,13 +1,10 @@
 // pong.js
-// Dependência: stats.js (startGameSession, endGameSession)
 
-// Variáveis do jogo
 let modoIA = false;
 let dificuldade = 'facil';
 let gameInterval;
 let jogador1Up = false, jogador1Down = false, jogador2Up = false, jogador2Down = false;
 
-// Variáveis do Pong
 let canvas, ctx;
 const largura = 600, altura = 400;
 const larguraRaquete = 10, alturaRaquete = 80;
@@ -15,7 +12,7 @@ const velocidadeRaquete = 6;
 const raioBola = 8;
 let raquete1, raquete2, bola, pontos1, pontos2, jogoEncerrado = false;
 
-// Controle de dificuldade IA
+const VELOCIDADE_INICIAL = 4;
 const dificuldadeIA = {
   facil: 2.5,
   medio: 4,
@@ -26,18 +23,12 @@ const dificuldadeIA = {
 function alternarDificuldade() {
   const modo = document.getElementById('modoJogo').value;
   document.getElementById('dificuldade-container').style.display = (modo === 'ia') ? 'block' : 'none';
-  // Esconde/mostra controles Jogador 2
   const spanJ2 = document.getElementById('controles-jogador2');
-  if (spanJ2) {
-    spanJ2.style.display = (modo === 'ia') ? 'none' : 'inline';
-  }
+  if (spanJ2) spanJ2.style.display = (modo === 'ia') ? 'none' : 'inline';
 }
 
 // Inicializa o jogo
 function iniciarJogo() {
-  // Estatísticas
-  startGameSession('pong');
-
   const modo = document.getElementById('modoJogo').value;
   modoIA = (modo === 'ia');
   dificuldade = document.getElementById('dificuldadeIA').value;
@@ -45,35 +36,37 @@ function iniciarJogo() {
   document.getElementById('menu-inicial').style.display = 'none';
   document.getElementById('jogo').style.display = 'block';
 
-  // Ajusta controles Jogador 2 para o modo escolhido
   const spanJ2 = document.getElementById('controles-jogador2');
-  if (spanJ2) {
-    spanJ2.style.display = modoIA ? 'none' : 'inline';
-  }
+  if (spanJ2) spanJ2.style.display = modoIA ? 'none' : 'inline';
 
   reiniciarJogo();
 }
 
-// Reinicia o jogo
 function reiniciarJogo() {
+  clearInterval(gameInterval);
+
   raquete1 = { x: 10, y: altura / 2 - alturaRaquete / 2, w: larguraRaquete, h: alturaRaquete };
   raquete2 = { x: largura - 20, y: altura / 2 - alturaRaquete / 2, w: larguraRaquete, h: alturaRaquete };
-  bola = { x: largura / 2, y: altura / 2, vx: (Math.random() > 0.5 ? 4 : -4), vy: (Math.random() * 4 - 2) };
+  bola = { x: largura / 2, y: altura / 2, vx: 0, vy: 0 };
   pontos1 = 0;
   pontos2 = 0;
   jogoEncerrado = false;
-  clearInterval(gameInterval);
   desenhar();
-  gameInterval = setInterval(atualizar, 1000 / 60);
+
+  setTimeout(() => {
+    let dir = (Math.random() > 0.5 ? VELOCIDADE_INICIAL : -VELOCIDADE_INICIAL);
+    bola.vx = dir;
+    bola.vy = (Math.random() * 4 - 2);
+    clearInterval(gameInterval);
+    gameInterval = setInterval(atualizar, 1000 / 60);
+  }, 1000);
 }
 
-// Adiciona esta função para resetar as raquetes para o centro
 function resetarRaquetes() {
   raquete1.y = altura / 2 - alturaRaquete / 2;
   raquete2.y = altura / 2 - alturaRaquete / 2;
 }
 
-// Altere a função resetarBola para pausar e centralizar
 function resetarBola(direcao) {
   bola.x = largura / 2;
   bola.y = altura / 2;
@@ -85,13 +78,13 @@ function resetarBola(direcao) {
   clearInterval(gameInterval);
 
   setTimeout(() => {
-    bola.vx = direcao;
+    bola.vx = direcao > 0 ? VELOCIDADE_INICIAL : -VELOCIDADE_INICIAL;
     bola.vy = (Math.random() * 4 - 2);
+    clearInterval(gameInterval);
     gameInterval = setInterval(atualizar, 1000 / 60);
   }, 1000);
 }
 
-// Atualiza o jogo
 function atualizar() {
   moverRaquetes();
   moverBola();
@@ -99,14 +92,11 @@ function atualizar() {
   checarVencedor();
 }
 
-// Movimento das raquetes
 function moverRaquetes() {
-  // Jogador 1 (W/S)
   if (jogador1Up) raquete1.y -= velocidadeRaquete;
   if (jogador1Down) raquete1.y += velocidadeRaquete;
   raquete1.y = Math.max(0, Math.min(altura - alturaRaquete, raquete1.y));
 
-  // Jogador 2
   if (modoIA) {
     iaMove();
   } else {
@@ -116,7 +106,6 @@ function moverRaquetes() {
   }
 }
 
-// IA movimenta raquete 2
 function iaMove() {
   const alvo = bola.y - (alturaRaquete / 2);
   if (raquete2.y < alvo) {
@@ -127,17 +116,15 @@ function iaMove() {
   raquete2.y = Math.max(0, Math.min(altura - alturaRaquete, raquete2.y));
 }
 
-// Movimento da bola
 function moverBola() {
   bola.x += bola.vx;
   bola.y += bola.vy;
 
-  // Colisão com topo/baixo
   if (bola.y - raioBola < 0 || bola.y + raioBola > altura) {
     bola.vy *= -1;
   }
 
-  // Colisão com raquete 1
+  // Raquete 1
   if (
     bola.x - raioBola < raquete1.x + raquete1.w &&
     bola.y > raquete1.y &&
@@ -148,7 +135,7 @@ function moverBola() {
     bola.vy += ((bola.y - (raquete1.y + raquete1.h / 2)) / alturaRaquete) * 5;
   }
 
-  // Colisão com raquete 2
+  // Raquete 2
   if (
     bola.x + raioBola > raquete2.x &&
     bola.y > raquete2.y &&
@@ -159,29 +146,24 @@ function moverBola() {
     bola.vy += ((bola.y - (raquete2.y + raquete2.h / 2)) / alturaRaquete) * 5;
   }
 
-  // Ponto jogador 2
+  // Pontos
   if (bola.x - raioBola < 0) {
     pontos2++;
-    resetarBola(-4);
+    resetarBola(-1);
   }
-
-  // Ponto jogador 1
   if (bola.x + raioBola > largura) {
     pontos1++;
-    resetarBola(4);
+    resetarBola(1);
   }
 }
 
-// Renderiza jogo
 function desenhar() {
   if (!ctx) return;
   ctx.clearRect(0, 0, largura, altura);
 
-  // Fundo
   ctx.fillStyle = '#e8eaf6';
   ctx.fillRect(0, 0, largura, altura);
 
-  // Linha central
   ctx.strokeStyle = '#b0bec5';
   ctx.beginPath();
   ctx.setLineDash([8, 16]);
@@ -190,36 +172,30 @@ function desenhar() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Raquetes
   ctx.fillStyle = '#3949ab';
   ctx.fillRect(raquete1.x, raquete1.y, raquete1.w, raquete1.h);
   ctx.fillRect(raquete2.x, raquete2.y, raquete2.w, raquete2.h);
 
-  // Bola
   ctx.beginPath();
   ctx.arc(bola.x, bola.y, raioBola, 0, 2 * Math.PI);
   ctx.fillStyle = '#1a237e';
   ctx.fill();
 
-  // Placar
   ctx.fillStyle = '#222';
   ctx.font = '32px Segoe UI, Arial';
   ctx.textAlign = 'center';
   ctx.fillText(`${pontos1}   ${pontos2}`, largura / 2, 50);
 }
 
-// Checa vencedor (primeiro a 5 pontos)
 function checarVencedor() {
-  if (!jogoEncerrado && (pontos1 >= 5 || pontos2 >= 5)) {
+  if (!jogoEncerrado && (pontos1 >= 10 || pontos2 >= 10)) {
     jogoEncerrado = true;
     clearInterval(gameInterval);
     let resultado = '';
-    if (pontos1 >= 5) {
+    if (pontos1 >= 10) {
       resultado = modoIA ? "Você venceu!" : "Jogador 1 venceu!";
-      endGameSession('pong', 'vitoria');
-    } else if (pontos2 >= 5) {
+    } else if (pontos2 >= 10) {
       resultado = modoIA ? "IA venceu!" : "Jogador 2 venceu!";
-      endGameSession('pong', modoIA ? 'derrota' : 'derrota');
     }
     setTimeout(() => {
       alert(resultado);
@@ -229,7 +205,6 @@ function checarVencedor() {
   }
 }
 
-// Controles teclado
 document.addEventListener('keydown', e => {
   if (document.getElementById('jogo').style.display === 'none') return;
   if (e.key === 'w' || e.key === 'W') jogador1Up = true;
@@ -261,9 +236,15 @@ document.addEventListener('keyup', e => {
   }
 });
 
-// Inicializa tela inicial e referências
 document.addEventListener('DOMContentLoaded', () => {
   alternarDificuldade();
   canvas = document.getElementById('pong-canvas');
   ctx = canvas ? canvas.getContext('2d') : null;
 });
+
+// Função para voltar ao menu inicial (usada no botão "Reiniciar" do jogo)
+function voltarAoMenuInicial() {
+  clearInterval(gameInterval);
+  document.getElementById('jogo').style.display = 'none';
+  document.getElementById('menu-inicial').style.display = 'block';
+}
