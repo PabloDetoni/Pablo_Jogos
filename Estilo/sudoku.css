@@ -1,0 +1,360 @@
+* { box-sizing: border-box; }
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f6e9ff, #e3f6fd);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  user-select: none;
+  overscroll-behavior: none;
+}
+
+/* MENU INICIAL */
+#menu-inicial {
+  background: #fff;
+  padding: 32px 30px 28px 30px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(80,40,160,0.11);
+  margin-top: 48px;
+  text-align: center;
+  min-width: 320px;
+  z-index: 2;
+}
+#menu-inicial h1 {
+  font-size: 2.2rem;
+  color: #3c007a;
+  margin-bottom: 18px;
+}
+#menu-inicial label {
+  color: #31205b;
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: block;
+}
+#menu-inicial select {
+  padding: 10px;
+  width: 210px;
+  border-radius: 8px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  margin-top: 8px;
+  margin-bottom: 18px;
+}
+#menu-inicial button {
+  background-color: #3949ab;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 26px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 10px;
+  transition: background-color 0.3s;
+}
+#menu-inicial button:hover {
+  background-color: #303f9f;
+}
+
+/* BLOCO PRINCIPAL */
+#sudoku-bloco-principal {
+  background: white;
+  margin-top: 34px;
+  padding: 32px 22px;
+  border-radius: 18px;
+  box-shadow: 0 10px 34px rgba(80,40,160,.13);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 350px;
+  max-width: 98vw;
+  gap: 18px;
+  z-index: 2;
+  position: relative;
+}
+
+/* TOPBAR */
+#sudoku-topbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 15px;
+  align-items: center;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 10px;
+  font-size: 1.15rem;
+}
+#sudoku-topbar > div {
+  background: #ece9f6;
+  border-radius: 8px;
+  padding: 6px 20px;
+  color: #3c007a;
+  font-weight: 500;
+  min-width: 92px;
+  text-align: center;
+}
+
+/* TABULEIRO */
+#sudoku-board {
+  display: grid;
+  grid-template-columns: repeat(9, 44px);
+  grid-template-rows: repeat(9, 44px);
+  gap: 0;
+  border-radius: 16px;
+  border: 3px solid #3c007a;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(80,40,160,.08);
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.sudoku-cell {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #bdbdbd;
+  font-size: 1.22rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafaff;
+  color: #2d2a32;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s, color 0.2s;
+  outline: none;
+  z-index: 1;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+  font-family: inherit;
+  border-radius: 8px;
+}
+.sudoku-cell.fixa {
+  background: #e3e8f2;
+  color: #26408b;
+  font-weight: bold;
+  cursor: default;
+}
+.sudoku-cell.selecionada {
+  background: #d1eaff;
+  outline: 2.3px solid #00b2ff;
+  z-index: 2;
+}
+.sudoku-cell.ativa {
+  background: #eefbff;
+}
+.sudoku-cell.erro {
+  background: #ffe6e6 !important;
+  color: #e02424 !important;
+  animation: erroFlash 0.8s;
+  font-weight: bold;
+}
+@keyframes erroFlash {
+  0%   { background: #ffe6e6; }
+  100% { background: #fafaff; }
+}
+.sudoku-cell.correta {
+  color: #17510e !important;
+  background: #e4ffe6 !important;
+  animation: corretaFlash 0.8s;
+}
+@keyframes corretaFlash {
+  0%   { background: #e4ffe6; }
+  100% { background: #fafaff; }
+}
+
+.sudoku-cell.destaca-igual {
+    background: #fff4b3 !important;
+    border: 2.5px solid #ffb800 !important;
+    z-index: 4;
+    color: #2d2a32;
+    animation: destaca-amarelo-pulse 0.35s;
+    box-shadow: 0 0 0 6px #ffe76666, 0 0 16px 7px #ffe7664d;
+  }
+  @keyframes destaca-amarelo-pulse {
+    0%   { box-shadow: 0 0 0 0 #ffe76666, 0 0 0 0 #ffe7664d; }
+    60%  { box-shadow: 0 0 0 16px #ffe76633, 0 0 32px 10px #ffe76699; }
+    100% { box-shadow: 0 0 0 6px #ffe76666, 0 0 16px 7px #ffe7664d; }
+  }
+/* NOVO: Destaque correto/errado animado para todas as células do mesmo número */
+.sudoku-cell.destaca-correta {
+  background: #e4ffe6 !important;
+  border: 2.5px solid #1bc700 !important;
+  color: #17510e !important;
+  box-shadow: 0 0 0 5px #8fffac66, 0 0 12px 5px #d6ffe6bb;
+  font-weight: bold;
+  z-index: 5;
+  animation: destaca-correta-pulse 0.3s;
+}
+@keyframes destaca-correta-pulse {
+  0%   { box-shadow: 0 0 0 0 #8fffac66; }
+  80%  { box-shadow: 0 0 0 10px #8fffac66; }
+  100% { box-shadow: 0 0 0 5px #8fffac66; }
+}
+.sudoku-cell.destaca-errada {
+  background: #ffe6e6 !important;
+  border: 2.5px solid #e02424 !important;
+  color: #e02424 !important;
+  box-shadow: 0 0 0 5px #ffb8b8bb, 0 0 12px 5px #ffd6d6bb;
+  font-weight: bold;
+  z-index: 5;
+  animation: destaca-errada-pulse 0.3s;
+}
+@keyframes destaca-errada-pulse {
+  0%   { box-shadow: 0 0 0 0 #ffb8b8bb; }
+  80%  { box-shadow: 0 0 0 10px #ffb8b8bb; }
+  100% { box-shadow: 0 0 0 5px #ffb8b8bb; }
+}
+.sudoku-cell.rascunho {
+  color: #8a94a2;
+  font-size: 0.85rem;
+  font-weight: 400;
+  background: #f8fafd;
+}
+.sudoku-cell .notas {
+  position: absolute;
+  left: 2px; top: 2px;
+  width: 40px; height: 40px;
+  font-size: 0.73rem;
+  color: #8a94a2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  align-items: center;
+  justify-items: center;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+#sudoku-board > .sudoku-cell {
+  border-right: 1px solid #bdbdbd;
+  border-bottom: 1px solid #bdbdbd;
+}
+#sudoku-board > .sudoku-cell.block-right { border-right: 3px solid #3c007a; }
+#sudoku-board > .sudoku-cell.block-bottom { border-bottom: 3px solid #3c007a; }
+/* Cantos arredondados do tabuleiro */
+#sudoku-board > .sudoku-cell:nth-child(1) { border-top-left-radius: 14px; }
+#sudoku-board > .sudoku-cell:nth-child(9) { border-top-right-radius: 14px; }
+#sudoku-board > .sudoku-cell:nth-child(73) { border-bottom-left-radius: 14px; }
+#sudoku-board > .sudoku-cell:nth-child(81) { border-bottom-right-radius: 14px; }
+
+/* MSG FINAL */
+#sudoku-msg-final {
+  background: #f1f8e9;
+  border-radius: 12px;
+  padding: 22px;
+  margin: 15px 0;
+  box-shadow: 0 4px 14px rgba(90,180,90,.09);
+  text-align: center;
+}
+#sudoku-msg-final h2 {
+  margin-top: 0;
+  font-size: 1.7rem;
+}
+
+/* FOOTER */
+#sudoku-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px 10px;
+  justify-content: center;
+  align-items: center;
+  margin: 8px 0 0 0;
+  width: 100%;
+  max-width: 500px;
+}
+#sudoku-numeros {
+  display: flex;
+  gap: 8px;
+}
+#sudoku-numeros button {
+  width: 38px; height: 38px;
+  font-size: 1.3rem;
+  border-radius: 10px;
+  border: none;
+  background: #ece9f6;
+  color: #3c007a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.14s;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#sudoku-numeros button:disabled {
+  background: #d2e7fa;
+  color: #2769a7;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+#sudoku-numeros button.completo {
+  background: #b3e6ff;
+  color: #0066b2;
+  font-weight: bold;
+}
+#btn-rascunho, #btn-apagar, #btn-dica {
+  min-width: 80px;
+  margin-left: 4px;
+  padding: 8px 13px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  background: #b7a0e7;
+  color: #31205b;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.13s;
+  outline: none;
+}
+#btn-rascunho[aria-pressed="true"] {
+  background: #ffd60a;
+  color: #2c1a00;
+  font-weight: bold;
+  box-shadow: 0 0 0 2px #ffd60a55;
+}
+#btn-apagar { background: #ffcfcf; color: #b60000; }
+#btn-apagar:hover { background: #ffb3b3; }
+#btn-dica { background: #e7fbdb; color: #186b00; }
+#btn-dica[disabled] { background: #e0e0e0; color: #999; cursor: not-allowed; }
+
+/* FOOTER GERAL */
+.botoes-footer,
+#novo-jogo-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 38px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+/* BOTÕES FOOTER PADRÃO (Voltar, Estatísticas, Reiniciar) */
+.botoes-footer button,
+#novo-jogo-footer button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #4caf50;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  min-width: 150px;
+}
+.botoes-footer button:hover,
+#novo-jogo-footer button:hover {
+  background-color: #43a047;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 650px) {
+  #menu-inicial, #sudoku-bloco-principal { min-width: unset; width: 98vw; padding: 8px; }
+  #sudoku-board { grid-template-columns: repeat(9, 9vw); grid-template-rows: repeat(9, 9vw); }
+  .sudoku-cell, #sudoku-numeros button { width: 9vw; height: 9vw; min-width: 28px; min-height: 28px; }
+  #sudoku-topbar, #sudoku-footer { flex-direction: column; gap: 8px; }
+}
+:focus-visible { outline: 2.5px solid #00b2ff; outline-offset: 2px; }
