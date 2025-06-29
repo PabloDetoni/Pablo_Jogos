@@ -74,7 +74,7 @@ function iniciarJogo() {
     card.dataset.index = idx;
 
     const img = document.createElement('img');
-    img.src = `../Imagens/${idx}.png`;
+    img.src = `../Imagens/img${idx}.jpeg`;
     img.alt = `Imagem ${idx}`;
     card.appendChild(img);
 
@@ -89,7 +89,7 @@ function iniciarJogo() {
   setTimeout(() => {
     allCards.forEach(card => card.classList.remove('virada'));
     lockBoard = false; // desbloquear clicks após reveal
-  }, 3000);
+  }, 5000);
 }
 
 function flipCard() {
