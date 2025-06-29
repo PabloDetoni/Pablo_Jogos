@@ -57,11 +57,18 @@ const sudoku = (() => {
     btnRascunho().setAttribute("aria-pressed", "false");
     btnRascunho().classList.remove('ativo');
     document.body.classList.remove('vitoria', 'derrota');
+    // INTEGRAÇÃO ESTATÍSTICAS
+    if (typeof startGameSession === "function") startGameSession('sudoku');
   }
 
   function finalizarJogo(vitoria) {
     jogoEncerrado = true;
     clearInterval(cronometroInterval);
+
+    // INTEGRAÇÃO ESTATÍSTICAS
+    if (typeof endGameSession === "function") {
+      endGameSession('sudoku', vitoria ? 'vitoria' : 'derrota', dificuldadeAtual);
+    }
 
     const resultado = vitoria ? "Vitória!" : "Derrota!";
     const tempo = formatarTempo(timer);
@@ -316,7 +323,7 @@ const sudoku = (() => {
   }
   function alternarRascunho() {
     modoRascunho = !modoRascunho;
-    btnRascunho().setAttribute("aria-pressed", modoRascunho ? "true" : "false");
+    btnRascunho().setAttribute("aria-pressed", "true");
     btnRascunho().classList.toggle('ativo', modoRascunho);
   }
   function usarDica() {

@@ -9,6 +9,7 @@ let timerSec = 0;
 let timerInterval = null;
 let gameOver = false;
 let firstClick = true;
+let dificuldadeAtual = "facil"; // INTEGRAÇÃO ESTATÍSTICAS
 
 // Vincula evento ao carregar DOM
 window.addEventListener('DOMContentLoaded', () => {
@@ -40,6 +41,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function iniciarJogo() {
   const dificuldade = document.getElementById('dificuldade').value;
+  dificuldadeAtual = dificuldade; // INTEGRAÇÃO ESTATÍSTICAS
+
+  // INTEGRAÇÃO ESTATÍSTICAS
+  if (typeof startGameSession === "function") startGameSession('campo_minado');
+
   const tempoSpan = document.getElementById('tempo');
   const bandeirasSpan = document.getElementById('bandeiras');
   const minasSpan = document.getElementById('minas');
@@ -262,6 +268,12 @@ function endGame(vencedor) {
   gameOver = true;
   clearInterval(timerInterval);
   revealAllMines();
+
+  // INTEGRAÇÃO ESTATÍSTICAS
+  if (typeof endGameSession === "function") {
+    endGameSession('campo_minado', vencedor ? 'vitoria' : 'derrota', dificuldadeAtual);
+  }
+
   setTimeout(() => {
     alert(vencedor ? 'Parabéns! Você venceu!' : 'Você perdeu!');
     document.getElementById('btn-reiniciar').style.display = 'block';

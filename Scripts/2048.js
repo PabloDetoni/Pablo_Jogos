@@ -15,10 +15,10 @@ function iniciarJogo2048() {
   gameOver = false;
   novaCelula = null;
   atualizarScore();
-  // Não mostra mais mensagem final na tela
   adicionarNovoNumero();
   adicionarNovoNumero();
   desenharTabuleiro();
+  // INTEGRAÇÃO ESTATÍSTICAS
   if (typeof startGameSession === "function") startGameSession('2048');
 }
 
@@ -60,60 +60,63 @@ function atualizarScore() {
 }
 
 function mover(direcao) {
-    if (gameOver) return;
-    novaCelula = null;
-  
-    let anterior = JSON.stringify(tabuleiro);
-  
-    // Rotaciona para mover sempre para a esquerda
-    for (let k = 0; k < direcao; k++) tabuleiro = girarTabuleiro(tabuleiro);
-  
-    for (let i = 0; i < tamanho; i++) {
-      let linha = tabuleiro[i].filter(v => v !== 0);
-      for (let j = 0; j < linha.length - 1; j++) {
-        if (linha[j] === linha[j + 1]) {
-          linha[j] *= 2;
-          score += linha[j];
-          linha[j + 1] = 0;
-        }
+  if (gameOver) return;
+  novaCelula = null;
+
+  let anterior = JSON.stringify(tabuleiro);
+
+  // Rotaciona para mover sempre para a esquerda
+  for (let k = 0; k < direcao; k++) tabuleiro = girarTabuleiro(tabuleiro);
+
+  for (let i = 0; i < tamanho; i++) {
+    let linha = tabuleiro[i].filter(v => v !== 0);
+    for (let j = 0; j < linha.length - 1; j++) {
+      if (linha[j] === linha[j + 1]) {
+        linha[j] *= 2;
+        score += linha[j];
+        linha[j + 1] = 0;
       }
-      linha = linha.filter(v => v !== 0);
-      while (linha.length < tamanho) linha.push(0);
-      tabuleiro[i] = linha;
     }
-  
-    // Rotaciona de volta
-    for (let k = direcao; k < 4; k++) tabuleiro = girarTabuleiro(tabuleiro);
-  
-    if (JSON.stringify(tabuleiro) !== anterior) {
-      // Só adiciona novo número SE ainda há movimentos após a jogada!
-      if (podeMover()) {
-        adicionarNovoNumero();
-        desenharTabuleiro();
-        atualizarScore();
-        // Agora verifica novamente: se após adicionar não tem mais movimentos, avisa fim de jogo
-        if (!podeMover()) {
-          desenharTabuleiro();
-          mostrarMensagemFinal("Fim de jogo!");
-          if (typeof endGameSession === "function") endGameSession('2048', 'derrota');
-          gameOver = true;
-        }
-      } else {
+    linha = linha.filter(v => v !== 0);
+    while (linha.length < tamanho) linha.push(0);
+    tabuleiro[i] = linha;
+  }
+
+  // Rotaciona de volta
+  for (let k = direcao; k < 4; k++) tabuleiro = girarTabuleiro(tabuleiro);
+
+  if (JSON.stringify(tabuleiro) !== anterior) {
+    // Só adiciona novo número SE ainda há movimentos após a jogada!
+    if (podeMover()) {
+      adicionarNovoNumero();
+      desenharTabuleiro();
+      atualizarScore();
+      // Agora verifica novamente: se após adicionar não tem mais movimentos, avisa fim de jogo
+      if (!podeMover()) {
         desenharTabuleiro();
         mostrarMensagemFinal("Fim de jogo!");
-        if (typeof endGameSession === "function") endGameSession('2048', 'derrota');
+        // INTEGRAÇÃO ESTATÍSTICAS
+        if (typeof endGameSession === "function") endGameSession('2048', score);
         gameOver = true;
       }
     } else {
       desenharTabuleiro();
-      // Mesmo se nada mudou, checa se tem movimentos possíveis ainda
-      if (!podeMover()) {
-        mostrarMensagemFinal("Fim de jogo!");
-        if (typeof endGameSession === "function") endGameSession('2048', 'derrota');
-        gameOver = true;
-      }
+      mostrarMensagemFinal("Fim de jogo!");
+      // INTEGRAÇÃO ESTATÍSTICAS
+      if (typeof endGameSession === "function") endGameSession('2048', score);
+      gameOver = true;
+    }
+  } else {
+    desenharTabuleiro();
+    // Mesmo se nada mudou, checa se tem movimentos possíveis ainda
+    if (!podeMover()) {
+      mostrarMensagemFinal("Fim de jogo!");
+      // INTEGRAÇÃO ESTATÍSTICAS
+      if (typeof endGameSession === "function") endGameSession('2048', score);
+      gameOver = true;
     }
   }
+}
 
 function girarTabuleiro(matriz) {
   // Rotaciona 90 graus para a direita
@@ -135,7 +138,6 @@ function podeMover() {
 }
 
 function mostrarMensagemFinal(msg) {
-  // Apenas mostra um aviso simples sem botão ou caixa decorada
   alert(msg);
 }
 
@@ -145,24 +147,24 @@ function reiniciarJogo() {
 
 // Eventos de teclado - todas direções funcionam e estão mapeadas corretamente
 document.addEventListener('keydown', function(e) {
-    if (gameOver) return;
-    if (bloqueado) return;
-    let direcao = null;
-    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
-      direcao = 3; // para cima
-    } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
-      direcao = 1; // para baixo
-    } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-      direcao = 0; // para a esquerda
-    } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-      direcao = 2; // para a direita
-    }
-    if (direcao !== null) {
-      bloqueado = true;
-      mover(direcao);
-      setTimeout(() => { bloqueado = false; }, TEMPO_COOLDOWN);
-    }
-  });
+  if (gameOver) return;
+  if (bloqueado) return;
+  let direcao = null;
+  if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+    direcao = 3; // para cima
+  } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+    direcao = 1; // para baixo
+  } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+    direcao = 0; // para a esquerda
+  } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+    direcao = 2; // para a direita
+  }
+  if (direcao !== null) {
+    bloqueado = true;
+    mover(direcao);
+    setTimeout(() => { bloqueado = false; }, TEMPO_COOLDOWN);
+  }
+});
 
 // Inicializa ao carregar a página
 document.addEventListener('DOMContentLoaded', iniciarJogo2048);

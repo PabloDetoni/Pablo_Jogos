@@ -2,6 +2,7 @@
 
 let modoIA = false;
 let dificuldade = 'facil';
+let dificuldadeAtual = 'facil';
 let gameInterval;
 let jogador1Up = false, jogador1Down = false, jogador2Up = false, jogador2Down = false;
 
@@ -19,7 +20,10 @@ const dificuldadeIA = {
   dificil: 6.5
 };
 
-// Alterna exibição das dificuldades e controles do Jogador 2
+// Estatísticas: tempo de partida
+let tempoPong = 0;
+let intervaloTempoPong = null;
+
 function alternarDificuldade() {
   const modo = document.getElementById('modoJogo').value;
   document.getElementById('dificuldade-container').style.display = (modo === 'ia') ? 'block' : 'none';
@@ -27,17 +31,22 @@ function alternarDificuldade() {
   if (spanJ2) spanJ2.style.display = (modo === 'ia') ? 'none' : 'inline';
 }
 
-// Inicializa o jogo
 function iniciarJogo() {
   const modo = document.getElementById('modoJogo').value;
   modoIA = (modo === 'ia');
   dificuldade = document.getElementById('dificuldadeIA').value;
+  dificuldadeAtual = dificuldade;
 
   document.getElementById('menu-inicial').style.display = 'none';
   document.getElementById('jogo').style.display = 'block';
 
   const spanJ2 = document.getElementById('controles-jogador2');
   if (spanJ2) spanJ2.style.display = modoIA ? 'none' : 'inline';
+
+  if (typeof startGameSession === "function") startGameSession('pong');
+  tempoPong = 0;
+  if (intervaloTempoPong) clearInterval(intervaloTempoPong);
+  intervaloTempoPong = setInterval(() => { tempoPong++; }, 1000);
 
   reiniciarJogo();
 }
@@ -124,7 +133,6 @@ function moverBola() {
     bola.vy *= -1;
   }
 
-  // Raquete 1
   if (
     bola.x - raioBola < raquete1.x + raquete1.w &&
     bola.y > raquete1.y &&
@@ -135,7 +143,6 @@ function moverBola() {
     bola.vy += ((bola.y - (raquete1.y + raquete1.h / 2)) / alturaRaquete) * 5;
   }
 
-  // Raquete 2
   if (
     bola.x + raioBola > raquete2.x &&
     bola.y > raquete2.y &&
@@ -146,7 +153,6 @@ function moverBola() {
     bola.vy += ((bola.y - (raquete2.y + raquete2.h / 2)) / alturaRaquete) * 5;
   }
 
-  // Pontos
   if (bola.x - raioBola < 0) {
     pontos2++;
     resetarBola(-1);
@@ -188,17 +194,24 @@ function desenhar() {
 }
 
 function checarVencedor() {
-  if (!jogoEncerrado && (pontos1 >= 10 || pontos2 >= 10)) {
+  if (jogoEncerrado) return;
+  if (pontos1 >= 1 && pontos1 - pontos2 >= 1) {
     jogoEncerrado = true;
     clearInterval(gameInterval);
-    let resultado = '';
-    if (pontos1 >= 10) {
-      resultado = modoIA ? "Você venceu!" : "Jogador 1 venceu!";
-    } else if (pontos2 >= 10) {
-      resultado = modoIA ? "IA venceu!" : "Jogador 2 venceu!";
-    }
+    if (intervaloTempoPong) clearInterval(intervaloTempoPong);
+    if (typeof endGameSession === "function") endGameSession('pong', 'vitoria', dificuldadeAtual, tempoPong);
     setTimeout(() => {
-      alert(resultado);
+      alert(modoIA ? "Você venceu!" : "Jogador 1 venceu!");
+      document.getElementById('menu-inicial').style.display = 'block';
+      document.getElementById('jogo').style.display = 'none';
+    }, 250);
+  } else if (pontos2 >= 10 && pontos2 - pontos1 >= 2) {
+    jogoEncerrado = true;
+    clearInterval(gameInterval);
+    if (intervaloTempoPong) clearInterval(intervaloTempoPong);
+    if (typeof endGameSession === "function") endGameSession('pong', 'derrota', dificuldadeAtual, tempoPong);
+    setTimeout(() => {
+      alert(modoIA ? "IA venceu!" : "Jogador 2 venceu!");
       document.getElementById('menu-inicial').style.display = 'block';
       document.getElementById('jogo').style.display = 'none';
     }, 250);
@@ -242,9 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
   ctx = canvas ? canvas.getContext('2d') : null;
 });
 
-// Função para voltar ao menu inicial (usada no botão "Reiniciar" do jogo)
 function voltarAoMenuInicial() {
   clearInterval(gameInterval);
+  if (intervaloTempoPong) clearInterval(intervaloTempoPong);
   document.getElementById('jogo').style.display = 'none';
   document.getElementById('menu-inicial').style.display = 'block';
 }

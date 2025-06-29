@@ -8,12 +8,21 @@ let errorsCount = 0;
 let totalPairs = 0;
 let timerSec = 0;
 let timerInterval = null;
+let dificuldadeAtual = 'facil';
 
+// INTEGRAÇÃO ESTATÍSTICAS: Salva dificuldade globalmente
 function iniciarJogo() {
   const tabuleiro = document.getElementById('tabuleiro');
   const errosSpan = document.getElementById('erros');
   const acertosSpan = document.getElementById('acertos');
   const timerSpan = document.getElementById('timer');
+
+  // Determinar dificuldade
+  const dificuldade = document.getElementById('dificuldade').value;
+  dificuldadeAtual = dificuldade; // Salva globalmente
+
+  // INTEGRAÇÃO ESTATÍSTICAS
+  if (typeof startGameSession === "function") startGameSession('memoria');
 
   // Reset estado do jogo
   tabuleiro.innerHTML = '';
@@ -37,13 +46,13 @@ function iniciarJogo() {
       clearInterval(timerInterval);
       lockBoard = true;
       alert('Tempo esgotado! Fim de jogo.');
+      // INTEGRAÇÃO ESTATÍSTICAS - derrota por tempo
+      if (typeof endGameSession === "function") endGameSession('memoria', 'derrota', dificuldadeAtual);
       return;
     }
     timerSpan.textContent = formatTime(timerSec);
   }, 1000);
 
-  // Determinar dificuldade
-  const dificuldade = document.getElementById('dificuldade').value;
   let startIdx, pairCount, cols;
   if (dificuldade === 'facil') {
     startIdx = 1; pairCount = 8; cols = 4;
@@ -82,7 +91,7 @@ function iniciarJogo() {
     tabuleiro.appendChild(card);
   });
 
-  // Reveal inicial por 3s
+  // Reveal inicial por 5s
   const allCards = Array.from(document.querySelectorAll('.carta'));
   allCards.forEach(card => card.classList.add('virada'));
 
@@ -123,6 +132,8 @@ function checkForMatch() {
       clearInterval(timerInterval);
       setTimeout(() => {
         alert(`Parabéns! Você venceu em ${formatTime(timerSec)} com ${errorsCount} erros.`);
+        // INTEGRAÇÃO ESTATÍSTICAS - vitória
+        if (typeof endGameSession === "function") endGameSession('memoria', 'vitoria', dificuldadeAtual);
       }, 500);
     } else {
       lockBoard = false;
