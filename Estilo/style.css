@@ -16,30 +16,146 @@ body {
   overflow: hidden; /* evita scroll */
 }
 
-/* Header fixo no topo */
-header {
+/* Header fixo no topo, espaço para botões nos cantos */
+header.site-header {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   background-color: rgba(30, 58, 138, 0.1);
-  padding: 40px 0;
-  text-align: center;
+  padding: 32px 0 32px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   border-bottom: 4px solid #283593;
   z-index: 1000;
 }
 
-header h1 {
-  font-size: 3.5rem;
+header.site-header h1 {
+  font-size: 2.6rem;
   color: #1e3a8a;
   margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+/* Botão do ranking (esquerdo) e user-actions (direito) */
+#btn-ranking,
+#user-actions button {
+  padding: 12px 20px;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 7px;
+  background-color: #3f51b5;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 0 8px;
+  transition: background 0.2s;
+}
+
+#btn-ranking:hover,
+#user-actions button:hover {
+  background-color: #283593;
+}
+
+/* Espaço do user-actions no header */
+#user-actions {
+  min-width: 110px;
+  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Modal de perfil (direita, abaixo do header) */
+.profile-modal {
+  display: none;
+  position: absolute;
+  top: 72px;
+  right: 32px;
+  background: #fff;
+  border: 1.5px solid #283593;
+  border-radius: 8px;
+  box-shadow: 0 2px 18px #0002;
+  z-index: 1100;
+  padding: 20px 28px 20px 28px;
+  min-width: 180px;
+  text-align: left;
+}
+.profile-modal.show {
+  display: block;
+}
+.profile-modal span {
+  font-weight: bold;
+  font-size: 1.13em;
+}
+.profile-modal button {
+  margin-top: 16px;
+  width: 100%;
+  background: #f87171;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.profile-modal button:hover {
+  background: #ef4444;
+}
+
+/* Modal de ranking (esquerda, abaixo do header) */
+.ranking-modal {
+  display: none;
+  position: absolute;
+  top: 72px;
+  left: 32px;
+  background: #fff;
+  border: 1.5px solid #283593;
+  border-radius: 8px;
+  box-shadow: 0 2px 18px #0002;
+  z-index: 1099;
+  padding: 20px 28px;
+  min-width: 230px;
+  text-align: left;
+}
+.ranking-modal.show {
+  display: block;
+}
+.ranking-modal h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #1e3a8a;
+  font-size: 1.2em;
+}
+.ranking-modal button {
+  margin-top: 16px;
+  width: 100%;
+  background: #3b82f6;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.ranking-modal button:hover {
+  background: #2563eb;
+}
+#ranking-list {
+  font-size: 1em;
+  color: #333;
+  min-height: 40px;
 }
 
 /* Área principal centralizada verticalmente */
 main {
   position: absolute;
-  top: 84px;   /* altura do header */
-  bottom: 28px; /* altura do footer */
+  top: 100px;   /* altura do header */
+  bottom: 48px; /* altura do footer */
   left: 0;
   right: 0;
   display: flex;
@@ -48,14 +164,15 @@ main {
   justify-content: center;
 }
 
-/* Grid de jogos */
+/* Grid de jogos responsivo */
 .grid-jogos {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
   justify-content: center;
   width: 100%;
-  max-width: 800px;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .jogo-btn {
@@ -103,4 +220,43 @@ footer {
 .ver-estatisticas-btn:hover {
   background-color: #43a047;
   transform: translateY(-2px);
+}
+
+/* Responsividade */
+@media (max-width: 900px) {
+  .grid-jogos {
+    max-width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+  header.site-header {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .profile-modal, .ranking-modal {
+    left: 8px;
+    right: 8px;
+    min-width: 160px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+@media (max-width: 600px) {
+  header.site-header h1 {
+    font-size: 1.3rem;
+  }
+  main {
+    top: 86px;
+  }
+  .profile-modal,
+  .ranking-modal {
+    font-size: .98em;
+    left: 4px;
+    right: 4px;
+    min-width: 120px;
+    padding: 12px 8px;
+  }
+  .grid-jogos {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
 }

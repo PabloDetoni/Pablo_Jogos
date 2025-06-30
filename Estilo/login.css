@@ -1,0 +1,167 @@
+/* login.css */
+
+/* Reset básico e herança da base */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #e0e7ff, #f5faff 70%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+  }
+  
+  .login-container {
+    background: rgba(255,255,255,0.95);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+    padding: 48px 32px 32px 32px;
+    max-width: 370px;
+    width: 98%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  
+  .login-container h1 {
+    color: #1e3a8a;
+    font-size: 2.5rem;
+    margin-bottom: 32px;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+  
+  /* Botões principais */
+  #main-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    margin-bottom: 28px;
+  }
+  
+  #main-buttons button {
+    padding: 14px 0;
+    font-size: 1.1rem;
+    color: #fff;
+    background-color: #3f51b5;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.18s;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+  }
+  
+  #main-buttons button:nth-child(2) {
+    background-color: #1976d2;
+  }
+  
+  #main-buttons button:nth-child(3) {
+    background-color: #8e8e8e;
+  }
+  
+  #main-buttons button:hover {
+    background-color: #283593;
+    transform: translateY(-2px) scale(1.03);
+  }
+  
+  /* Formulários de login/registro */
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 8px;
+    animation: aparecer 0.3s;
+  }
+  
+  @keyframes aparecer {
+    from { opacity: 0; transform: scale(0.98);}
+    to   { opacity: 1; transform: scale(1);}
+  }
+  
+  form input {
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid #b0bec5;
+    border-radius: 7px;
+    background: #f3f8fd;
+    color: #283593;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  
+  form input:focus {
+    border-color: #3f51b5;
+  }
+  
+  form button[type="submit"] {
+    background: #4caf50;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 7px;
+    padding: 12px 0;
+    margin-top: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  form button[type="submit"]:hover {
+    background: #388e3c;
+  }
+  
+  form button[type="button"] {
+    background: #bdbdbd;
+    color: #263238;
+    border: none;
+    border-radius: 7px;
+    padding: 10px 0;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  form button[type="button"]:hover {
+    background: #757575;
+    color: #fff;
+  }
+  
+  .error {
+    color: #d32f2f;
+    background: #ffeaea;
+    border: 1px solid #ffcdd2;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 0.95rem;
+    margin-top: 2px;
+    min-height: 20px;
+    text-align: center;
+    display: none; /* Mostre via JS quando necessário */
+  }
+  
+  /* Responsividade */
+  @media (max-width: 480px) {
+    .login-container {
+      padding: 24px 6px 16px 6px;
+      max-width: 98vw;
+    }
+    .login-container h1 {
+      font-size: 2rem;
+    }
+    #main-buttons button,
+    form button,
+    form input {
+      font-size: 1rem;
+      padding: 10px;
+    }
+  }
