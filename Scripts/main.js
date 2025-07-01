@@ -9,6 +9,27 @@ function renderUserActions() {
   } else {
     userActions.innerHTML = `<button id="btn-logar">Logar</button>`;
   }
+  renderAdminActions(); // Sempre tenta renderizar ações de admin
+}
+
+// Mostra o botão de admin se o usuário for admin
+function renderAdminActions() {
+  const adminActions = document.getElementById('admin-actions');
+  const user = JSON.parse(sessionStorage.getItem('user'));
+  if (user && user.isAdmin) {
+    adminActions.innerHTML = `<button id="btn-admin">Painel do Administrador</button>`;
+  } else {
+    adminActions.innerHTML = '';
+  }
+}
+
+// Evento para botão do admin (header)
+function setupAdminBtn() {
+  document.getElementById('admin-actions').addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'btn-admin') {
+      window.location.href = 'admin.html';
+    }
+  });
 }
 
 // Eventos dos botões de login/perfil no header
@@ -30,6 +51,20 @@ function abrirPerfil() {
     document.getElementById('profile-nome').textContent = user.nome;
     document.getElementById('profile-email').textContent = user.email || '';
     document.getElementById('profile-modal').classList.add('show');
+    renderProfileAdminBtn(user); // Chama aqui para mostrar o botão do admin no modal
+  }
+}
+
+// Renderiza o botão admin dentro do modal de perfil, se for admin
+function renderProfileAdminBtn(user) {
+  const wrap = document.getElementById('profile-admin-btn-wrap');
+  if (user && user.isAdmin) {
+    wrap.innerHTML = `<button id="btn-admin-profile" style="background:#3f51b5;margin-top:10px;color:#fff;">Painel do Administrador</button>`;
+    document.getElementById('btn-admin-profile').onclick = function() {
+      window.location.href = 'admin.html';
+    }
+  } else {
+    wrap.innerHTML = '';
   }
 }
 
@@ -110,4 +145,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setupLogoutBtn();
   setupGameBtns();
   setupEstatisticasBtn();
+  setupAdminBtn();
 });

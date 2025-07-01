@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel do Administrador</title>
+  <link rel="stylesheet" href="../Estilo/admin.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <nav class="admin-sidebar">
+      <div class="sidebar-header">
+        <i class="fa-solid fa-chess-knight"></i>
+        <span>Painel Admin</span>
+      </div>
+      <ul>
+        <li class="active" data-section="dashboard"><i class="fa fa-chart-pie"></i> Dashboard</li>
+        <li data-section="usuarios"><i class="fa fa-users"></i> Usuários</li>
+        <li data-section="jogos"><i class="fa fa-gamepad"></i> Jogos</li>
+        <li data-section="rankings"><i class="fa fa-trophy"></i> Rankings</li>
+        <li data-section="logs"><i class="fa fa-list-alt"></i> Logs</li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+      <header class="admin-header">
+        <div>
+          <i class="fa fa-user-shield"></i>
+          <span id="admin-nome"></span>
+        </div>
+        <button id="admin-logout" title="Sair"><i class="fa fa-sign-out-alt"></i> Sair</button>
+      </header>
+
+      <section id="section-dashboard" class="admin-section">
+        <h2>Visão Geral</h2>
+        <div class="dashboard-cards">
+          <div class="dashboard-card">
+            <div class="card-icon bg1"><i class="fa fa-users"></i></div>
+            <div>
+              <div class="card-value" id="card-total-usuarios">--</div>
+              <div class="card-label">Total de Usuários</div>
+            </div>
+          </div>
+          <div class="dashboard-card">
+            <div class="card-icon bg2"><i class="fa fa-chess-board"></i></div>
+            <div>
+              <div class="card-value" id="card-total-partidas">--</div>
+              <div class="card-label">Partidas Jogadas</div>
+            </div>
+          </div>
+          <div class="dashboard-card">
+            <div class="card-icon bg3"><i class="fa fa-user-shield"></i></div>
+            <div>
+              <div class="card-value" id="card-total-admins">--</div>
+              <div class="card-label">Administradores</div>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-last-rows">
+          <div>
+            <h3>Últimos cadastros</h3>
+            <ul id="ultimos-cadastros" class="last-users-list"></ul>
+          </div>
+          <div>
+            <h3>Últimos logins</h3>
+            <ul id="ultimos-logins" class="last-logins-list"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-usuarios" class="admin-section" style="display:none;">
+        <h2>Gestão de Usuários</h2>
+        <div class="usuarios-toolbar">
+          <input type="text" id="busca-usuario" placeholder="Buscar por nome ou email...">
+          <span id="usuarios-loading" style="display:none; color:#888; margin-left:10px;">Carregando...</span>
+        </div>
+        <div class="tabela-scroll">
+          <table class="usuarios-tabela">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Admin</th>
+                <th>Status</th>
+                <th>Data Cadastro</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="usuarios-lista">
+              <!-- Linhas dinâmicas -->
+            </tbody>
+          </table>
+        </div>
+        <div id="usuarios-erro" style="color:red; margin-top:8px; display:none;"></div>
+      </section>
+
+      <section id="section-jogos" class="admin-section" style="display:none;">
+        <h2>Gestão de Jogos</h2>
+        <div class="jogos-toolbar">
+          <button id="btn-add-jogo"><i class="fa fa-plus"></i> Adicionar Jogo</button>
+          <span id="jogos-loading" style="display:none; color:#888; margin-left:10px;">Carregando...</span>
+        </div>
+        <div class="tabela-scroll">
+          <table class="jogos-tabela">
+            <thead>
+              <tr>
+                <th>Nome do Jogo</th>
+                <th>Total de Partidas</th>
+                <th>Vitórias</th>
+                <th>Derrotas</th>
+                <th>Empates</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="jogos-lista">
+              <!-- Linhas dinâmicas -->
+            </tbody>
+          </table>
+        </div>
+        <div id="jogos-erro" style="color:red; margin-top:8px; display:none;"></div>
+      </section>
+
+      <section id="section-rankings" class="admin-section" style="display:none;">
+        <h2>Rankings</h2>
+        <div class="rankings-toolbar">
+          <button id="btn-exportar-csv"><i class="fa fa-file-csv"></i> Exportar CSV</button>
+          <select id="ranking-jogo-select"></select>
+          <span id="rankings-loading" style="display:none; color:#888; margin-left:10px;">Carregando...</span>
+        </div>
+        <div class="tabela-scroll">
+          <table class="rankings-tabela">
+            <thead>
+              <tr>
+                <th>Posição</th>
+                <th>Nome</th>
+                <th>Pontuação</th>
+              </tr>
+            </thead>
+            <tbody id="rankings-lista">
+              <!-- Linhas dinâmicas -->
+            </tbody>
+          </table>
+        </div>
+        <div id="rankings-erro" style="color:red; margin-top:8px; display:none;"></div>
+      </section>
+
+      <section id="section-logs" class="admin-section" style="display:none;">
+        <h2>Logs e Auditoria</h2>
+        <div class="tabela-scroll">
+          <table class="logs-tabela">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Usuário</th>
+                <th>Ação</th>
+                <th>Detalhes</th>
+              </tr>
+            </thead>
+            <tbody id="logs-lista">
+              <!-- Linhas dinâmicas -->
+            </tbody>
+          </table>
+        </div>
+        <div id="logs-erro" style="color:red; margin-top:8px; display:none;"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- MODAIS -->
+  <div id="modal-bg" class="modal-bg" style="display:none;"></div>
+
+  <!-- Modal: Adicionar Jogo -->
+  <div id="modal-add-jogo" class="modal-admin" style="display:none;">
+    <div class="modal-content">
+      <span class="modal-close" id="close-add-jogo">&times;</span>
+      <h3>Adicionar Novo Jogo</h3>
+      <form id="form-add-jogo">
+        <input type="text" id="novo-jogo-nome" placeholder="Nome do Jogo" required maxlength="30">
+        <button type="submit">Adicionar</button>
+      </form>
+      <div id="add-jogo-erro" style="color:red; margin-top:8px; display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar Ação -->
+  <div id="modal-confirmar" class="modal-admin" style="display:none;">
+    <div class="modal-content">
+      <span class="modal-close" id="close-confirmar">&times;</span>
+      <h3 id="confirmar-titulo">Confirmação</h3>
+      <p id="confirmar-msg"></p>
+      <div class="modal-actions">
+        <button id="btn-confirmar-ok">Confirmar</button>
+        <button id="btn-confirmar-cancelar">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../Scripts/admin.js"></script>
+</body>
+</html>

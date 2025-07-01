@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // Se quiser mostrar o login por padrão:
+  showLoginForm();
 });
 
 // Função de login
@@ -53,9 +56,13 @@ async function login(event) {
     });
     const data = await res.json();
 
-    // Agora o backend retorna user: {nome, email}
+    // Agora o backend retorna user: {nome, email, isAdmin}
     if (data.success && data.user) {
-      sessionStorage.setItem('user', JSON.stringify({ nome: data.user.nome, email: data.user.email }));
+      sessionStorage.setItem('user', JSON.stringify({ 
+        nome: data.user.nome, 
+        email: data.user.email, 
+        isAdmin: data.user.isAdmin // <- ESSENCIAL PARA FUNCIONAR O BOTÃO DO ADMIN!
+      }));
       sessionStorage.removeItem('guest');
       window.location.href = 'index.html';
     } else {
@@ -115,9 +122,13 @@ async function register(event) {
     });
     const data = await res.json();
 
-    // Agora o backend retorna user: {nome, email}
+    // Agora o backend retorna user: {nome, email, isAdmin}
     if (data.success && data.user) {
-      sessionStorage.setItem('user', JSON.stringify({ nome: data.user.nome, email: data.user.email }));
+      sessionStorage.setItem('user', JSON.stringify({ 
+        nome: data.user.nome, 
+        email: data.user.email, 
+        isAdmin: data.user.isAdmin // <- ESSENCIAL
+      }));
       sessionStorage.removeItem('guest');
       window.location.href = 'index.html';
     } else {
