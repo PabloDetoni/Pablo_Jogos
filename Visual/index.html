@@ -8,10 +8,14 @@
 </head>
 <body>
   <header class="site-header">
-    <button id="btn-ranking">Ranking dos Jogos</button>
-    <h1>Escolha um Jogo</h1>
-    <div id="user-actions"></div>
-    <div id="admin-actions"></div>
+    <div class="page-title-bar">
+      <button id="btn-ranking">Ranking dos Jogos</button>
+      <h1 class="page-title-fixed">Escolha um Jogo</h1>
+      <div class="header-actions">
+        <div id="user-actions"></div>
+        <div id="admin-actions"></div>
+      </div>
+    </div>
   </header>
 
   <!-- Modal de Perfil -->
@@ -24,14 +28,7 @@
     </div>
   </div>
 
-  <!-- Modal de Ranking (pode ser removido se for usar rankings.html em vez de modal) -->
-  <div id="ranking-modal" class="ranking-modal">
-    <h3>Ranking dos Jogos</h3>
-    <div id="ranking-list"></div>
-    <button id="fechar-ranking-btn">Fechar</button>
-  </div>
-
-  <main>
+  <div class="main-scroll-area">
     <div class="grid-jogos">
       <button class="jogo-btn" id="btn-velha">Jogo da Velha</button>
       <button class="jogo-btn" id="btn-ppt">Pedra Papel Tesoura</button>
@@ -42,23 +39,12 @@
       <button class="jogo-btn" id="btn-2048">2048</button>
       <button class="jogo-btn" id="btn-sudoku">Sudoku</button>
     </div>
-  </main>
+  </div>
 
   <footer>
     <button class="ver-estatisticas-btn" id="btn-estatisticas">Ver Estatísticas</button>
   </footer>
 
   <script src="../Scripts/main.js"></script>
-  <script>
-    // Redirecionamento do botão Ranking
-    document.addEventListener('DOMContentLoaded', function() {
-      var btnRanking = document.getElementById('btn-ranking');
-      if (btnRanking) {
-        btnRanking.onclick = function() {
-          window.location.href = 'rankings.html';
-        };
-      }
-    });
-  </script>
 </body>
 </html>

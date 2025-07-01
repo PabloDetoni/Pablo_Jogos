@@ -17,7 +17,7 @@ function renderAdminActions() {
   const adminActions = document.getElementById('admin-actions');
   const user = JSON.parse(sessionStorage.getItem('user'));
   if (user && user.isAdmin) {
-    adminActions.innerHTML = `<button id="btn-admin">Painel do Administrador</button>`;
+    adminActions.innerHTML = `<button id="btn-admin" class="admin-btn">Painel do Administrador</button>`;
   } else {
     adminActions.innerHTML = '';
   }
@@ -59,7 +59,7 @@ function abrirPerfil() {
 function renderProfileAdminBtn(user) {
   const wrap = document.getElementById('profile-admin-btn-wrap');
   if (user && user.isAdmin) {
-    wrap.innerHTML = `<button id="btn-admin-profile" style="background:#3f51b5;margin-top:10px;color:#fff;">Painel do Administrador</button>`;
+    wrap.innerHTML = `<button id="btn-admin-profile" class="admin-btn">Painel do Administrador</button>`;
     document.getElementById('btn-admin-profile').onclick = function() {
       window.location.href = 'admin.html';
     }
@@ -77,7 +77,7 @@ function setupLogoutBtn() {
   document.getElementById('logout-btn').addEventListener('click', function() {
     sessionStorage.clear();
     localStorage.clear();
-    location.reload();
+    window.location.href = 'login.html'; // Redireciona para a tela de login
   });
 }
 
@@ -101,19 +101,13 @@ function abrirRanking() {
   window.location.href = 'rankings.html';
 }
 
-// Modal antigo de ranking (removido: funcionalidade substituída pelo redirecionamento)
-// function abrirRanking() { ... }
-
-// Eventos dos botões do header para os modais e ranking
+// Eventos dos botões do header para ranking
 function setupHeaderBtns() {
   const btnRanking = document.getElementById('btn-ranking');
   if (btnRanking) {
     btnRanking.addEventListener('click', abrirRanking);
   }
-  const btnFecharRanking = document.getElementById('fechar-ranking-btn');
-  if (btnFecharRanking) {
-    btnFecharRanking.addEventListener('click', fecharRanking);
-  }
+  // Removido o botão fechar do ranking-modal pois modal foi removido
 }
 
 // Botões dos jogos
