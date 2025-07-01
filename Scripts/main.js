@@ -96,22 +96,24 @@ function setupProfileModalCloseOnClickOutside() {
   });
 }
 
-// Modal Ranking dos Jogos
+// Redireciona para a página de rankings.html ao clicar no botão Ranking dos Jogos
 function abrirRanking() {
-  document.getElementById('ranking-modal').classList.add('show');
-  // Exemplo para preencher o ranking
-  // Aqui você pode buscar do backend ou API
-  document.getElementById('ranking-list').innerHTML = "<em>Ranking ainda não implementado.</em>";
+  window.location.href = 'rankings.html';
 }
 
-function fecharRanking() {
-  document.getElementById('ranking-modal').classList.remove('show');
-}
+// Modal antigo de ranking (removido: funcionalidade substituída pelo redirecionamento)
+// function abrirRanking() { ... }
 
-// Eventos dos botões do header para os modais
+// Eventos dos botões do header para os modais e ranking
 function setupHeaderBtns() {
-  document.getElementById('btn-ranking').addEventListener('click', abrirRanking);
-  document.getElementById('fechar-ranking-btn').addEventListener('click', fecharRanking);
+  const btnRanking = document.getElementById('btn-ranking');
+  if (btnRanking) {
+    btnRanking.addEventListener('click', abrirRanking);
+  }
+  const btnFecharRanking = document.getElementById('fechar-ranking-btn');
+  if (btnFecharRanking) {
+    btnFecharRanking.addEventListener('click', fecharRanking);
+  }
 }
 
 // Botões dos jogos

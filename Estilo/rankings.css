@@ -1,0 +1,75 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f4f8;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  h1 {
+    margin-bottom: 30px;
+    font-size: 2.3rem;
+    color: #1e3a8a;
+    text-align: center;
+  }
+  
+  #rankings-container {
+    width: 100%;
+    max-width: 700px;
+  }
+  
+  .ranking-section {
+    background: #fff;
+    margin-bottom: 18px;
+    padding: 18px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px #0001;
+  }
+  
+  .ranking-section h2 {
+    margin-top: 0;
+    color: #3949ab;
+    font-size: 1.3rem;
+  }
+  
+  .ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  
+  .ranking-table th, .ranking-table td {
+    border-bottom: 1px solid #e0e0e0;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .ranking-table th {
+    background: #f3f4fa;
+    color: #222;
+  }
+  
+  .ranking-table tr:nth-child(even) {
+    background: #f7fafd;
+  }
+  
+  .botoes-footer button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    background: #4caf50;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .botoes-footer button:hover {
+    background-color: #43a047;
+    transform: translateY(-2px);
+  }

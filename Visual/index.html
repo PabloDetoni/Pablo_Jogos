@@ -24,7 +24,7 @@
     </div>
   </div>
 
-  <!-- Modal de Ranking -->
+  <!-- Modal de Ranking (pode ser removido se for usar rankings.html em vez de modal) -->
   <div id="ranking-modal" class="ranking-modal">
     <h3>Ranking dos Jogos</h3>
     <div id="ranking-list"></div>
@@ -49,5 +49,16 @@
   </footer>
 
   <script src="../Scripts/main.js"></script>
+  <script>
+    // Redirecionamento do botão Ranking
+    document.addEventListener('DOMContentLoaded', function() {
+      var btnRanking = document.getElementById('btn-ranking');
+      if (btnRanking) {
+        btnRanking.onclick = function() {
+          window.location.href = 'rankings.html';
+        };
+      }
+    });
+  </script>
 </body>
 </html>

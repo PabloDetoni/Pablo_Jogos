@@ -86,6 +86,9 @@ app.post('/login', (req, res) => {
   const { email, senha } = req.body;
   const user = users.find(u => u.email === email && u.senha === senha);
   if (user) {
+    if (user.status === 'bloqueado') {
+      return res.json({ success: false, message: 'Usuário bloqueado. Contate o administrador.' });
+    }
     user.ultimoLogin = nowStr();
     addLog(user.nome, 'Login', email);
     return res.json({ success: true, user: { nome: user.nome, email: user.email, isAdmin: !!user.isAdmin } });
@@ -203,10 +206,41 @@ app.delete('/admin/games/:nome', requireAdmin, (req, res) => {
 
 // --- RANKINGS --- //
 
-// Listar ranking de um jogo
+// Listar ranking de um jogo (admin)
 app.post('/admin/rankings', requireAdmin, (req, res) => {
   const { jogo } = req.body;
   res.json({ success: true, ranking: rankings[jogo] || [] });
+});
+
+// Listar ranking de um jogo (público)
+app.post('/rankings', (req, res) => {
+  const { jogo } = req.body;
+  res.json({ success: true, ranking: rankings[jogo] || [] });
+});
+
+// Resetar ranking de um jogo (admin)
+app.put('/admin/rankings/:jogo/reset', requireAdmin, (req, res) => {
+  const jogo = req.params.jogo;
+  if (rankings[jogo]) {
+    rankings[jogo] = [];
+    addLog(req.body.email, 'Resetou ranking', jogo);
+    return res.json({ success: true });
+  }
+  res.json({ success: false, message: 'Jogo não encontrado.' });
+});
+
+// Adicionar entrada ao ranking de um jogo (exemplo público)
+app.post('/rankings/:jogo/add', (req, res) => {
+  const jogo = req.params.jogo;
+  const { nome, pontuacao } = req.body;
+  if (!nome || typeof pontuacao !== 'number') {
+    return res.json({ success: false, message: 'Dados inválidos.' });
+  }
+  if (!rankings[jogo]) rankings[jogo] = [];
+  rankings[jogo].push({ nome, pontuacao });
+  // Ordena ranking (maior pontuação primeiro)
+  rankings[jogo].sort((a, b) => b.pontuacao - a.pontuacao);
+  res.json({ success: true });
 });
 
 // --- LOGS --- //
