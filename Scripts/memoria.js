@@ -48,6 +48,7 @@ function iniciarJogo() {
       alert('Tempo esgotado! Fim de jogo.');
       // INTEGRAÇÃO ESTATÍSTICAS - derrota por tempo
       if (typeof endGameSession === "function") endGameSession('memoria', 'derrota', dificuldadeAtual);
+      // INTEGRAÇÃO RANKING - derrota não envia score
       return;
     }
     timerSpan.textContent = formatTime(timerSec);
@@ -134,6 +135,8 @@ function checkForMatch() {
         alert(`Parabéns! Você venceu em ${formatTime(timerSec)} com ${errorsCount} erros.`);
         // INTEGRAÇÃO ESTATÍSTICAS - vitória
         if (typeof endGameSession === "function") endGameSession('memoria', 'vitoria', dificuldadeAtual);
+        // INTEGRAÇÃO RANKING - registra score ao vencer
+        registrarPontuacaoRankingMemoria();
       }, 500);
     } else {
       lockBoard = false;
@@ -174,4 +177,14 @@ function formatTime(seconds) {
   const mDisplay = String(mins).padStart(2, '0') + ':';
   const sDisplay = String(secs).padStart(2, '0');
   return hDisplay + mDisplay + sDisplay;
+}
+
+// INTEGRAÇÃO RANKING - registra score ao vencer
+function registrarPontuacaoRankingMemoria() {
+  if (typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
+    // Score: tempo em segundos. Se preferir, pode inverter para errosCount (quanto menos, melhor).
+    adicionarPontuacaoRanking('Memória', getNomeUsuario(), timerSec);
+    // Para ranking por erros (quanto menos, melhor): 
+    // adicionarPontuacaoRanking('Memória', getNomeUsuario(), errorsCount);
+  }
 }

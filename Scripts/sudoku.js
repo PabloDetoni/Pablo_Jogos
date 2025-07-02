@@ -70,6 +70,9 @@ const sudoku = (() => {
       endGameSession('sudoku', vitoria ? 'vitoria' : 'derrota', dificuldadeAtual);
     }
 
+    // INTEGRAÇÃO RANKING
+    registrarPontuacaoRankingSudoku(vitoria);
+
     const resultado = vitoria ? "Vitória!" : "Derrota!";
     const tempo = formatarTempo(timer);
     const estatisticas = `Tempo: ${tempo} | Erros: ${erros}`;
@@ -442,6 +445,17 @@ const sudoku = (() => {
     if (e.key==="h"||e.key==="H") usarDica();
     if (e.key==="Tab") { e.preventDefault(); selecionarCelula((celulaSelecionada+1)%81);}
   });
+
+  // --- INTEGRAÇÃO RANKING - registra score ao terminar o jogo ---
+  function registrarPontuacaoRankingSudoku(vitoria) {
+    // Só registra se vencer (padrão). Para registrar derrotas, remova o "vitoria" do if.
+    if (vitoria && typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
+      // Score: tempo de resolução (quanto MENOR melhor)
+      adicionarPontuacaoRanking('Sudoku', getNomeUsuario(), timer);
+      // Se preferir ranking por erros, troque timer por erros.
+      // adicionarPontuacaoRanking('Sudoku', getNomeUsuario(), erros);
+    }
+  }
 
   return {
     iniciarJogo,

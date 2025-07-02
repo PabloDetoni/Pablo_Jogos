@@ -108,6 +108,7 @@
             <thead>
               <tr>
                 <th>Nome do Jogo</th>
+                <th>Status</th>
                 <th>Total de Partidas</th>
                 <th>Vitórias</th>
                 <th>Derrotas</th>
@@ -128,21 +129,11 @@
         <div class="rankings-toolbar">
           <button id="btn-exportar-csv"><i class="fa fa-file-csv"></i> Exportar CSV</button>
           <select id="ranking-jogo-select"></select>
+          <!-- Os selects de tipo e dificuldade serão criados dinamicamente pelo JS -->
           <span id="rankings-loading" style="display:none; color:#888; margin-left:10px;">Carregando...</span>
         </div>
         <div class="tabela-scroll">
-          <table class="rankings-tabela">
-            <thead>
-              <tr>
-                <th>Posição</th>
-                <th>Nome</th>
-                <th>Pontuação</th>
-              </tr>
-            </thead>
-            <tbody id="rankings-lista">
-              <!-- Linhas dinâmicas -->
-            </tbody>
-          </table>
+          <!-- A tabela de rankings será gerada dinamicamente pelo JS -->
         </div>
         <div id="rankings-erro" style="color:red; margin-top:8px; display:none;"></div>
       </section>

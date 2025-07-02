@@ -274,10 +274,24 @@ function endGame(vencedor) {
     endGameSession('campo_minado', vencedor ? 'vitoria' : 'derrota', dificuldadeAtual);
   }
 
+  // ------- INTEGRAR RANKING -------
+  registrarPontuacaoRankingCampoMinado(vencedor);
+
   setTimeout(() => {
     alert(vencedor ? 'Parabéns! Você venceu!' : 'Você perdeu!');
     document.getElementById('btn-reiniciar').style.display = 'block';
   }, 200);
+}
+
+function registrarPontuacaoRankingCampoMinado(vitoria) {
+  // Só registra se venceu, para não poluir ranking com derrotas
+  if (vitoria && typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
+    // Score = menor tempo (quanto menor, melhor!), ranking pode ser por tempo
+    // Se quiser ranking por tempo, use timerSec (tempo em segundos)
+    // Se quiser ranking por vitórias, pode incrementar um contador simples
+    // Aqui vamos registrar o tempo como "pontuação"
+    adicionarPontuacaoRanking('Campo Minado', getNomeUsuario(), timerSec);
+  }
 }
 
 function formatTime(seconds) {

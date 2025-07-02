@@ -97,6 +97,7 @@ function mover(direcao) {
         mostrarMensagemFinal("Fim de jogo!");
         // INTEGRAÇÃO ESTATÍSTICAS
         if (typeof endGameSession === "function") endGameSession('2048', score);
+        registrarPontuacaoRanking2048();
         gameOver = true;
       }
     } else {
@@ -104,6 +105,7 @@ function mover(direcao) {
       mostrarMensagemFinal("Fim de jogo!");
       // INTEGRAÇÃO ESTATÍSTICAS
       if (typeof endGameSession === "function") endGameSession('2048', score);
+      registrarPontuacaoRanking2048();
       gameOver = true;
     }
   } else {
@@ -113,6 +115,7 @@ function mover(direcao) {
       mostrarMensagemFinal("Fim de jogo!");
       // INTEGRAÇÃO ESTATÍSTICAS
       if (typeof endGameSession === "function") endGameSession('2048', score);
+      registrarPontuacaoRanking2048();
       gameOver = true;
     }
   }
@@ -143,6 +146,13 @@ function mostrarMensagemFinal(msg) {
 
 function reiniciarJogo() {
   iniciarJogo2048();
+}
+
+// Função para registrar a pontuação no ranking ao final do jogo
+function registrarPontuacaoRanking2048() {
+  if (typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
+    adicionarPontuacaoRanking('2048', getNomeUsuario(), score);
+  }
 }
 
 // Eventos de teclado - todas direções funcionam e estão mapeadas corretamente

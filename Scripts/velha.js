@@ -1,5 +1,6 @@
 // velha.js
 // Dependência: stats.js (startGameSession, endGameSession)
+// Integração: rankings.js (adicionarPontuacaoRanking, getNomeUsuario)
 
 let jogador = 'X';
 let tabuleiro = Array(9).fill('');
@@ -176,8 +177,14 @@ function verificarVencedor() {
       jogoEncerrado = true;
       const vencedor = tabuleiro[a];
       atualizarMensagem(`Jogador ${vencedor} venceu!`);
+
+      // INTEGRAÇÃO ESTATÍSTICAS
       if (vencedor === 'X') endGameSession('velha', 'vitoria');
       else endGameSession('velha', 'derrota');
+
+      // INTEGRAÇÃO RANKING
+      registrarPontuacaoRankingVelha(vencedor);
+
       return;
     }
   }
@@ -185,6 +192,21 @@ function verificarVencedor() {
     jogoEncerrado = true;
     atualizarMensagem('Empate!');
     endGameSession('velha', 'empate');
+
+    // INTEGRAÇÃO RANKING empate
+    registrarPontuacaoRankingVelha('empate');
+  }
+}
+
+// Função para registrar o resultado no ranking ao final do jogo
+function registrarPontuacaoRankingVelha(resultado) {
+  if (typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
+    // Score: 1 para vitória do jogador, 0 para empate, -1 para derrota (ajuste se quiser outro critério)
+    let score = 0;
+    if (resultado === 'X') score = 1;
+    else if (resultado === 'empate') score = 0;
+    else score = -1;
+    adicionarPontuacaoRanking('Jogo da Velha', getNomeUsuario(), score);
   }
 }
 

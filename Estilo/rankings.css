@@ -1,75 +1,151 @@
 body {
-    font-family: Arial, sans-serif;
-    background: #f0f4f8;
-    color: #333;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  h1 {
-    margin-bottom: 30px;
-    font-size: 2.3rem;
-    color: #1e3a8a;
-    text-align: center;
-  }
-  
+  font-family: Arial, sans-serif;
+  background: #f0f4f8;
+  color: #333;
+  margin: 0;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  margin-bottom: 30px;
+  font-size: 2.3rem;
+  color: #1e3a8a;
+  text-align: center;
+}
+
+#rankings-container {
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Filtros de seleção */
+#jogo-select,
+#tipo-ranking {
+  padding: 7px 14px;
+  font-size: 1rem;
+  border-radius: 5px;
+  border: 1px solid #b0b8cc;
+  margin: 0 6px;
+  background: #f8fafc;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.2s;
+}
+#jogo-select:focus,
+#tipo-ranking:focus {
+  border-color: #3949ab;
+}
+
+/* Labels */
+label {
+  font-size: 1.05rem;
+  color: #1e293b;
+  margin-right: 3px;
+}
+
+/* Agrupamento de filtros */
+#dificuldade-group {
+  margin: 0 8px;
+}
+
+/* Título de dificuldade */
+.dificuldade-title {
+  margin: 22px 0 8px 0;
+  color: #2e5ca4;
+  font-size: 1.08rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+/* Bloco de cada seção/tabela de ranking */
+.ranking-section {
+  background: #fff;
+  margin-bottom: 18px;
+  padding: 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px #0001;
+}
+
+.ranking-section h2 {
+  margin-top: 0;
+  color: #3949ab;
+  font-size: 1.3rem;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.ranking-table th, .ranking-table td {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 8px;
+  text-align: left;
+}
+
+.ranking-table th {
+  background: #f3f4fa;
+  color: #222;
+}
+
+.ranking-table tr:nth-child(even) {
+  background: #f7fafd;
+}
+
+.ranking-table tr.destacado,
+.ranking-table tr.meu-ranking {
+  background: #c8e6c9 !important;
+  font-weight: bold;
+}
+
+.ranking-table td.erros {
+  color: #c62828;
+  font-weight: bold;
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
   #rankings-container {
-    width: 100%;
-    max-width: 700px;
+    max-width: 98vw;
   }
-  
   .ranking-section {
-    background: #fff;
-    margin-bottom: 18px;
-    padding: 18px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px #0001;
+    padding: 10px 2vw;
   }
-  
-  .ranking-section h2 {
-    margin-top: 0;
-    color: #3949ab;
-    font-size: 1.3rem;
+  .ranking-table th,
+  .ranking-table td {
+    padding: 6px 2px;
+    font-size: 0.98rem;
   }
-  
-  .ranking-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
+  h1 {
+    font-size: 1.6rem;
   }
-  
-  .ranking-table th, .ranking-table td {
-    border-bottom: 1px solid #e0e0e0;
-    padding: 8px;
-    text-align: left;
-  }
-  
-  .ranking-table th {
-    background: #f3f4fa;
-    color: #222;
-  }
-  
-  .ranking-table tr:nth-child(even) {
-    background: #f7fafd;
-  }
-  
-  .botoes-footer button {
-    margin: 0 10px;
-    padding: 10px 20px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 6px;
-    background: #4caf50;
-    color: #fff;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  .botoes-footer button:hover {
-    background-color: #43a047;
-    transform: translateY(-2px);
-  }
+}
+
+/* Footer */
+.botoes-footer {
+  margin-top: 30px;
+  width: 100%;
+  text-align: center;
+}
+
+.botoes-footer button {
+  margin: 0 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #4caf50;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.botoes-footer button:hover {
+  background-color: #43a047;
+  transform: translateY(-2px);
+}

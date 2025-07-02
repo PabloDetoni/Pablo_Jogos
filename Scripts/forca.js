@@ -1,5 +1,6 @@
 // forca.js
 // Dependência: stats.js (startGameSession, endGameSession)
+// Integração: rankings.js (adicionarPontuacaoRanking, getNomeUsuario)
 
 let bancoPalavras = {};
 let palavra = "";
@@ -8,6 +9,7 @@ let dica = "";
 let resposta = [];
 let letrasUsadas = [];
 let tentativasRestantes = 6;
+let venceuPartida = false;
 
 // Carrega banco de palavras a partir do CSV
 async function carregarBancoPalavras() {
@@ -53,6 +55,7 @@ function iniciarJogo() {
   resposta = Array(palavra.length).fill("_");
   letrasUsadas = [];
   tentativasRestantes = 6;
+  venceuPartida = false;
 
   atualizarTela();
   atualizarBoneco();
@@ -116,12 +119,16 @@ function verificarEstado() {
     resEl.textContent = "Parabéns! Você venceu! 🎉";
     document.body.classList.add("vitoria");
     desativarEntrada();
+    venceuPartida = true;
     endGameSession('forca', 'vitoria');
+    registrarPontuacaoRankingForca();
   } else if (tentativasRestantes <= 0) {
     resEl.textContent = `Você perdeu! A palavra era "${palavra}". 😞`;
     document.body.classList.add("derrota");
     desativarEntrada();
+    venceuPartida = false;
     endGameSession('forca', 'derrota');
+    registrarPontuacaoRankingForca();
   }
 }
 
@@ -144,4 +151,15 @@ function reiniciarJogo() {
   document.getElementById("jogo").style.display = "none";
   document.getElementById("menu-inicial").style.display = "block";
   document.body.classList.remove("vitoria","derrota");
+}
+
+// Função para registrar pontuação no ranking ao final do jogo
+function registrarPontuacaoRankingForca() {
+  // Só registra se venceu (padrão). Para registrar derrotas, remova o "venceuPartida" do if.
+  if (venceuPartida && typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
+    // Score pode ser a quantidade de tentativas RESTANTES (ou seja, quanto mais sobrar, melhor)
+    // Ou pode ser o número de letras acertadas, ou tempo (se adicionar timer)
+    // Aqui vamos usar tentativasRestantes como score
+    adicionarPontuacaoRanking('Forca', getNomeUsuario(), tentativasRestantes);
+  }
 }

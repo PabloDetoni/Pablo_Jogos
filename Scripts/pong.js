@@ -195,11 +195,16 @@ function desenhar() {
 
 function checarVencedor() {
   if (jogoEncerrado) return;
-  if (pontos1 >= 1 && pontos1 - pontos2 >= 1) {
+  // Altere a regra de vitória conforme seu projeto (exemplo: 10 pontos, diferença de 2)
+  if (pontos1 >= 10 && pontos1 - pontos2 >= 2) {
     jogoEncerrado = true;
     clearInterval(gameInterval);
     if (intervaloTempoPong) clearInterval(intervaloTempoPong);
     if (typeof endGameSession === "function") endGameSession('pong', 'vitoria', dificuldadeAtual, tempoPong);
+
+    // INTEGRAÇÃO RANKING - envia score ao vencer
+    registrarPontuacaoRankingPong(true);
+
     setTimeout(() => {
       alert(modoIA ? "Você venceu!" : "Jogador 1 venceu!");
       document.getElementById('menu-inicial').style.display = 'block';
@@ -210,11 +215,24 @@ function checarVencedor() {
     clearInterval(gameInterval);
     if (intervaloTempoPong) clearInterval(intervaloTempoPong);
     if (typeof endGameSession === "function") endGameSession('pong', 'derrota', dificuldadeAtual, tempoPong);
+
+    // INTEGRAÇÃO RANKING - envia score ao perder (opcional, aqui NÃO envia)
+    registrarPontuacaoRankingPong(false);
+
     setTimeout(() => {
       alert(modoIA ? "IA venceu!" : "Jogador 2 venceu!");
       document.getElementById('menu-inicial').style.display = 'block';
       document.getElementById('jogo').style.display = 'none';
     }, 250);
+  }
+}
+
+// INTEGRAÇÃO RANKING - envia score ao terminar jogo
+function registrarPontuacaoRankingPong(vitoria) {
+  // Só registra se vencer (padrão). Para registrar derrotas, remova o "vitoria" do if.
+  if (vitoria && typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
+    // Score: tempo da partida. Se preferir, pode usar diferença de pontos, ou pontos1, etc.
+    adicionarPontuacaoRanking('Pong', getNomeUsuario(), tempoPong);
   }
 }
 

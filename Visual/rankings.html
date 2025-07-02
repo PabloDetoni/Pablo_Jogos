@@ -8,14 +8,18 @@
 </head>
 <body>
   <h1>Ranking dos Jogos</h1>
+  <div style="margin-bottom:20px; text-align:center;">
+    <label for="jogo-select"><strong>Jogo:</strong></label>
+    <select id="jogo-select"></select>
+    <label for="tipo-ranking" style="margin-left: 10px;"><strong>Tipo:</strong></label>
+    <select id="tipo-ranking"></select>
+  </div>
   <div id="rankings-container">
     <!-- Rankings vão aparecer aqui dinamicamente -->
   </div>
-
   <div class="botoes-footer" style="text-align:center; margin-top:20px;">
     <button onclick="window.location.href='index.html'">Voltar ao Início</button>
   </div>
-
   <script src="../Scripts/rankings.js"></script>
 </body>
 </html>
