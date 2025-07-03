@@ -1,4 +1,5 @@
 // campo_minado.js
+// Integrado ao ranking avançado via API
 
 let board = [];
 let rows = 0;
@@ -11,39 +12,29 @@ let gameOver = false;
 let firstClick = true;
 let dificuldadeAtual = "facil"; // INTEGRAÇÃO ESTATÍSTICAS
 
-// Vincula evento ao carregar DOM
 window.addEventListener('DOMContentLoaded', () => {
   const btnIniciar = document.getElementById('btn-iniciar');
   const btnReiniciar = document.getElementById('btn-reiniciar');
 
   btnIniciar.addEventListener('click', () => {
-    // Esconde toda a tela inicial (incluindo botões de rodapé)
     document.getElementById('tela-inicial').style.display = 'none';
-
-    // Exibe painel superior e área do jogo
     document.getElementById('painel-topo').style.display = 'flex';
     document.getElementById('jogo').style.display = 'block';
-
     iniciarJogo();
   });
 
   btnReiniciar.addEventListener('click', () => {
-    // Ao reiniciar, esconde painel e área de jogo...
     document.getElementById('painel-topo').style.display = 'none';
     document.getElementById('jogo').style.display = 'none';
-
-    // ...e exibe novamente toda a tela inicial
     document.getElementById('tela-inicial').style.display = 'flex';
-
     clearInterval(timerInterval);
   });
 });
 
 function iniciarJogo() {
   const dificuldade = document.getElementById('dificuldade').value;
-  dificuldadeAtual = dificuldade; // INTEGRAÇÃO ESTATÍSTICAS
+  dificuldadeAtual = dificuldade;
 
-  // INTEGRAÇÃO ESTATÍSTICAS
   if (typeof startGameSession === "function") startGameSession('campo_minado');
 
   const tempoSpan = document.getElementById('tempo');
@@ -269,12 +260,10 @@ function endGame(vencedor) {
   clearInterval(timerInterval);
   revealAllMines();
 
-  // INTEGRAÇÃO ESTATÍSTICAS
   if (typeof endGameSession === "function") {
     endGameSession('campo_minado', vencedor ? 'vitoria' : 'derrota', dificuldadeAtual);
   }
 
-  // ------- INTEGRAR RANKING -------
   registrarPontuacaoRankingCampoMinado(vencedor);
 
   setTimeout(() => {
@@ -283,14 +272,50 @@ function endGame(vencedor) {
   }, 200);
 }
 
-function registrarPontuacaoRankingCampoMinado(vitoria) {
-  // Só registra se venceu, para não poluir ranking com derrotas
-  if (vitoria && typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
-    // Score = menor tempo (quanto menor, melhor!), ranking pode ser por tempo
-    // Se quiser ranking por tempo, use timerSec (tempo em segundos)
-    // Se quiser ranking por vitórias, pode incrementar um contador simples
-    // Aqui vamos registrar o tempo como "pontuação"
-    adicionarPontuacaoRanking('Campo Minado', getNomeUsuario(), timerSec);
+// INTEGRAÇÃO RANKING AVANÇADO
+async function registrarPontuacaoRankingCampoMinado(vitoria) {
+  if (vitoria) {
+    const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
+    let dificuldadeLabel = 
+      dificuldadeAtual === 'facil' ? 'Fácil' : 
+      dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
+    // 1. Ranking geral (mais vitórias totais)
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Campo Minado",
+        tipo: "maior_vitoria_total",
+        dificuldade: "",
+        nome: user.nome,
+        valor: 1
+      })
+    });
+    // 2. Ranking por dificuldade (mais vitórias por dificuldade)
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Campo Minado",
+        tipo: "maior_vitoria_dificuldade",
+        dificuldade: dificuldadeLabel,
+        nome: user.nome,
+        valor: 1
+      })
+    });
+    // 3. Ranking menor tempo por dificuldade
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Campo Minado",
+        tipo: "menor_tempo",
+        dificuldade: dificuldadeLabel,
+        nome: user.nome,
+        tempo: timerSec,
+        valor: 1
+      })
+    });
   }
 }
 

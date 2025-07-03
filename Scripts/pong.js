@@ -1,4 +1,5 @@
 // pong.js
+// Integrado ao ranking avançado via API
 
 let modoIA = false;
 let dificuldade = 'facil';
@@ -20,7 +21,6 @@ const dificuldadeIA = {
   dificil: 6.5
 };
 
-// Estatísticas: tempo de partida
 let tempoPong = 0;
 let intervaloTempoPong = null;
 
@@ -195,16 +195,12 @@ function desenhar() {
 
 function checarVencedor() {
   if (jogoEncerrado) return;
-  // Altere a regra de vitória conforme seu projeto (exemplo: 10 pontos, diferença de 2)
   if (pontos1 >= 10 && pontos1 - pontos2 >= 2) {
     jogoEncerrado = true;
     clearInterval(gameInterval);
     if (intervaloTempoPong) clearInterval(intervaloTempoPong);
     if (typeof endGameSession === "function") endGameSession('pong', 'vitoria', dificuldadeAtual, tempoPong);
-
-    // INTEGRAÇÃO RANKING - envia score ao vencer
     registrarPontuacaoRankingPong(true);
-
     setTimeout(() => {
       alert(modoIA ? "Você venceu!" : "Jogador 1 venceu!");
       document.getElementById('menu-inicial').style.display = 'block';
@@ -215,10 +211,7 @@ function checarVencedor() {
     clearInterval(gameInterval);
     if (intervaloTempoPong) clearInterval(intervaloTempoPong);
     if (typeof endGameSession === "function") endGameSession('pong', 'derrota', dificuldadeAtual, tempoPong);
-
-    // INTEGRAÇÃO RANKING - envia score ao perder (opcional, aqui NÃO envia)
     registrarPontuacaoRankingPong(false);
-
     setTimeout(() => {
       alert(modoIA ? "IA venceu!" : "Jogador 2 venceu!");
       document.getElementById('menu-inicial').style.display = 'block';
@@ -228,11 +221,51 @@ function checarVencedor() {
 }
 
 // INTEGRAÇÃO RANKING - envia score ao terminar jogo
-function registrarPontuacaoRankingPong(vitoria) {
-  // Só registra se vencer (padrão). Para registrar derrotas, remova o "vitoria" do if.
-  if (vitoria && typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
-    // Score: tempo da partida. Se preferir, pode usar diferença de pontos, ou pontos1, etc.
-    adicionarPontuacaoRanking('Pong', getNomeUsuario(), tempoPong);
+async function registrarPontuacaoRankingPong(vitoria) {
+  const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
+  let dificuldadeLabel = 
+    dificuldadeAtual === 'facil' ? 'Fácil' : 
+    dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
+  if (vitoria) {
+    // 1. Ranking geral (mais vitórias totais)
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Pong",
+        tipo: "maior_vitoria_total",
+        dificuldade: "",
+        nome: user.nome,
+        valor: 1
+      })
+    });
+
+    // 2. Ranking por dificuldade (mais vitórias por dificuldade)
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Pong",
+        tipo: "maior_vitoria_dificuldade",
+        dificuldade: dificuldadeLabel,
+        nome: user.nome,
+        valor: 1
+      })
+    });
+
+    // 3. Ranking menor tempo por dificuldade
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Pong",
+        tipo: "menor_tempo",
+        dificuldade: dificuldadeLabel,
+        nome: user.nome,
+        tempo: tempoPong,
+        valor: 1 // valor 1 indica vitória, ranking é por tempo
+      })
+    });
   }
 }
 

@@ -31,7 +31,10 @@
           <i class="fa fa-user-shield"></i>
           <span id="admin-nome"></span>
         </div>
-        <button id="admin-logout" title="Sair"><i class="fa fa-sign-out-alt"></i> Sair</button>
+        <div class="admin-header-buttons">
+          <button id="admin-home" title="Início"><i class="fa fa-home"></i> Início</button>
+          <button id="admin-logout" title="Sair"><i class="fa fa-sign-out-alt"></i> Sair</button>
+        </div>
       </header>
 
       <section id="section-dashboard" class="admin-section">
@@ -100,7 +103,7 @@
       <section id="section-jogos" class="admin-section" style="display:none;">
         <h2>Gestão de Jogos</h2>
         <div class="jogos-toolbar">
-          <button id="btn-add-jogo"><i class="fa fa-plus"></i> Adicionar Jogo</button>
+          <!-- Botão de adicionar jogo removido -->
           <span id="jogos-loading" style="display:none; color:#888; margin-left:10px;">Carregando...</span>
         </div>
         <div class="tabela-scroll">
@@ -190,5 +193,16 @@
   </div>
 
   <script src="../Scripts/admin.js"></script>
+  <script>
+    // Adiciona funcionalidade ao botão "Início"
+    document.addEventListener('DOMContentLoaded', function() {
+      var btnHome = document.getElementById('admin-home');
+      if (btnHome) {
+        btnHome.onclick = function() {
+          window.location.href = 'index.html';
+        }
+      }
+    });
+  </script>
 </body>
 </html>

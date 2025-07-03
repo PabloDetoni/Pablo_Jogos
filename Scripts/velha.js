@@ -1,6 +1,5 @@
 // velha.js
-// Dependência: stats.js (startGameSession, endGameSession)
-// Integração: rankings.js (adicionarPontuacaoRanking, getNomeUsuario)
+// Integrado ao ranking avançado via API
 
 let jogador = 'X';
 let tabuleiro = Array(9).fill('');
@@ -24,7 +23,7 @@ function criarTabuleiro() {
 // Inicia o jogo (chamado ao clicar em Iniciar)
 function iniciarJogo() {
   // Estatísticas
-  startGameSession('velha');
+  if (typeof startGameSession === "function") startGameSession('velha');
 
   const modo = document.getElementById('modoJogo').value;
   modoIA = (modo === 'ia');
@@ -178,36 +177,81 @@ function verificarVencedor() {
       const vencedor = tabuleiro[a];
       atualizarMensagem(`Jogador ${vencedor} venceu!`);
 
-      // INTEGRAÇÃO ESTATÍSTICAS
-      if (vencedor === 'X') endGameSession('velha', 'vitoria');
-      else endGameSession('velha', 'derrota');
+      if (typeof endGameSession === "function") {
+        if (vencedor === 'X') endGameSession('velha', 'vitoria');
+        else endGameSession('velha', 'derrota');
+      }
 
-      // INTEGRAÇÃO RANKING
       registrarPontuacaoRankingVelha(vencedor);
-
       return;
     }
   }
   if (!tabuleiro.includes('')) {
     jogoEncerrado = true;
     atualizarMensagem('Empate!');
-    endGameSession('velha', 'empate');
-
-    // INTEGRAÇÃO RANKING empate
+    if (typeof endGameSession === "function") endGameSession('velha', 'empate');
     registrarPontuacaoRankingVelha('empate');
   }
 }
 
-// Função para registrar o resultado no ranking ao final do jogo
-function registrarPontuacaoRankingVelha(resultado) {
-  if (typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
-    // Score: 1 para vitória do jogador, 0 para empate, -1 para derrota (ajuste se quiser outro critério)
-    let score = 0;
-    if (resultado === 'X') score = 1;
-    else if (resultado === 'empate') score = 0;
-    else score = -1;
-    adicionarPontuacaoRanking('Jogo da Velha', getNomeUsuario(), score);
+// Função para registrar no ranking avançado (três rankings distintos)
+async function registrarPontuacaoRankingVelha(resultado) {
+  const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
+  let dificuldadeLabel = dificuldade === 'facil' ? 'Fácil' : 'Médio';
+  let valor = resultado === 'X' ? 1 : 0; // só conta vitória
+
+  // 1. Ranking geral (mais vitórias no Jogo da Velha)
+  if (resultado === 'X') {
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Jogo da Velha",
+        tipo: "maior_vitoria_total",
+        dificuldade: "",
+        nome: user.nome,
+        valor: 1
+      })
+    });
   }
+
+  // 2. Ranking por dificuldade (mais vitórias por dificuldade)
+  if (resultado === 'X') {
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Jogo da Velha",
+        tipo: "maior_vitoria_dificuldade",
+        dificuldade: dificuldadeLabel,
+        nome: user.nome,
+        valor: 1
+      })
+    });
+  }
+
+  // 3. Ranking por sequência de vitórias (consecutivas) por dificuldade
+  // Você pode usar localStorage/sessionStorage para armazenar a sequência localmente
+  // Exemplo de controle local:
+  let seqKey = `velha_seq_vitoria_${user.nome}_${dificuldadeLabel}`;
+  let seqAtual = Number(localStorage.getItem(seqKey)) || 0;
+  if (resultado === 'X') {
+    seqAtual += 1;
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Jogo da Velha",
+        tipo: "maior_sequencia_vitoria",
+        dificuldade: dificuldadeLabel,
+        nome: user.nome,
+        valor: seqAtual
+      })
+    });
+  } else {
+    seqAtual = 0; // zera a sequência ao perder ou empatar
+  }
+  localStorage.setItem(seqKey, seqAtual);
 }
 
 // Reinicia o jogo

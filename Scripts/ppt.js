@@ -1,10 +1,9 @@
 // ppt.js
-// Dependência: stats.js (startGameSession, endGameSession)
-// Integração: rankings.js (adicionarPontuacaoRanking, getNomeUsuario)
+// Integrado ao ranking avançado via API
 
 function jogar(jogador) {
   // Inicia sessão de estatísticas
-  startGameSession('ppt');
+  if (typeof startGameSession === "function") startGameSession('ppt');
 
   // Desabilita botões de escolha até o resultado
   const botoes = document.querySelectorAll('.botoes-ppt button');
@@ -50,15 +49,15 @@ function jogar(jogador) {
 
     // Registra estatísticas
     if (classe === 'vitoria') {
-      endGameSession('ppt', 'vitoria');
+      if (typeof endGameSession === "function") endGameSession('ppt', 'vitoria');
       registrarPontuacaoRankingPPT('vitoria');
     }
     else if (classe === 'derrota') {
-      endGameSession('ppt', 'derrota');
+      if (typeof endGameSession === "function") endGameSession('ppt', 'derrota');
       registrarPontuacaoRankingPPT('derrota');
     }
     else if (classe === 'empate') {
-      endGameSession('ppt', 'empate');
+      if (typeof endGameSession === "function") endGameSession('ppt', 'empate');
       registrarPontuacaoRankingPPT('empate');
     }
 
@@ -68,13 +67,43 @@ function jogar(jogador) {
 }
 
 // INTEGRAÇÃO RANKING - registra score ao final de cada partida
-function registrarPontuacaoRankingPPT(resultado) {
-  if (typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
-    // Score: 1 para vitória, 0 para empate, -1 para derrota (ajuste se quiser ranking só de vitórias)
-    let score = 0;
-    if (resultado === 'vitoria') score = 1;
-    else if (resultado === 'empate') score = 0;
-    else if (resultado === 'derrota') score = -1;
-    adicionarPontuacaoRanking('PPT', getNomeUsuario(), score);
+async function registrarPontuacaoRankingPPT(resultado) {
+  const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
+
+  // 1. Ranking geral (mais vitórias totais em PPT)
+  if (resultado === 'vitoria') {
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "PPT",
+        tipo: "maior_vitoria_total",
+        dificuldade: "",
+        nome: user.nome,
+        valor: 1
+      })
+    });
   }
+
+  // 2. Ranking por sequência de vitórias consecutivas
+  // Controle local da sequência
+  let seqKey = `ppt_seq_vitoria_${user.nome}`;
+  let seqAtual = Number(localStorage.getItem(seqKey)) || 0;
+  if (resultado === 'vitoria') {
+    seqAtual += 1;
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "PPT",
+        tipo: "maior_sequencia_vitoria",
+        dificuldade: "",
+        nome: user.nome,
+        valor: seqAtual
+      })
+    });
+  } else {
+    seqAtual = 0;
+  }
+  localStorage.setItem(seqKey, seqAtual);
 }

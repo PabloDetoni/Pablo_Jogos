@@ -1,4 +1,5 @@
 // 2048.js
+// Integrado ao ranking avançado via API
 
 const tamanho = 4;
 let tabuleiro;
@@ -7,7 +8,7 @@ let gameOver = false;
 let novaCelula = null; // Guardar a última célula criada para animar
 
 let bloqueado = false; // Bloqueio para evitar spam
-const TEMPO_COOLDOWN = 500; // ms
+const TEMPO_COOLDOWN = 0; // ms
 
 function iniciarJogo2048() {
   tabuleiro = Array.from({ length: tamanho }, () => Array(tamanho).fill(0));
@@ -18,7 +19,6 @@ function iniciarJogo2048() {
   adicionarNovoNumero();
   adicionarNovoNumero();
   desenharTabuleiro();
-  // INTEGRAÇÃO ESTATÍSTICAS
   if (typeof startGameSession === "function") startGameSession('2048');
 }
 
@@ -32,7 +32,6 @@ function desenharTabuleiro() {
       celula.className = 'celula-2048';
       celula.textContent = valor > 0 ? valor : '';
       celula.setAttribute('data-valor', valor);
-      // Adiciona classe "nova" se a célula acabou de ser criada
       if (novaCelula && novaCelula.i === i && novaCelula.j === j) {
         celula.classList.add('nova');
       }
@@ -65,7 +64,6 @@ function mover(direcao) {
 
   let anterior = JSON.stringify(tabuleiro);
 
-  // Rotaciona para mover sempre para a esquerda
   for (let k = 0; k < direcao; k++) tabuleiro = girarTabuleiro(tabuleiro);
 
   for (let i = 0; i < tamanho; i++) {
@@ -82,20 +80,16 @@ function mover(direcao) {
     tabuleiro[i] = linha;
   }
 
-  // Rotaciona de volta
   for (let k = direcao; k < 4; k++) tabuleiro = girarTabuleiro(tabuleiro);
 
   if (JSON.stringify(tabuleiro) !== anterior) {
-    // Só adiciona novo número SE ainda há movimentos após a jogada!
     if (podeMover()) {
       adicionarNovoNumero();
       desenharTabuleiro();
       atualizarScore();
-      // Agora verifica novamente: se após adicionar não tem mais movimentos, avisa fim de jogo
       if (!podeMover()) {
         desenharTabuleiro();
         mostrarMensagemFinal("Fim de jogo!");
-        // INTEGRAÇÃO ESTATÍSTICAS
         if (typeof endGameSession === "function") endGameSession('2048', score);
         registrarPontuacaoRanking2048();
         gameOver = true;
@@ -103,17 +97,14 @@ function mover(direcao) {
     } else {
       desenharTabuleiro();
       mostrarMensagemFinal("Fim de jogo!");
-      // INTEGRAÇÃO ESTATÍSTICAS
       if (typeof endGameSession === "function") endGameSession('2048', score);
       registrarPontuacaoRanking2048();
       gameOver = true;
     }
   } else {
     desenharTabuleiro();
-    // Mesmo se nada mudou, checa se tem movimentos possíveis ainda
     if (!podeMover()) {
       mostrarMensagemFinal("Fim de jogo!");
-      // INTEGRAÇÃO ESTATÍSTICAS
       if (typeof endGameSession === "function") endGameSession('2048', score);
       registrarPontuacaoRanking2048();
       gameOver = true;
@@ -122,16 +113,13 @@ function mover(direcao) {
 }
 
 function girarTabuleiro(matriz) {
-  // Rotaciona 90 graus para a direita
   return matriz[0].map((_, i) => matriz.map(row => row[i]).reverse());
 }
 
 function podeMover() {
-  // Tem espaço vazio?
   for (let i = 0; i < tamanho; i++)
     for (let j = 0; j < tamanho; j++)
       if (tabuleiro[i][j] === 0) return true;
-  // Tem movimentos possíveis?
   for (let i = 0; i < tamanho; i++)
     for (let j = 0; j < tamanho; j++) {
       if (i < tamanho - 1 && tabuleiro[i][j] === tabuleiro[i + 1][j]) return true;
@@ -149,13 +137,23 @@ function reiniciarJogo() {
 }
 
 // Função para registrar a pontuação no ranking ao final do jogo
-function registrarPontuacaoRanking2048() {
-  if (typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
-    adicionarPontuacaoRanking('2048', getNomeUsuario(), score);
-  }
+async function registrarPontuacaoRanking2048() {
+  const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
+  let tipo = "maior_pontuacao";
+  let valor = score;
+  await fetch("http://localhost:3001/rankings/advanced/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jogo: "2048",
+      tipo,
+      dificuldade: "",
+      nome: user.nome,
+      valor
+    })
+  });
 }
 
-// Eventos de teclado - todas direções funcionam e estão mapeadas corretamente
 document.addEventListener('keydown', function(e) {
   if (gameOver) return;
   if (bloqueado) return;
@@ -176,5 +174,4 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Inicializa ao carregar a página
 document.addEventListener('DOMContentLoaded', iniciarJogo2048);

@@ -40,7 +40,6 @@ const sudoku = (() => {
     dicasUsadas = 0;
     jogoEncerrado = false;
     timer = 0;
-    // Esconde o botão Novo Jogo no início
     document.getElementById('novo-jogo-footer').style.display = "none";
     atualizaErros();
     atualizaDicas();
@@ -57,7 +56,6 @@ const sudoku = (() => {
     btnRascunho().setAttribute("aria-pressed", "false");
     btnRascunho().classList.remove('ativo');
     document.body.classList.remove('vitoria', 'derrota');
-    // INTEGRAÇÃO ESTATÍSTICAS
     if (typeof startGameSession === "function") startGameSession('sudoku');
   }
 
@@ -65,12 +63,10 @@ const sudoku = (() => {
     jogoEncerrado = true;
     clearInterval(cronometroInterval);
 
-    // INTEGRAÇÃO ESTATÍSTICAS
     if (typeof endGameSession === "function") {
       endGameSession('sudoku', vitoria ? 'vitoria' : 'derrota', dificuldadeAtual);
     }
 
-    // INTEGRAÇÃO RANKING
     registrarPontuacaoRankingSudoku(vitoria);
 
     const resultado = vitoria ? "Vitória!" : "Derrota!";
@@ -79,11 +75,9 @@ const sudoku = (() => {
 
     alert(`${resultado}\n${estatisticas}`);
 
-    // Mostra o botão Novo Jogo
     document.getElementById('novo-jogo-footer').style.display = "flex";
   }
 
-  // --- Geração de Sudoku (Backtracking + remoção randomica) ---
   function gerarSudoku(numDicas) {
     let tab = Array(TAM).fill(0).map(()=>Array(TAM).fill(0));
     preencherSudoku(tab);
@@ -165,7 +159,6 @@ const sudoku = (() => {
     return tab;
   }
 
-  // --- Renderização do Tabuleiro ---
   function renderizarTabuleiro() {
     boardEl().innerHTML = "";
     for (let i=0; i<TAM; i++) {
@@ -195,7 +188,6 @@ const sudoku = (() => {
     atualizarAtivos();
   }
 
-  // NOVO: Remove destaques ao selecionar célula, navegação ou clique fora
   function clearDestacaAnimado() {
     let cells = [...boardEl().children];
     for (let c of cells) c.classList.remove('destaca-correta', 'destaca-errada');
@@ -207,10 +199,10 @@ const sudoku = (() => {
 
   function selecionarCelula(idx) {
     if (jogoEncerrado) return;
-    clearDestacaAnimado();           // Remove o destaque animado (verde/vermelho)
-    clearDestacaIguais();            // Remove o destaque amarelo antigo
-    atualizarSelecionada(idx);       
-    destacarIguais(idx);             // Aplica amarelo para iguais
+    clearDestacaAnimado();
+    clearDestacaIguais();
+    atualizarSelecionada(idx);
+    destacarIguais(idx);
   }
   function atualizarSelecionada(idx) {
     celulaSelecionada = idx;
@@ -229,7 +221,6 @@ const sudoku = (() => {
     }
   }
 
-  // --- Interação via teclado ---
   function tratarTeclaCelula(e, idx) {
     if (jogoEncerrado) return;
     let i = Math.floor(idx/TAM), j = idx%TAM;
@@ -245,7 +236,6 @@ const sudoku = (() => {
     if (e.key==="Tab") { e.preventDefault(); selecionarCelula((idx+1)%81);}
   }
 
-  // --- Inserção de Números ---
   function inserirNumero(n) {
     if (jogoEncerrado) return;
     let i = Math.floor(celulaSelecionada/TAM), j = celulaSelecionada%TAM;
@@ -259,10 +249,7 @@ const sudoku = (() => {
       return;
     }
 
-    // Impede repetir número errado sem apagar antes
     if (puzzle[i][j] === n && n !== solucao[i][j]) return;
-
-    // Impede inserir em célula preenchida (certa ou errada)
     if (puzzle[i][j] !== 0) { mostrarAvisoCelula(); return; }
 
     puzzle[i][j] = n;
@@ -276,8 +263,7 @@ const sudoku = (() => {
     if (solucao[i][j] === n) {
       puzzle[i][j] = n;
       notas[i][j] = [];
-      fixas[i][j] = true; 
-      // ACERTO: Destaca todas as corretas
+      fixas[i][j] = true;
       for (let idx=0; idx<cells.length; idx++) {
         let x = Math.floor(idx/TAM), y = idx%TAM;
         if (puzzle[x][y] === n && solucao[x][y] === n) {
@@ -285,7 +271,6 @@ const sudoku = (() => {
         }
       }
     } else {
-      // ERRO: Destaca TODAS as células com esse número (mesmo as que seriam corretas)
       for (let idx=0; idx<cells.length; idx++) {
         let x = Math.floor(idx/TAM), y = idx%TAM;
         if (puzzle[x][y] === n) {
@@ -326,7 +311,7 @@ const sudoku = (() => {
   }
   function alternarRascunho() {
     modoRascunho = !modoRascunho;
-    btnRascunho().setAttribute("aria-pressed", "true");
+    btnRascunho().setAttribute("aria-pressed", modoRascunho ? "true" : "false");
     btnRascunho().classList.toggle('ativo', modoRascunho);
   }
   function usarDica() {
@@ -346,7 +331,6 @@ const sudoku = (() => {
     clearDestacaAnimado();
     clearDestacaIguais();
 
-    // Destaca todas as corretas daquele número
     let cells = [...boardEl().children];
     for (let idx=0; idx<cells.length; idx++) {
       let x = Math.floor(idx/TAM), y = idx%TAM;
@@ -381,7 +365,6 @@ const sudoku = (() => {
     setTimeout(()=>c.classList.remove('erro'), 350);
   }
 
-  // --- Destaque de Iguais (apenas seleção, não animado) ---
   function destacarIguais(idx) {
     let i = Math.floor(idx/TAM), j = idx%TAM;
     let val = puzzle[i][j];
@@ -392,14 +375,12 @@ const sudoku = (() => {
       let cell = cells[k];
       cell.classList.remove('destaca-igual');
       if (match && puzzle[x][y]) {
-        // Força reinício da animação
-        void cell.offsetWidth; // trigger reflow
+        void cell.offsetWidth;
         cell.classList.add('destaca-igual');
       }
     }
   }
 
-  // Remove destaque animado/amarelo ao clicar fora do tabuleiro
   boardEl().addEventListener("click", e => {
     if (!e.target.classList.contains('sudoku-cell')) {
       clearDestacaAnimado();
@@ -407,7 +388,6 @@ const sudoku = (() => {
     }
   });
 
-  // --- Botões de Números ---
   function criaBotoesNumeros() {
     numerosEl().innerHTML = "";
     for (let n=1; n<=9; n++) {
@@ -420,7 +400,6 @@ const sudoku = (() => {
     }
   }
 
-  // --- Cronômetro ---
   function atualizarCronometro() {
     cronoEl().textContent = formatarTempo(timer);
   }
@@ -429,12 +408,10 @@ const sudoku = (() => {
     return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
   }
 
-  // --- Botões UI e dificuldade ---
   btnRascunho().addEventListener("click", alternarRascunho);
   btnApagar().addEventListener("click", apagarCelula);
   btnDica().addEventListener("click", usarDica);
 
-  // --- Teclado global ---
   document.addEventListener("keydown", function(e) {
     if (document.activeElement.tagName === "INPUT" || jogoEncerrado) return;
     if (/^[1-9]$/.test(e.key)) inserirNumero(Number(e.key));
@@ -447,13 +424,53 @@ const sudoku = (() => {
   });
 
   // --- INTEGRAÇÃO RANKING - registra score ao terminar o jogo ---
-  function registrarPontuacaoRankingSudoku(vitoria) {
-    // Só registra se vencer (padrão). Para registrar derrotas, remova o "vitoria" do if.
-    if (vitoria && typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
-      // Score: tempo de resolução (quanto MENOR melhor)
-      adicionarPontuacaoRanking('Sudoku', getNomeUsuario(), timer);
-      // Se preferir ranking por erros, troque timer por erros.
-      // adicionarPontuacaoRanking('Sudoku', getNomeUsuario(), erros);
+  async function registrarPontuacaoRankingSudoku(vitoria) {
+    if (vitoria) {
+      const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
+      let dificuldadeLabel = 
+        dificuldadeAtual === "facil" ? "Fácil" :
+        dificuldadeAtual === "medio" ? "Médio" :
+        dificuldadeAtual === "dificil" ? "Difícil" : "Muito Difícil";
+      
+      // 1. Ranking geral (mais vitórias totais)
+      await fetch("http://localhost:3001/rankings/advanced/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jogo: "Sudoku",
+          tipo: "maior_vitoria_total",
+          dificuldade: "",
+          nome: user.nome,
+          valor: 1
+        })
+      });
+
+      // 2. Ranking por dificuldade (mais vitórias por dificuldade)
+      await fetch("http://localhost:3001/rankings/advanced/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jogo: "Sudoku",
+          tipo: "maior_vitoria_dificuldade",
+          dificuldade: dificuldadeLabel,
+          nome: user.nome,
+          valor: 1
+        })
+      });
+
+      // 3. Ranking por menor tempo para finalizar (por dificuldade)
+      await fetch("http://localhost:3001/rankings/advanced/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jogo: "Sudoku",
+          tipo: "menor_tempo",
+          dificuldade: dificuldadeLabel,
+          nome: user.nome,
+          tempo: timer,
+          valor: 1
+        })
+      });
     }
   }
 
@@ -463,7 +480,6 @@ const sudoku = (() => {
   };
 })();
 
-// Controle de tela inicial
 document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById('btn-iniciar').addEventListener('click', () => {
     const dif = document.getElementById('dificuldade').value;

@@ -1,4 +1,4 @@
-// rankings.js - dinâmico, multi-tabela por dificuldade, colunas específicas por tipo
+// rankings.js - dinâmico, multi-tabela por dificuldade, colunas específicas por tipo, suporte a usuários bloqueados
 
 const jogosRanking = [
   {
@@ -124,9 +124,11 @@ async function carregarRankingSelecionado() {
   }
 }
 
-// Monta o HTML da tabela de ranking
+// Monta o HTML da tabela de ranking com suporte a usuários bloqueados
 function montarTabelaRanking(nomeJogo, tipoObj, ranking, dificuldade = null) {
   const colunasExtras = tipoObj.colunas || [];
+  // Calcula posições ignorando bloqueados
+  let posicaoReal = 1;
   return `
     <section class="ranking-section">
       <h2>${nomeJogo} - ${tipoObj.label}${dificuldade ? `</h2><div class="dificuldade-title">${dificuldade}</div>` : "</h2>"}
@@ -136,25 +138,43 @@ function montarTabelaRanking(nomeJogo, tipoObj, ranking, dificuldade = null) {
             <th>Posição</th>
             <th>Nome</th>
             ${colunasExtras.map(c => `<th>${c}</th>`).join('')}
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
           ${ranking.length === 0
-            ? `<tr><td colspan="${2 + colunasExtras.length}"><em>Sem registros</em></td></tr>`
-            : ranking.map((item, idx) => `
-                <tr${getNomeUsuario() === item.nome ? ' class="meu-ranking"' : ''}>
-                  <td>${idx + 1}º</td>
-                  <td>${item.nome}</td>
-                  ${colunasExtras.map(c => {
-                    if (c === "Pontuação") return `<td>${item.valor}</td>`;
-                    if (c === "Vitórias") return `<td>${item.valor}</td>`;
-                    if (c === "Tempo") return `<td>${formatarTempo(item.tempo)}</td>`;
-                    if (c === "Sequência") return `<td>${item.valor}</td>`;
-                    if (c === "Erros") return `<td class="erros">${item.erros ?? 0}</td>`;
-                    return `<td>-</td>`;
-                  }).join('')}
-                </tr>
-              `).join('')
+            ? `<tr><td colspan="${3 + colunasExtras.length}"><em>Sem registros</em></td></tr>`
+            : ranking.map((item, idx) => {
+                const isBloqueado = item.status === "bloqueado";
+                const isAtivo = item.status === "ativo";
+                // Posição só conta usuários ativos
+                let posTd = isBloqueado
+                  ? `<td class="pos-bloqueado">--</td>`
+                  : `<td>${posicaoReal++}º</td>`;
+                // Badge de status
+                let statusTd = isBloqueado
+                  ? `<td class="status-badge status-bloqueado">Bloqueado</td>`
+                  : `<td class="status-badge status-ativo">Ativo</td>`;
+                // Linha destacada se for o usuário logado
+                let trClass = '';
+                if (getNomeUsuario() === item.nome) trClass += 'meu-ranking ';
+                if (isBloqueado) trClass += 'bloqueado';
+                return `
+                  <tr class="${trClass.trim()}">
+                    ${posTd}
+                    <td>${item.nome}</td>
+                    ${colunasExtras.map(c => {
+                      if (c === "Pontuação") return `<td>${item.valor}</td>`;
+                      if (c === "Vitórias") return `<td>${item.valor}</td>`;
+                      if (c === "Tempo") return `<td>${formatarTempo(item.tempo)}</td>`;
+                      if (c === "Sequência") return `<td>${item.valor}</td>`;
+                      if (c === "Erros") return `<td class="erros">${item.erros ?? 0}</td>`;
+                      return `<td>-</td>`;
+                    }).join('')}
+                    ${statusTd}
+                  </tr>
+                `;
+              }).join('')
           }
         </tbody>
       </table>

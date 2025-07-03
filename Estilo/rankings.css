@@ -108,6 +108,35 @@ label {
   font-weight: bold;
 }
 
+/* Linha de usuário bloqueado */
+.ranking-table tr.bloqueado {
+  background: #ffeaea !important;
+  color: #b71c1c;
+  font-style: italic;
+}
+
+.ranking-table td.status-badge {
+  font-weight: bold;
+  padding: 3px 10px;
+  border-radius: 8px;
+}
+
+.ranking-table td.status-ativo {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.ranking-table td.status-bloqueado {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.ranking-table td.pos-bloqueado {
+  color: #bdbdbd;
+  font-style: italic;
+  font-weight: bold;
+}
+
 /* Responsivo */
 @media (max-width: 900px) {
   #rankings-container {

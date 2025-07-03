@@ -1,6 +1,5 @@
 // forca.js
-// Dependência: stats.js (startGameSession, endGameSession)
-// Integração: rankings.js (adicionarPontuacaoRanking, getNomeUsuario)
+// Integrado ao ranking avançado via API
 
 let bancoPalavras = {};
 let palavra = "";
@@ -10,6 +9,7 @@ let resposta = [];
 let letrasUsadas = [];
 let tentativasRestantes = 6;
 let venceuPartida = false;
+let dificuldadeAtual = 'facil';
 
 // Carrega banco de palavras a partir do CSV
 async function carregarBancoPalavras() {
@@ -36,12 +36,14 @@ async function carregarBancoPalavras() {
 
 // Inicia sessão de estatísticas ao começar o jogo
 function iniciarJogo() {
-  startGameSession('forca');
+  if (typeof startGameSession === "function") startGameSession('forca');
 
   document.getElementById("menu-inicial").style.display = "none";
   document.getElementById("jogo").style.display = "block";
 
   const dificuldade = document.getElementById("dificuldade").value;
+  dificuldadeAtual = dificuldade;
+
   const lista = bancoPalavras[dificuldade] || bancoPalavras['facil'];
   const escolha = lista[Math.floor(Math.random() * lista.length)];
 
@@ -120,14 +122,14 @@ function verificarEstado() {
     document.body.classList.add("vitoria");
     desativarEntrada();
     venceuPartida = true;
-    endGameSession('forca', 'vitoria');
+    if (typeof endGameSession === "function") endGameSession('forca', 'vitoria');
     registrarPontuacaoRankingForca();
   } else if (tentativasRestantes <= 0) {
     resEl.textContent = `Você perdeu! A palavra era "${palavra}". 😞`;
     document.body.classList.add("derrota");
     desativarEntrada();
     venceuPartida = false;
-    endGameSession('forca', 'derrota');
+    if (typeof endGameSession === "function") endGameSession('forca', 'derrota');
     registrarPontuacaoRankingForca();
   }
 }
@@ -154,12 +156,61 @@ function reiniciarJogo() {
 }
 
 // Função para registrar pontuação no ranking ao final do jogo
-function registrarPontuacaoRankingForca() {
-  // Só registra se venceu (padrão). Para registrar derrotas, remova o "venceuPartida" do if.
-  if (venceuPartida && typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
-    // Score pode ser a quantidade de tentativas RESTANTES (ou seja, quanto mais sobrar, melhor)
-    // Ou pode ser o número de letras acertadas, ou tempo (se adicionar timer)
-    // Aqui vamos usar tentativasRestantes como score
-    adicionarPontuacaoRanking('Forca', getNomeUsuario(), tentativasRestantes);
+async function registrarPontuacaoRankingForca() {
+  const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
+  let dificuldadeLabel =
+    dificuldadeAtual === 'facil' ? 'Fácil' :
+    dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
+
+  // 1. Ranking geral (mais vitórias totais)
+  if (venceuPartida) {
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Forca",
+        tipo: "maior_vitoria_total",
+        dificuldade: "",
+        nome: user.nome,
+        valor: 1
+      })
+    });
   }
+
+  // 2. Ranking por dificuldade (mais vitórias por dificuldade)
+  if (venceuPartida) {
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Forca",
+        tipo: "maior_vitoria_dificuldade",
+        dificuldade: dificuldadeLabel,
+        nome: user.nome,
+        valor: 1
+      })
+    });
+  }
+
+  // 3. Ranking por sequência de vitórias consecutivas por dificuldade
+  // Controle local da sequência
+  let seqKey = `forca_seq_vitoria_${user.nome}_${dificuldadeLabel}`;
+  let seqAtual = Number(localStorage.getItem(seqKey)) || 0;
+  if (venceuPartida) {
+    seqAtual += 1;
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo: "Forca",
+        tipo: "maior_sequencia_vitoria",
+        dificuldade: dificuldadeLabel,
+        nome: user.nome,
+        valor: seqAtual
+      })
+    });
+  } else {
+    seqAtual = 0;
+  }
+  localStorage.setItem(seqKey, seqAtual);
 }

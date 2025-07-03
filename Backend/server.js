@@ -1,4 +1,4 @@
-// BACKEND Node.js/Express para login, registro e painel admin funcional (em memória)
+// BACKEND Node.js/Express completo para login, registro, painel admin e ranking avançado (em memória)
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -8,18 +8,24 @@ const users = [
   // Primeiro admin criado manualmente
   { nome: "Administrador", email: "admin@admin.com", senha: "admin123", isAdmin: true, status: 'ativo', createdAt: '2024-06-01', ultimoLogin: '' }
 ];
+
+// Lista estática dos jogos
 const jogos = [
-  { nome: 'Jogo da Velha', partidas: 120, vitorias: 55, derrotas: 44, empates: 21 },
-  { nome: 'Pong', partidas: 80, vitorias: 40, derrotas: 35, empates: 5 }
+  { nome: 'Jogo da Velha', partidas: 120, vitorias: 55, derrotas: 44, empates: 21, bloqueado: false },
+  { nome: 'PPT', partidas: 100, vitorias: 50, derrotas: 45, empates: 5, bloqueado: false },
+  { nome: 'Forca', partidas: 80, vitorias: 40, derrotas: 35, empates: 5, bloqueado: false },
+  { nome: '2048', partidas: 60, vitorias: 30, derrotas: 28, empates: 2, bloqueado: false },
+  { nome: 'Memória', partidas: 70, vitorias: 35, derrotas: 33, empates: 2, bloqueado: false },
+  { nome: 'Sudoku', partidas: 90, vitorias: 45, derrotas: 40, empates: 5, bloqueado: false },
+  { nome: 'Pong', partidas: 80, vitorias: 40, derrotas: 35, empates: 5, bloqueado: false },
+  { nome: 'Campo Minado', partidas: 50, vitorias: 25, derrotas: 25, empates: 0, bloqueado: false }
 ];
-const rankings = {
-  "Jogo da Velha": [
-    { nome: 'Administrador', pontuacao: 30 }
-  ],
-  "Pong": [
-    { nome: 'Administrador', pontuacao: 20 }
-  ]
-};
+
+// Ranking avançado: { [jogo]: { [tipo]: { [dificuldade]: [entradas] } } }
+const advancedRankings = {};
+// Exemplo de entrada de ranking:
+// { nome, valor, tempo, erros, status: 'ativo'|'bloqueado' }
+
 const logs = [
   { data: '2025-06-28 14:51', usuario: 'Administrador', acao: 'Criou sistema', detalhes: '-' }
 ];
@@ -171,18 +177,6 @@ app.post('/admin/games', requireAdmin, (req, res) => {
   res.json({ success: true, jogos });
 });
 
-// Adicionar jogo
-app.post('/admin/games/add', requireAdmin, (req, res) => {
-  const { nome } = req.body;
-  if (!nome || jogos.some(j => j.nome.toLowerCase() === nome.toLowerCase())) {
-    return res.json({ success: false, message: 'Nome de jogo inválido ou já existe.' });
-  }
-  jogos.push({ nome, partidas: 0, vitorias: 0, derrotas: 0, empates: 0 });
-  rankings[nome] = [];
-  addLog(req.body.email, 'Adicionou jogo', nome);
-  res.json({ success: true });
-});
-
 // Resetar estatísticas do jogo
 app.put('/admin/games/:nome/reset', requireAdmin, (req, res) => {
   const nome = req.params.nome;
@@ -193,54 +187,126 @@ app.put('/admin/games/:nome/reset', requireAdmin, (req, res) => {
   res.json({ success: true });
 });
 
-// Remover jogo
-app.delete('/admin/games/:nome', requireAdmin, (req, res) => {
+// Bloquear/desbloquear jogo
+app.put('/admin/games/:nome/block', requireAdmin, (req, res) => {
   const nome = req.params.nome;
-  const idx = jogos.findIndex(j => j.nome === nome);
-  if (idx === -1) return res.json({ success: false });
-  jogos.splice(idx, 1);
-  delete rankings[nome];
-  addLog(req.body.email, 'Removeu jogo', nome);
+  const jogo = jogos.find(j => j.nome === nome);
+  if (!jogo) return res.json({ success: false });
+  jogo.bloqueado = true;
+  addLog(req.body.email, 'Bloqueou jogo', nome);
+  res.json({ success: true });
+});
+app.put('/admin/games/:nome/unblock', requireAdmin, (req, res) => {
+  const nome = req.params.nome;
+  const jogo = jogos.find(j => j.nome === nome);
+  if (!jogo) return res.json({ success: false });
+  jogo.bloqueado = false;
+  addLog(req.body.email, 'Desbloqueou jogo', nome);
   res.json({ success: true });
 });
 
-// --- RANKINGS --- //
-
-// Listar ranking de um jogo (admin)
-app.post('/admin/rankings', requireAdmin, (req, res) => {
-  const { jogo } = req.body;
-  res.json({ success: true, ranking: rankings[jogo] || [] });
-});
-
-// Listar ranking de um jogo (público)
-app.post('/rankings', (req, res) => {
-  const { jogo } = req.body;
-  res.json({ success: true, ranking: rankings[jogo] || [] });
-});
-
-// Resetar ranking de um jogo (admin)
-app.put('/admin/rankings/:jogo/reset', requireAdmin, (req, res) => {
-  const jogo = req.params.jogo;
-  if (rankings[jogo]) {
-    rankings[jogo] = [];
-    addLog(req.body.email, 'Resetou ranking', jogo);
-    return res.json({ success: true });
+// --- RANKINGS AVANÇADO --- //
+/*
+Estrutura do advancedRankings:
+{
+  [jogo]: {
+    [tipoRanking]: {
+      [dificuldade]: [
+        { nome, valor, tempo, erros, status: "ativo"|"bloqueado" }
+      ]
+    }
   }
-  res.json({ success: false, message: 'Jogo não encontrado.' });
+}
+*/
+
+// Obter ranking avançado (admin ou público)
+app.post('/rankings/advanced', (req, res) => {
+  const { jogo, tipo, dificuldade } = req.body;
+  if (!jogo || !tipo) return res.json({ success: false, ranking: [] });
+
+  let entries = [];
+  if (advancedRankings[jogo] && advancedRankings[jogo][tipo]) {
+    if (dificuldade !== undefined && dificuldade !== null && dificuldade !== "") {
+      entries = (advancedRankings[jogo][tipo][dificuldade] || []);
+    } else {
+      // Se não há dificuldade, pega todos os que não tem dificuldade
+      entries = (advancedRankings[jogo][tipo][''] || []);
+    }
+  }
+  // Ordenação padrão: 
+  // valor decrescente (Vitórias/Pontuação/Sequência), tempo crescente (para menor tempo), erros crescente (para desempate se houver)
+  // O frontend já monta a tabela correta para cada tipo
+  entries = entries.slice(); // copiar array
+  // Ordena por valor (maior primeiro), exceto se for ranking de tempo
+  if (tipo.startsWith('menor_tempo')) {
+    entries.sort((a, b) => (a.tempo ?? Infinity) - (b.tempo ?? Infinity) || (a.erros ?? 0) - (b.erros ?? 0));
+  } else {
+    entries.sort((a, b) => (b.valor ?? 0) - (a.valor ?? 0));
+  }
+  res.json({ success: true, ranking: entries });
 });
 
-// Adicionar entrada ao ranking de um jogo (exemplo público)
-app.post('/rankings/:jogo/add', (req, res) => {
-  const jogo = req.params.jogo;
-  const { nome, pontuacao } = req.body;
-  if (!nome || typeof pontuacao !== 'number') {
+// Adicionar entrada ao ranking avançado (public)
+app.post('/rankings/advanced/add', (req, res) => {
+  const { jogo, tipo, dificuldade, nome, valor, tempo, erros } = req.body;
+  if (!jogo || !tipo || !nome || valor === undefined) {
     return res.json({ success: false, message: 'Dados inválidos.' });
   }
-  if (!rankings[jogo]) rankings[jogo] = [];
-  rankings[jogo].push({ nome, pontuacao });
-  // Ordena ranking (maior pontuação primeiro)
-  rankings[jogo].sort((a, b) => b.pontuacao - a.pontuacao);
+  // status padrão: ativo
+  if (!advancedRankings[jogo]) advancedRankings[jogo] = {};
+  if (!advancedRankings[jogo][tipo]) advancedRankings[jogo][tipo] = {};
+  const keyDif = dificuldade || '';
+  if (!advancedRankings[jogo][tipo][keyDif]) advancedRankings[jogo][tipo][keyDif] = [];
+  // Remove duplicado do mesmo nome (por simplicidade)
+  let arr = advancedRankings[jogo][tipo][keyDif];
+  let idx = arr.findIndex(e => e.nome === nome);
+  if (idx !== -1) arr.splice(idx, 1);
+  arr.push({ nome, valor, tempo, erros, status: "ativo" });
+  addLog(nome, `Pontuou em ${jogo} [${tipo}]${dificuldade ? " ("+dificuldade+")" : ""}`, valor);
   res.json({ success: true });
+});
+
+// Remover entrada do ranking (admin)
+app.post('/rankings/remove', requireAdmin, (req, res) => {
+  const { jogo, tipo, dificuldade, nome } = req.body;
+  if (!jogo || !tipo || !nome) return res.json({ success: false });
+  const keyDif = dificuldade || '';
+  let arr = (advancedRankings[jogo] && advancedRankings[jogo][tipo] && advancedRankings[jogo][tipo][keyDif]) || [];
+  let idx = arr.findIndex(e => e.nome === nome);
+  if (idx !== -1) {
+    arr.splice(idx, 1);
+    addLog(req.body.email, `Removeu "${nome}" do ranking (${jogo} - ${tipo} ${keyDif})`, '-');
+    return res.json({ success: true });
+  }
+  res.json({ success: false });
+});
+
+// Bloquear/desbloquear entrada no ranking (admin)
+app.post('/rankings/block', requireAdmin, (req, res) => {
+  const { jogo, tipo, dificuldade, nome } = req.body;
+  if (!jogo || !tipo || !nome) return res.json({ success: false });
+  const keyDif = dificuldade || '';
+  let arr = (advancedRankings[jogo] && advancedRankings[jogo][tipo] && advancedRankings[jogo][tipo][keyDif]) || [];
+  let idx = arr.findIndex(e => e.nome === nome);
+  if (idx !== -1) {
+    arr[idx].status = "bloqueado";
+    addLog(req.body.email, `Bloqueou "${nome}" no ranking (${jogo} - ${tipo} ${keyDif})`, '-');
+    return res.json({ success: true });
+  }
+  res.json({ success: false });
+});
+app.post('/rankings/unblock', requireAdmin, (req, res) => {
+  const { jogo, tipo, dificuldade, nome } = req.body;
+  if (!jogo || !tipo || !nome) return res.json({ success: false });
+  const keyDif = dificuldade || '';
+  let arr = (advancedRankings[jogo] && advancedRankings[jogo][tipo] && advancedRankings[jogo][tipo][keyDif]) || [];
+  let idx = arr.findIndex(e => e.nome === nome);
+  if (idx !== -1) {
+    arr[idx].status = "ativo";
+    addLog(req.body.email, `Desbloqueou "${nome}" no ranking (${jogo} - ${tipo} ${keyDif})`, '-');
+    return res.json({ success: true });
+  }
+  res.json({ success: false });
 });
 
 // --- LOGS --- //

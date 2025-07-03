@@ -300,7 +300,7 @@ window.desbloquearJogo = function(nome) {
 }
 
 // ======================
-// RANKINGS DINÂMICO (mantido igual!)
+// RANKINGS DINÂMICO - ADM POWERS
 // ======================
 function rankingsAdminInit() {
   const rankingsToolbar = document.querySelector('.rankings-toolbar');
@@ -447,16 +447,17 @@ function montarTabelaRankingAdmin(nomeJogo, tipoObj, ranking, dificuldade = null
           <th>Posição</th>
           <th>Nome</th>
           ${colunasExtras.map(c => `<th>${c}</th>`).join('')}
+          <th>Status</th>
           <th>Ações</th>
         </tr>
       </thead>
       <tbody>
         ${
           ranking.length === 0
-          ? `<tr><td colspan="${3 + colunasExtras.length}"><em>Sem registros</em></td></tr>`
+          ? `<tr><td colspan="${4 + colunasExtras.length}"><em>Sem registros</em></td></tr>`
           : ranking.map((item, idx) => `
-              <tr>
-                <td>${idx + 1}º</td>
+              <tr${item.status === "bloqueado" ? ' class="bloqueado"' : ''}>
+                <td>${item.status === "bloqueado" ? "--" : (idx + 1) + "º"}</td>
                 <td>${item.nome}</td>
                 ${colunasExtras.map(c => {
                   if (c === "Pontuação") return `<td>${item.valor}</td>`;
@@ -467,9 +468,23 @@ function montarTabelaRankingAdmin(nomeJogo, tipoObj, ranking, dificuldade = null
                   return `<td>-</td>`;
                 }).join('')}
                 <td>
+                  ${item.status === "bloqueado"
+                    ? '<span class="badge-blocked">Bloqueado</span>'
+                    : '<span class="badge-active">Ativo</span>'
+                  }
+                </td>
+                <td>
                   <button class="btn-remover-ranking" title="Remover" onclick="removerLinhaRanking('${nomeJogo.replace(/'/g, "\\'")}', '${tipoObj.chave}', '${dificuldade ?? ""}', '${item.nome.replace(/'/g, "\\'")}')">
                     <i class="fa fa-trash"></i>
                   </button>
+                  ${item.status !== "bloqueado"
+                    ? `<button class="btn-remover-ranking" title="Bloquear deste Ranking" onclick="bloquearNoRanking('${nomeJogo.replace(/'/g, "\\'")}', '${tipoObj.chave}', '${dificuldade ?? ""}', '${item.nome.replace(/'/g, "\\'")}')">
+                        <i class="fa fa-user-slash"></i>
+                      </button>`
+                    : `<button class="btn-remover-ranking" title="Desbloquear deste Ranking" onclick="desbloquearNoRanking('${nomeJogo.replace(/'/g, "\\'")}', '${tipoObj.chave}', '${dificuldade ?? ""}', '${item.nome.replace(/'/g, "\\'")}')">
+                        <i class="fa fa-user-check"></i>
+                      </button>`
+                  }
                 </td>
               </tr>
             `).join('')
@@ -511,6 +526,44 @@ window.removerLinhaRanking = function(jogo, tipo, dificuldade, nome) {
     }
   );
 };
+window.bloquearNoRanking = function(jogo, tipo, dificuldade, nome) {
+  abrirConfirmacao(
+    'Bloquear usuário do ranking?',
+    `Deseja bloquear "${nome}" deste ranking? Ele não aparecerá mais como ativo neste ranking.`,
+    async () => {
+      await fetch(`${API_URL}/rankings/block`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jogo,
+          tipo,
+          dificuldade: dificuldade || null,
+          nome
+        })
+      });
+      renderRankingAdminTabela();
+    }
+  );
+};
+window.desbloquearNoRanking = function(jogo, tipo, dificuldade, nome) {
+  abrirConfirmacao(
+    'Desbloquear usuário do ranking?',
+    `Deseja desbloquear "${nome}" deste ranking? Ele voltará a aparecer como ativo.`,
+    async () => {
+      await fetch(`${API_URL}/rankings/unblock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jogo,
+          tipo,
+          dificuldade: dificuldade || null,
+          nome
+        })
+      });
+      renderRankingAdminTabela();
+    }
+  );
+};
 function formatarTempo(segundos) {
   if (typeof segundos !== "number" || isNaN(segundos)) return "-";
   const min = Math.floor(segundos / 60);
@@ -527,15 +580,16 @@ async function exportarRankingCSVAdmin() {
     : null;
   const params = { jogo: jogoObj.chave, tipo: tipoObj.chave, dificuldade };
   const ranking = await obterRankingAvancado(params);
-  let csv = "Posição,Nome," + (tipoObj.colunas || []).join(",") + "\n";
+  let csv = "Posição,Nome," + (tipoObj.colunas || []).join(",") + ",Status\n";
   ranking.forEach((item, idx) => {
-    let row = [idx + 1, `"${item.nome}"`];
+    let row = [item.status === "bloqueado" ? "--" : (idx + 1), `"${item.nome}"`];
     for (const c of (tipoObj.colunas || [])) {
       if (c === "Pontuação" || c === "Vitórias" || c === "Sequência") row.push(item.valor);
       else if (c === "Tempo") row.push(formatarTempo(item.tempo));
       else if (c === "Erros") row.push(item.erros ?? 0);
       else row.push("-");
     }
+    row.push(item.status === "bloqueado" ? "Bloqueado" : "Ativo");
     csv += row.join(",") + "\n";
   });
   const blob = new Blob([csv], { type: "text/csv" });

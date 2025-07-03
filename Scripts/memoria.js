@@ -1,4 +1,5 @@
 // memoria.js
+// Integrado ao ranking avançado via API
 
 let firstCard = null;
 let secondCard = null;
@@ -21,7 +22,6 @@ function iniciarJogo() {
   const dificuldade = document.getElementById('dificuldade').value;
   dificuldadeAtual = dificuldade; // Salva globalmente
 
-  // INTEGRAÇÃO ESTATÍSTICAS
   if (typeof startGameSession === "function") startGameSession('memoria');
 
   // Reset estado do jogo
@@ -46,9 +46,7 @@ function iniciarJogo() {
       clearInterval(timerInterval);
       lockBoard = true;
       alert('Tempo esgotado! Fim de jogo.');
-      // INTEGRAÇÃO ESTATÍSTICAS - derrota por tempo
       if (typeof endGameSession === "function") endGameSession('memoria', 'derrota', dificuldadeAtual);
-      // INTEGRAÇÃO RANKING - derrota não envia score
       return;
     }
     timerSpan.textContent = formatTime(timerSec);
@@ -133,9 +131,7 @@ function checkForMatch() {
       clearInterval(timerInterval);
       setTimeout(() => {
         alert(`Parabéns! Você venceu em ${formatTime(timerSec)} com ${errorsCount} erros.`);
-        // INTEGRAÇÃO ESTATÍSTICAS - vitória
         if (typeof endGameSession === "function") endGameSession('memoria', 'vitoria', dificuldadeAtual);
-        // INTEGRAÇÃO RANKING - registra score ao vencer
         registrarPontuacaoRankingMemoria();
       }, 500);
     } else {
@@ -180,11 +176,48 @@ function formatTime(seconds) {
 }
 
 // INTEGRAÇÃO RANKING - registra score ao vencer
-function registrarPontuacaoRankingMemoria() {
-  if (typeof adicionarPontuacaoRanking === "function" && typeof getNomeUsuario === "function") {
-    // Score: tempo em segundos. Se preferir, pode inverter para errosCount (quanto menos, melhor).
-    adicionarPontuacaoRanking('Memória', getNomeUsuario(), timerSec);
-    // Para ranking por erros (quanto menos, melhor): 
-    // adicionarPontuacaoRanking('Memória', getNomeUsuario(), errorsCount);
-  }
+async function registrarPontuacaoRankingMemoria() {
+  const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
+  let dificuldadeLabel = dificuldadeAtual === 'facil' ? 'Fácil' :
+                         dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
+
+  // 1. Ranking geral (mais vitórias totais)
+  await fetch("http://localhost:3001/rankings/advanced/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jogo: "Memória",
+      tipo: "maior_vitoria_total",
+      dificuldade: "",
+      nome: user.nome,
+      valor: 1
+    })
+  });
+
+  // 2. Ranking por dificuldade (mais vitórias por dificuldade)
+  await fetch("http://localhost:3001/rankings/advanced/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jogo: "Memória",
+      tipo: "maior_vitoria_dificuldade",
+      dificuldade: dificuldadeLabel,
+      nome: user.nome,
+      valor: 1
+    })
+  });
+
+  // 3. Ranking menor tempo por dificuldade
+  await fetch("http://localhost:3001/rankings/advanced/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jogo: "Memória",
+      tipo: "menor_tempo",
+      dificuldade: dificuldadeLabel,
+      nome: user.nome,
+      tempo: timerSec,
+      valor: 1 // valor só para indicar vitória, ranking é pelo tempo
+    })
+  });
 }
