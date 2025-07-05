@@ -73,11 +73,7 @@ function jogadaIA() {
     // estratégia média: ganhar, bloquear, senão random
     posicao = jogadaMedia();
 
-  } else {
-    // difícil = Minimax perfeito
-    posicao = melhorJogada();
   }
-
   if (posicao !== undefined) jogar(posicao, true);
 }
 
@@ -110,53 +106,6 @@ function jogadaMedia() {
     .map((v,i) => v === '' ? i : null)
     .filter(i => i !== null);
   return vazias[Math.floor(Math.random() * vazias.length)];
-}
-
-// Minimax para dificuldade difícil
-function melhorJogada() {
-  let melhorScore = -Infinity;
-  let move = null;
-  tabuleiro.forEach((v, i) => {
-    if (v === '') {
-      tabuleiro[i] = 'O';
-      const score = minimax(tabuleiro, 0, false);
-      tabuleiro[i] = '';
-      if (score > melhorScore) {
-        melhorScore = score;
-        move = i;
-      }
-    }
-  });
-  return move;
-}
-
-function minimax(board, depth, isMax) {
-  const winner = checarVencedorParaMinimax(board);
-  if (winner !== null) {
-    const scores = { O: 10, X: -10, empate: 0 };
-    return scores[winner];
-  }
-  if (isMax) {
-    let best = -Infinity;
-    for (let i = 0; i < 9; i++) {
-      if (board[i] === '') {
-        board[i] = 'O';
-        best = Math.max(best, minimax(board, depth+1, false));
-        board[i] = '';
-      }
-    }
-    return best;
-  } else {
-    let worst = Infinity;
-    for (let i = 0; i < 9; i++) {
-      if (board[i] === '') {
-        board[i] = 'X';
-        worst = Math.min(worst, minimax(board, depth+1, true));
-        board[i] = '';
-      }
-    }
-    return worst;
-  }
 }
 
 function checarVencedorParaMinimax(board) {
@@ -198,41 +147,28 @@ function verificarVencedor() {
 async function registrarPontuacaoRankingVelha(resultado) {
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
   let dificuldadeLabel = dificuldade === 'facil' ? 'Fácil' : 'Médio';
-  let valor = resultado === 'X' ? 1 : 0; // só conta vitória
 
   // 1. Ranking geral (mais vitórias no Jogo da Velha)
   if (resultado === 'X') {
-    await fetch("http://localhost:3001/rankings/advanced/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jogo: "Jogo da Velha",
-        tipo: "maior_vitoria_total",
-        dificuldade: "",
-        nome: user.nome,
-        valor: 1
-      })
+    await atualizarRankingAdvanced({
+      jogo: "Jogo da Velha",
+      tipo: "mais_vitorias_total",
+      dificuldade: "",
+      nome: user.nome
     });
   }
 
   // 2. Ranking por dificuldade (mais vitórias por dificuldade)
   if (resultado === 'X') {
-    await fetch("http://localhost:3001/rankings/advanced/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jogo: "Jogo da Velha",
-        tipo: "maior_vitoria_dificuldade",
-        dificuldade: dificuldadeLabel,
-        nome: user.nome,
-        valor: 1
-      })
+    await atualizarRankingAdvanced({
+      jogo: "Jogo da Velha",
+      tipo: "mais_vitorias_dificuldade",
+      dificuldade: dificuldadeLabel,
+      nome: user.nome
     });
   }
 
-  // 3. Ranking por sequência de vitórias (consecutivas) por dificuldade
-  // Você pode usar localStorage/sessionStorage para armazenar a sequência localmente
-  // Exemplo de controle local:
+  // 3. Ranking por sequência de vitórias consecutivas por dificuldade
   let seqKey = `velha_seq_vitoria_${user.nome}_${dificuldadeLabel}`;
   let seqAtual = Number(localStorage.getItem(seqKey)) || 0;
   if (resultado === 'X') {
@@ -242,7 +178,7 @@ async function registrarPontuacaoRankingVelha(resultado) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jogo: "Jogo da Velha",
-        tipo: "maior_sequencia_vitoria",
+        tipo: "mais_vitorias_consecutivas",
         dificuldade: dificuldadeLabel,
         nome: user.nome,
         valor: seqAtual
@@ -252,6 +188,33 @@ async function registrarPontuacaoRankingVelha(resultado) {
     seqAtual = 0; // zera a sequência ao perder ou empatar
   }
   localStorage.setItem(seqKey, seqAtual);
+}
+
+// Helper para atualizar ranking acumulando vitórias
+async function atualizarRankingAdvanced({ jogo, tipo, dificuldade, nome }) {
+  // Primeiro, busca o valor atual do ranking para este jogador/tipo/dificuldade
+  let valorAntigo = 0;
+  try {
+    const res = await fetch("http://localhost:3001/rankings/advanced", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jogo, tipo, dificuldade })
+    });
+    const data = await res.json();
+    if (data.ranking && Array.isArray(data.ranking)) {
+      const registro = data.ranking.find(e => e.nome === nome);
+      if (registro && typeof registro.valor === "number") valorAntigo = registro.valor;
+    }
+  } catch (e) {}
+
+  // Agora envia com valor +1
+  try {
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jogo, tipo, dificuldade, nome, valor: valorAntigo + 1 })
+    });
+  } catch (e) {}
 }
 
 // Reinicia o jogo
@@ -265,7 +228,8 @@ function reiniciarJogo() {
 
 // Atualiza mensagem de status
 function atualizarMensagem(texto) {
-  document.getElementById('mensagem').textContent = texto;
+  const el = document.getElementById('mensagem');
+  if (el) el.textContent = texto;
 }
 
 // Controla tela inicial / dificuldade

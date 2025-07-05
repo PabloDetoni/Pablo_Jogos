@@ -11,7 +11,6 @@ let timerSec = 0;
 let timerInterval = null;
 let dificuldadeAtual = 'facil';
 
-// INTEGRAÇÃO ESTATÍSTICAS: Salva dificuldade globalmente
 function iniciarJogo() {
   const tabuleiro = document.getElementById('tabuleiro');
   const errosSpan = document.getElementById('erros');
@@ -182,42 +181,97 @@ async function registrarPontuacaoRankingMemoria() {
                          dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
 
   // 1. Ranking geral (mais vitórias totais)
-  await fetch("http://localhost:3001/rankings/advanced/add", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      jogo: "Memória",
-      tipo: "maior_vitoria_total",
-      dificuldade: "",
-      nome: user.nome,
-      valor: 1
-    })
+  await atualizarRankingAdvanced({
+    jogo: "Memória",
+    tipo: "mais_vitorias_total",
+    dificuldade: "",
+    nome: user.nome,
+    valorNovo: 1
   });
 
   // 2. Ranking por dificuldade (mais vitórias por dificuldade)
-  await fetch("http://localhost:3001/rankings/advanced/add", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      jogo: "Memória",
-      tipo: "maior_vitoria_dificuldade",
-      dificuldade: dificuldadeLabel,
-      nome: user.nome,
-      valor: 1
-    })
+  await atualizarRankingAdvanced({
+    jogo: "Memória",
+    tipo: "mais_vitorias_dificuldade",
+    dificuldade: dificuldadeLabel,
+    nome: user.nome,
+    valorNovo: 1
   });
 
-  // 3. Ranking menor tempo por dificuldade
-  await fetch("http://localhost:3001/rankings/advanced/add", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      jogo: "Memória",
-      tipo: "menor_tempo",
-      dificuldade: dificuldadeLabel,
-      nome: user.nome,
-      tempo: timerSec,
-      valor: 1 // valor só para indicar vitória, ranking é pelo tempo
-    })
+  // 3. Ranking menor tempo por dificuldade: só atualiza se o tempo for menor
+  await atualizarRankingMenorTempo({
+    jogo: "Memória",
+    tipo: "menor_tempo",
+    dificuldade: dificuldadeLabel,
+    nome: user.nome,
+    tempo: timerSec,
+    erros: errorsCount
   });
+}
+
+// Helper para vitórias acumuladas (total e por dificuldade)
+async function atualizarRankingAdvanced({ jogo, tipo, dificuldade, nome, valorNovo }) {
+  let valorAntigo = 0;
+  try {
+    const res = await fetch("http://localhost:3001/rankings/advanced", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jogo, tipo, dificuldade })
+    });
+    const data = await res.json();
+    if (data.ranking && Array.isArray(data.ranking)) {
+      const registro = data.ranking.find(e => e.nome === nome);
+      if (registro && typeof registro.valor === "number") valorAntigo = registro.valor;
+    }
+  } catch (e) {}
+
+  try {
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jogo,
+        tipo,
+        dificuldade,
+        nome,
+        valor: valorAntigo + valorNovo
+      })
+    });
+  } catch (e) {}
+}
+
+// Helper para ranking de menor tempo (só salva se for o menor tempo do usuário)
+async function atualizarRankingMenorTempo({ jogo, tipo, dificuldade, nome, tempo, erros }) {
+  let tempoAntigo = null;
+  try {
+    const res = await fetch("http://localhost:3001/rankings/advanced", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jogo, tipo, dificuldade })
+    });
+    const data = await res.json();
+    if (data.ranking && Array.isArray(data.ranking)) {
+      const registro = data.ranking.find(e => e.nome === nome);
+      if (registro && typeof registro.tempo === "number") tempoAntigo = registro.tempo;
+    }
+  } catch (e) {}
+
+  // Só envia se tempo for menor (ou se não existe registro)
+  if (tempoAntigo === null || tempo < tempoAntigo) {
+    try {
+      await fetch("http://localhost:3001/rankings/advanced/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jogo,
+          tipo,
+          dificuldade,
+          nome,
+          tempo,
+          erros,
+          valor: 1 // valor só para indicar vitória, ranking é pelo tempo
+        })
+      });
+    } catch (e) {}
+  }
 }

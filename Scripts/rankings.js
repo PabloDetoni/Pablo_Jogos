@@ -45,7 +45,8 @@ const jogosRanking = [
   },
   {
     chave: "Sudoku", nome: "Sudoku",
-    dificuldades: ["Fácil", "Médio", "Difícil"],
+    // Adicionado "Muito Difícil" aqui:
+    dificuldades: ["Fácil", "Médio", "Difícil", "Muito Difícil"],
     tipos: [
       { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
@@ -200,10 +201,10 @@ async function obterRankingAvancado(params) {
 // Função para adicionar pontuação/dados ao ranking (chame no fim do jogo)
 async function adicionarPontuacaoRanking(jogo, nome, dados) {
   try {
-    await fetch(`http://localhost:3001/rankings/${encodeURIComponent(jogo)}/add`, {
+    await fetch('http://localhost:3001/rankings/advanced/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome, ...dados })
+      body: JSON.stringify({ jogo, nome, ...dados })
     });
   } catch {
     // pode exibir alerta se desejar

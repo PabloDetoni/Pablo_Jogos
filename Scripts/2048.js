@@ -8,7 +8,7 @@ let gameOver = false;
 let novaCelula = null; // Guardar a última célula criada para animar
 
 let bloqueado = false; // Bloqueio para evitar spam
-const TEMPO_COOLDOWN = 0; // ms
+const TEMPO_COOLDOWN = 500; // ms
 
 function iniciarJogo2048() {
   tabuleiro = Array.from({ length: tamanho }, () => Array(tamanho).fill(0));
@@ -113,6 +113,7 @@ function mover(direcao) {
 }
 
 function girarTabuleiro(matriz) {
+  // Gira matriz 90 graus no sentido horário
   return matriz[0].map((_, i) => matriz.map(row => row[i]).reverse());
 }
 
@@ -141,17 +142,38 @@ async function registrarPontuacaoRanking2048() {
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
   let tipo = "maior_pontuacao";
   let valor = score;
-  await fetch("http://localhost:3001/rankings/advanced/add", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      jogo: "2048",
-      tipo,
-      dificuldade: "",
-      nome: user.nome,
-      valor
-    })
-  });
+
+  // Busca o valor atual do ranking para este usuário
+  let valorAntigo = 0;
+  try {
+    const res = await fetch("http://localhost:3001/rankings/advanced", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jogo: "2048", tipo, dificuldade: "" })
+    });
+    const data = await res.json();
+    if (data.ranking && Array.isArray(data.ranking)) {
+      const registro = data.ranking.find(e => e.nome === user.nome);
+      if (registro && typeof registro.valor === "number") valorAntigo = registro.valor;
+    }
+  } catch (e) {}
+
+  // Só atualiza se o valor atual for maior que o antigo
+  if (valor > valorAntigo) {
+    try {
+      await fetch("http://localhost:3001/rankings/advanced/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jogo: "2048",
+          tipo,
+          dificuldade: "",
+          nome: user.nome,
+          valor
+        })
+      });
+    } catch (e) {}
+  }
 }
 
 document.addEventListener('keydown', function(e) {

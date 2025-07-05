@@ -155,6 +155,32 @@ function reiniciarJogo() {
   document.body.classList.remove("vitoria","derrota");
 }
 
+// Helper para atualizar ranking acumulando vitórias
+async function atualizarRankingAdvanced({ jogo, tipo, dificuldade, nome, valorNovo }) {
+  let valorAntigo = 0;
+  try {
+    const res = await fetch("http://localhost:3001/rankings/advanced", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jogo, tipo, dificuldade })
+    });
+    const data = await res.json();
+    if (data.ranking && Array.isArray(data.ranking)) {
+      const registro = data.ranking.find(e => e.nome === nome);
+      if (registro && typeof registro.valor === "number") valorAntigo = registro.valor;
+    }
+  } catch (e) {}
+
+  // Para rankings de soma, envie valorAntigo + valorNovo
+  try {
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jogo, tipo, dificuldade, nome, valor: valorAntigo + valorNovo })
+    });
+  } catch (e) {}
+}
+
 // Função para registrar pontuação no ranking ao final do jogo
 async function registrarPontuacaoRankingForca() {
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
@@ -164,31 +190,23 @@ async function registrarPontuacaoRankingForca() {
 
   // 1. Ranking geral (mais vitórias totais)
   if (venceuPartida) {
-    await fetch("http://localhost:3001/rankings/advanced/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jogo: "Forca",
-        tipo: "maior_vitoria_total",
-        dificuldade: "",
-        nome: user.nome,
-        valor: 1
-      })
+    await atualizarRankingAdvanced({
+      jogo: "Forca",
+      tipo: "mais_vitorias_total",
+      dificuldade: "",
+      nome: user.nome,
+      valorNovo: 1
     });
   }
 
   // 2. Ranking por dificuldade (mais vitórias por dificuldade)
   if (venceuPartida) {
-    await fetch("http://localhost:3001/rankings/advanced/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jogo: "Forca",
-        tipo: "maior_vitoria_dificuldade",
-        dificuldade: dificuldadeLabel,
-        nome: user.nome,
-        valor: 1
-      })
+    await atualizarRankingAdvanced({
+      jogo: "Forca",
+      tipo: "mais_vitorias_dificuldade",
+      dificuldade: dificuldadeLabel,
+      nome: user.nome,
+      valorNovo: 1
     });
   }
 
@@ -203,7 +221,7 @@ async function registrarPontuacaoRankingForca() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jogo: "Forca",
-        tipo: "maior_sequencia_vitoria",
+        tipo: "mais_vitorias_consecutivas",
         dificuldade: dificuldadeLabel,
         nome: user.nome,
         valor: seqAtual

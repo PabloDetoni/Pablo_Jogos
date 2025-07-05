@@ -47,7 +47,7 @@ function jogar(jogador) {
     resultadoEl.innerHTML = mensagem;
     body.classList.add(classe);
 
-    // Registra estatísticas
+    // Registra estatísticas e ranking
     if (classe === 'vitoria') {
       if (typeof endGameSession === "function") endGameSession('ppt', 'vitoria');
       registrarPontuacaoRankingPPT('vitoria');
@@ -66,22 +66,44 @@ function jogar(jogador) {
   }, 2000);
 }
 
+// Helper para atualizar ranking acumulando vitórias
+async function atualizarRankingAdvanced({ jogo, tipo, dificuldade, nome, valorNovo }) {
+  let valorAntigo = 0;
+  try {
+    const res = await fetch("http://localhost:3001/rankings/advanced", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jogo, tipo, dificuldade })
+    });
+    const data = await res.json();
+    if (data.ranking && Array.isArray(data.ranking)) {
+      const registro = data.ranking.find(e => e.nome === nome);
+      if (registro && typeof registro.valor === "number") valorAntigo = registro.valor;
+    }
+  } catch (e) {}
+
+  // Para rankings de soma, envie valorAntigo + valorNovo
+  try {
+    await fetch("http://localhost:3001/rankings/advanced/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jogo, tipo, dificuldade, nome, valor: valorAntigo + valorNovo })
+    });
+  } catch (e) {}
+}
+
 // INTEGRAÇÃO RANKING - registra score ao final de cada partida
 async function registrarPontuacaoRankingPPT(resultado) {
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
 
   // 1. Ranking geral (mais vitórias totais em PPT)
   if (resultado === 'vitoria') {
-    await fetch("http://localhost:3001/rankings/advanced/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jogo: "PPT",
-        tipo: "maior_vitoria_total",
-        dificuldade: "",
-        nome: user.nome,
-        valor: 1
-      })
+    await atualizarRankingAdvanced({
+      jogo: "PPT",
+      tipo: "mais_vitorias_total",
+      dificuldade: "",
+      nome: user.nome,
+      valorNovo: 1
     });
   }
 
@@ -96,7 +118,7 @@ async function registrarPontuacaoRankingPPT(resultado) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jogo: "PPT",
-        tipo: "maior_sequencia_vitoria",
+        tipo: "mais_vitorias_consecutivas",
         dificuldade: "",
         nome: user.nome,
         valor: seqAtual
