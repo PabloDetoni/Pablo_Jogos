@@ -9,16 +9,16 @@ const users = [
   { nome: "Administrador", email: "admin@admin.com", senha: "admin123", isAdmin: true, status: 'ativo', createdAt: '2024-06-01', ultimoLogin: '' }
 ];
 
-// Lista estática dos jogos
-const jogos = [
-  { nome: 'Jogo da Velha', partidas: 120, vitorias: 55, derrotas: 44, empates: 21, bloqueado: false },
-  { nome: 'PPT', partidas: 100, vitorias: 50, derrotas: 45, empates: 5, bloqueado: false },
-  { nome: 'Forca', partidas: 80, vitorias: 40, derrotas: 35, empates: 5, bloqueado: false },
-  { nome: '2048', partidas: 60, vitorias: 30, derrotas: 28, empates: 2, bloqueado: false },
-  { nome: 'Memória', partidas: 70, vitorias: 35, derrotas: 33, empates: 2, bloqueado: false },
-  { nome: 'Sudoku', partidas: 90, vitorias: 45, derrotas: 40, empates: 5, bloqueado: false },
-  { nome: 'Pong', partidas: 80, vitorias: 40, derrotas: 35, empates: 5, bloqueado: false },
-  { nome: 'Campo Minado', partidas: 50, vitorias: 25, derrotas: 25, empates: 0, bloqueado: false }
+// Para bloqueio de jogos (status) — estatísticas serão dinâmicas
+const jogosStatus = [
+  { nome: 'Jogo da Velha', bloqueado: false },
+  { nome: 'PPT', bloqueado: false },
+  { nome: 'Forca', bloqueado: false },
+  { nome: '2048', bloqueado: false },
+  { nome: 'Memória', bloqueado: false },
+  { nome: 'Sudoku', bloqueado: false },
+  { nome: 'Pong', bloqueado: false },
+  { nome: 'Campo Minado', bloqueado: false }
 ];
 
 // Ranking avançado: { [jogo]: { [tipo]: { [dificuldade]: [entradas] } } }
@@ -107,14 +107,25 @@ app.post('/login', (req, res) => {
 
 // Listar usuários
 app.post('/admin/users', requireAdmin, (req, res) => {
-  const usersInfo = users.map(u => ({
-    nome: u.nome,
-    email: u.email,
-    isAdmin: u.isAdmin,
-    status: u.status,
-    createdAt: u.createdAt,
-    ultimoLogin: u.ultimoLogin
-  }));
+  // Buscar últimas ações do usuário nos logs
+  const usersInfo = users.map(u => {
+    // Filtrar logs mais recentes deste usuário
+    const userLogs = logs.filter(l => l.usuario === u.nome || l.usuario === u.email)
+      .sort((a, b) => b.data.localeCompare(a.data));
+    // Considera o log mais recente como 'última ação'
+    const ultimaAcao = userLogs.length > 0
+      ? `${userLogs[0].acao} (${userLogs[0].data})`
+      : (u.ultimoLogin ? `Login (${u.ultimoLogin})` : '--');
+    return {
+      nome: u.nome,
+      email: u.email,
+      isAdmin: u.isAdmin,
+      status: u.status,
+      createdAt: u.createdAt,
+      ultimoLogin: u.ultimoLogin,
+      ultimaAcao
+    }
+  });
   res.json({ success: true, users: usersInfo });
 });
 
@@ -172,25 +183,69 @@ app.delete('/admin/users/:email', requireAdmin, (req, res) => {
 
 // --- JOGOS --- //
 
-// Listar jogos
-app.post('/admin/games', requireAdmin, (req, res) => {
-  res.json({ success: true, jogos });
+// Nova rota: Estatísticas reais dos jogos (dinâmico)
+app.post('/admin/game-stats', requireAdmin, (req, res) => {
+  const nomesJogos = [
+    'Jogo da Velha', 'PPT', 'Forca', '2048',
+    'Memória', 'Sudoku', 'Pong', 'Campo Minado'
+  ];
+  const stats = [];
+
+  nomesJogos.forEach(nome => {
+    let totalPartidas = 0;
+    let totalVitorias = 0, totalDerrotas = 0, totalEmpates = 0;
+    let jogadoresSet = new Set();
+
+    // Busca as entradas de ranking para estatísticas
+    for (const tipo in (advancedRankings[nome] || {})) {
+      for (const dificuldade in (advancedRankings[nome][tipo] || {})) {
+        (advancedRankings[nome][tipo][dificuldade] || []).forEach(entry => {
+          jogadoresSet.add(entry.nome);
+
+          // Ajuste os tipos conforme seu padrão real de ranking
+          if (tipo.includes('vitoria')) totalVitorias += entry.valor || 0;
+          if (tipo.includes('derrota')) totalDerrotas += entry.valor || 0;
+          if (tipo.includes('empate'))  totalEmpates  += entry.valor || 0;
+          // Considera todas interações como partidas (ajuste se necessário)
+          if (tipo.includes('partida') || tipo.includes('vitoria') || tipo.includes('derrota') || tipo.includes('empate')) {
+            totalPartidas += entry.valor || 0;
+          }
+        });
+      }
+    }
+    const qtdJogadores = jogadoresSet.size || 1;
+    // Busca status de bloqueio
+    const bloqueado = (jogosStatus.find(j => j.nome === nome) || {}).bloqueado || false;
+    stats.push({
+      nome,
+      bloqueado,
+      totalPartidas,
+      mediaVitorias: (totalVitorias / qtdJogadores).toFixed(2),
+      mediaDerrotas: (totalDerrotas / qtdJogadores).toFixed(2),
+      mediaEmpates: (totalEmpates / qtdJogadores).toFixed(2)
+    });
+  });
+
+  res.json({ success: true, stats });
 });
 
-// Resetar estatísticas do jogo
+// Listar jogos (status apenas)
+app.post('/admin/games', requireAdmin, (req, res) => {
+  res.json({ success: true, jogos: jogosStatus });
+});
+
+// Resetar estatísticas do jogo (NÃO zera rankings, só loga)
 app.put('/admin/games/:nome/reset', requireAdmin, (req, res) => {
+  // Não faz nada além de logar (pois ranking é histórico, não zera)
   const nome = req.params.nome;
-  const jogo = jogos.find(j => j.nome === nome);
-  if (!jogo) return res.json({ success: false });
-  jogo.partidas = 0; jogo.vitorias = 0; jogo.derrotas = 0; jogo.empates = 0;
-  addLog(req.body.email, 'Resetou jogo', nome);
+  addLog(req.body.email, 'Resetou estatísticas do jogo', nome);
   res.json({ success: true });
 });
 
 // Bloquear/desbloquear jogo
 app.put('/admin/games/:nome/block', requireAdmin, (req, res) => {
   const nome = req.params.nome;
-  const jogo = jogos.find(j => j.nome === nome);
+  const jogo = jogosStatus.find(j => j.nome === nome);
   if (!jogo) return res.json({ success: false });
   jogo.bloqueado = true;
   addLog(req.body.email, 'Bloqueou jogo', nome);
@@ -198,7 +253,7 @@ app.put('/admin/games/:nome/block', requireAdmin, (req, res) => {
 });
 app.put('/admin/games/:nome/unblock', requireAdmin, (req, res) => {
   const nome = req.params.nome;
-  const jogo = jogos.find(j => j.nome === nome);
+  const jogo = jogosStatus.find(j => j.nome === nome);
   if (!jogo) return res.json({ success: false });
   jogo.bloqueado = false;
   addLog(req.body.email, 'Desbloqueou jogo', nome);
@@ -235,7 +290,6 @@ app.post('/rankings/advanced', (req, res) => {
   }
   // Ordenação padrão: 
   // valor decrescente (Vitórias/Pontuação/Sequência), tempo crescente (para menor tempo), erros crescente (para desempate se houver)
-  // O frontend já monta a tabela correta para cada tipo
   entries = entries.slice(); // copiar array
   // Ordena por valor (maior primeiro), exceto se for ranking de tempo
   if (tipo.startsWith('menor_tempo')) {
@@ -307,6 +361,22 @@ app.post('/rankings/unblock', requireAdmin, (req, res) => {
     return res.json({ success: true });
   }
   res.json({ success: false });
+});
+
+// --- NOVA ROTA: Editar entrada do ranking (admin) ---
+app.post('/rankings/edit', requireAdmin, (req, res) => {
+  const { jogo, tipo, dificuldade, nome, valor, tempo, erros, status } = req.body;
+  if (!jogo || !tipo || !nome) return res.json({ success: false, message: 'Dados obrigatórios faltando.' });
+  const keyDif = dificuldade || '';
+  let arr = (advancedRankings[jogo] && advancedRankings[jogo][tipo] && advancedRankings[jogo][tipo][keyDif]) || [];
+  let idx = arr.findIndex(e => e.nome === nome);
+  if (idx === -1) return res.json({ success: false, message: 'Entrada não encontrada.' });
+  if (valor !== undefined) arr[idx].valor = valor;
+  if (tempo !== undefined) arr[idx].tempo = tempo;
+  if (erros !== undefined) arr[idx].erros = erros;
+  if (status === "ativo" || status === "bloqueado") arr[idx].status = status;
+  addLog(req.body.email, `Editou "${nome}" no ranking (${jogo} - ${tipo} ${keyDif})`, `valor=${valor}, tempo=${tempo}, erros=${erros}, status=${status}`);
+  res.json({ success: true });
 });
 
 // --- LOGS --- //

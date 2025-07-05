@@ -80,20 +80,20 @@ document.addEventListener('DOMContentLoaded', () => {
 // ======================
 async function renderDashboard() {
   const user = getUserToken();
-  const [usuarios, jogos] = await Promise.all([
+  const [usuarios, statsRes] = await Promise.all([
     fetch(`${API_URL}/admin/users`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user.email })
     }).then(r => r.json()).then(d => d.users || []),
-    fetch(`${API_URL}/admin/games`, {
+    fetch(`${API_URL}/admin/game-stats`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user.email })
-    }).then(r => r.json()).then(d => d.jogos || [])
+    }).then(r => r.json()).then(d => d.stats || [])
   ]);
   document.getElementById('card-total-usuarios').textContent = usuarios.length;
-  document.getElementById('card-total-partidas').textContent = jogos.reduce((a, b) => a + (b.partidas || 0), 0);
+  document.getElementById('card-total-partidas').textContent = statsRes.reduce((a, b) => a + (b.totalPartidas || 0), 0);
   document.getElementById('card-total-admins').textContent = usuarios.filter(u => u.isAdmin).length;
   let ultimos = usuarios
     .slice().sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1))
@@ -142,6 +142,7 @@ async function renderUsuarios() {
           : '<span class="badge-blocked">Bloqueado</span>'}
       </td>
       <td>${u.createdAt || '--'}</td>
+      <td>${u.ultimaAcao || '--'}</td>
       <td>
         ${u.status === 'ativo'
           ? `<button class="action-btn" onclick="bloquearUsuario('${u.email}')">Bloquear</button>`
@@ -214,34 +215,23 @@ window.excluirUsuario = function(email) {
 }
 
 // ======================
-// JOGOS (apenas os existentes, 8 jogos estáticos)
+// JOGOS (informações reais e bloqueio)
 // ======================
-const jogosEstáticos = [
-  { nome: "Jogo da Velha" },
-  { nome: "PPT" },
-  { nome: "Forca" },
-  { nome: "2048" },
-  { nome: "Memória" },
-  { nome: "Sudoku" },
-  { nome: "Pong" },
-  { nome: "Campo Minado" }
-];
 async function renderJogos() {
   const user = getUserToken();
-  const res = await fetch(`${API_URL}/admin/games`, {
+  const res = await fetch(`${API_URL}/admin/game-stats`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: user.email })
   });
   const data = await res.json();
-  const jogosBack = data.jogos || [];
+  const stats = data.stats || [];
   const tbody = document.getElementById('jogos-lista');
   tbody.innerHTML = '';
-  jogosEstáticos.forEach(jogoInfo => {
-    const jogo = jogosBack.find(j => j.nome === jogoInfo.nome) || {};
+  stats.forEach(jogo => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${jogoInfo.nome}</td>
+      <td>${jogo.nome}</td>
       <td>
         ${
           jogo.bloqueado
@@ -249,31 +239,19 @@ async function renderJogos() {
             : '<span class="badge-active" title="Jogo disponível">Ativo</span>'
         }
       </td>
-      <td>${jogo.partidas ?? '--'}</td>
-      <td>${jogo.vitorias ?? '--'}</td>
-      <td>${jogo.derrotas ?? '--'}</td>
-      <td>${jogo.empates ?? '--'}</td>
+      <td>${jogo.totalPartidas ?? '--'}</td>
+      <td>${jogo.mediaVitorias ?? '--'}</td>
+      <td>${jogo.mediaDerrotas ?? '--'}</td>
+      <td>${jogo.mediaEmpates ?? '--'}</td>
       <td>
-        <button onclick="resetarJogo('${jogoInfo.nome}')">Resetar</button>
         ${
           jogo.bloqueado
-            ? `<button onclick="desbloquearJogo('${jogoInfo.nome}')"><i class="fa fa-lock-open"></i> Desbloquear</button>`
-            : `<button onclick="bloquearJogo('${jogoInfo.nome}')"><i class="fa fa-lock"></i> Bloquear</button>`
+            ? `<button onclick="desbloquearJogo('${jogo.nome}')"><i class="fa fa-lock-open"></i> Desbloquear</button>`
+            : `<button onclick="bloquearJogo('${jogo.nome}')"><i class="fa fa-lock"></i> Bloquear</button>`
         }
       </td>
     `;
     tbody.appendChild(tr);
-  });
-}
-window.resetarJogo = function(nome) {
-  abrirConfirmacao('Resetar estatísticas?', `Deseja resetar TODAS as estatísticas do jogo "${nome}"?`, async () => {
-    const user = getUserToken();
-    await fetch(`${API_URL}/admin/games/${encodeURIComponent(nome)}/reset`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: user.email })
-    });
-    renderJogos(); renderDashboard(); closeAllModals();
   });
 }
 window.bloquearJogo = function(nome) {
