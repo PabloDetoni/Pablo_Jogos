@@ -1,4 +1,9 @@
+
 // rankings.js - dinâmico, multi-tabela por dificuldade, colunas específicas por tipo, suporte a usuários bloqueados
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkUserBlocked();
+  startBlockedUserPolling();
+});
 
 const jogosRanking = [
   {

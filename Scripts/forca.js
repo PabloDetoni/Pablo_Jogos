@@ -1,5 +1,10 @@
+
 // forca.js
 // Integrado ao ranking avançado via API
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkUserBlocked();
+  startBlockedUserPolling();
+});
 
 let bancoPalavras = {};
 let palavra = "";

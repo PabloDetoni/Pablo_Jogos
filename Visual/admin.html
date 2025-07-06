@@ -48,17 +48,24 @@
             </div>
           </div>
           <div class="dashboard-card">
-            <div class="card-icon bg2"><i class="fa fa-chess-board"></i></div>
-            <div>
-              <div class="card-value" id="card-total-partidas">--</div>
-              <div class="card-label">Partidas Jogadas</div>
-            </div>
-          </div>
-          <div class="dashboard-card">
             <div class="card-icon bg3"><i class="fa fa-user-shield"></i></div>
             <div>
               <div class="card-value" id="card-total-admins">--</div>
-              <div class="card-label">Administradores</div>
+              <div class="card-label">Total de Administradores</div>
+            </div>
+          </div>
+          <div class="dashboard-card">
+            <div class="card-icon bg2"><i class="fa fa-chess-board"></i></div>
+            <div>
+              <div class="card-value" id="card-total-jogos">--</div>
+              <div class="card-label">Quantidade de Jogos</div>
+            </div>
+          </div>
+          <div class="dashboard-card">
+            <div class="card-icon bg4"><i class="fa fa-chart-bar"></i></div>
+            <div>
+              <div class="card-value" id="card-total-partidas">--</div>
+              <div class="card-label">Total de Partidas</div>
             </div>
           </div>
         </div>
@@ -72,25 +79,46 @@
             <ul id="ultimos-logins" class="last-logins-list"></ul>
           </div>
         </div>
+        <div style="margin-top:24px;">
+          <h3>Dicas de uso do painel:</h3>
+          <ul style="margin-left:18px; color:#374785; font-size:1.04em;">
+            <li>Use os filtros para encontrar usuários rapidamente.</li>
+            <li>Exporte listas de usuários e rankings para CSV para análise externa.</li>
+            <li>Bloqueie jogos para manutenção sem afetar outros jogos.</li>
+            <li>Consulte logs para auditoria de ações administrativas.</li>
+            <li>Promova ou remova administradores conforme necessário.</li>
+          </ul>
+        </div>
       </section>
 
       <section id="section-usuarios" class="admin-section" style="display:none;">
         <h2>Gestão de Usuários</h2>
         <div class="usuarios-toolbar">
-          <input type="text" id="busca-usuario" placeholder="Buscar por nome ou email...">
-          <span id="usuarios-loading" style="display:none; color:#888; margin-left:10px;">Carregando...</span>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; width:100%;">
+            <input type="text" id="busca-usuario" placeholder="Buscar por nome ou email..." style="flex:1; min-width:180px; max-width:320px;">
+            <select id="filtro-status">
+              <option value="">Status</option>
+              <option value="ativo">Ativo</option>
+              <option value="bloqueado">Bloqueado</option>
+            </select>
+            <select id="filtro-tipo">
+              <option value="">Tipo</option>
+              <option value="admin">Administrador</option>
+              <option value="comum">Comum</option>
+            </select>
+            <button id="btn-exportar-usuarios" type="button" title="Exportar usuários para CSV" tabindex="0"><i class="fa fa-file-csv"></i> Exportar CSV</button>
+            <span id="usuarios-loading" style="display:none; color:#888; margin-left:10px;">Carregando...</span>
+          </div>
         </div>
-        <div class="tabela-scroll">
+        <div class="tabela-scroll" style="margin-top:10px;">
           <table class="usuarios-tabela">
             <thead>
               <tr>
-                <th>Nome</th>
-                <th>Email</th>
-                <th>Admin</th>
-                <th>Status</th>
-                <th>Data Cadastro</th>
-                <th>Última Ação</th>
-                <th>Ações</th>
+                <th style="min-width:120px;">Nome</th>
+                <th style="min-width:180px;">Email</th>
+                <th style="min-width:90px;">Status</th>
+                <th style="min-width:140px;">Últimas ações</th>
+                <th style="min-width:180px;">Ações</th>
               </tr>
             </thead>
             <tbody id="usuarios-lista">
@@ -99,6 +127,7 @@
           </table>
         </div>
         <div id="usuarios-erro" style="color:red; margin-top:8px; display:none;"></div>
+        <div id="usuarios-total-info" style="margin: 8px 0 0 0; color: #374785; font-size: 1.01em;"></div>
       </section>
 
       <section id="section-jogos" class="admin-section" style="display:none;">
@@ -193,6 +222,7 @@
     </div>
   </div>
 
+  <script src="../Scripts/utils.js"></script>
   <script src="../Scripts/admin.js"></script>
   <script>
     // Adiciona funcionalidade ao botão "Início"
@@ -206,4 +236,5 @@
     });
   </script>
 </body>
+ </html>
 </html>

@@ -1,5 +1,10 @@
+
 // ppt.js
 // Integrado ao ranking avançado via API
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkUserBlocked();
+  startBlockedUserPolling();
+});
 
 function jogar(jogador) {
   // Inicia sessão de estatísticas

@@ -133,7 +133,9 @@ function irParaLogin() {
 }
 
 // Inicialização de tudo
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkUserBlocked();
+  startBlockedUserPolling();
   renderUserActions();
   setupUserActionsEvents();
   setupHeaderBtns();

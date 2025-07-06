@@ -12,7 +12,10 @@ let gameOver = false;
 let firstClick = true;
 let dificuldadeAtual = "facil"; // INTEGRAÇÃO ESTATÍSTICAS
 
-window.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkUserBlocked();
+  startBlockedUserPolling();
+
   const btnIniciar = document.getElementById('btn-iniciar');
   const btnReiniciar = document.getElementById('btn-reiniciar');
 

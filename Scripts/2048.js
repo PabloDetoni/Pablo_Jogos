@@ -1,5 +1,10 @@
+
 // 2048.js
 // Integrado ao ranking avançado via API
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkUserBlocked();
+  startBlockedUserPolling();
+});
 
 const tamanho = 4;
 let tabuleiro;

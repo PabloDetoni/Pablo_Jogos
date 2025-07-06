@@ -1,4 +1,9 @@
+
 // stats.js
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkUserBlocked();
+  startBlockedUserPolling();
+});
 
 const statsSession = {};
 

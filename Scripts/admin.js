@@ -1,13 +1,14 @@
-// ======================
-// UTILIDADES GERAIS
-// ======================
-function showSection(id) {
-  document.querySelectorAll('.admin-section').forEach(sec => sec.style.display = 'none');
-  document.getElementById(`section-${id}`).style.display = 'block';
-  document.querySelectorAll('.admin-sidebar ul li').forEach(li => li.classList.remove('active'));
-  document.querySelector(`.admin-sidebar ul li[data-section="${id}"]`).classList.add('active');
+// Novo painel admin.js
+// Estrutura principal para painel administrativo moderno
+// Requer backend com rotas RESTful compatíveis
+
+window.API_URL = window.API_URL || "http://localhost:3001";
+
+function getUserToken() {
+  return JSON.parse(sessionStorage.getItem('user'));
 }
 
+// Utilidades de modal
 function showModal(id) {
   document.getElementById('modal-bg').style.display = 'block';
   document.getElementById(id).style.display = 'block';
@@ -21,16 +22,26 @@ function closeAllModals() {
   document.getElementById('modal-bg').style.display = 'none';
 }
 
-function getUserToken() {
-  return JSON.parse(sessionStorage.getItem('user'));
+// Toast visual para feedback
+function showToast(msg, tipo = 'sucesso') {
+  let toast = document.getElementById('admin-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'admin-toast';
+    toast.style = 'position:fixed;top:24px;right:24px;z-index:9999;padding:16px 28px;border-radius:8px;font-size:1.08em;box-shadow:0 2px 12px #0002;transition:opacity .2s;opacity:0;pointer-events:none;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.background = tipo === 'erro' ? '#e53935' : '#43a047';
+  toast.style.color = '#fff';
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; }, 2200);
 }
-const API_URL = "http://localhost:3001";
 
-// ======================
-// INICIALIZAÇÃO
-// ======================
-document.addEventListener('DOMContentLoaded', () => {
-  // Checa se usuário é admin
+// Inicialização
+window.addEventListener('DOMContentLoaded', async () => {
+  await checkUserBlocked();
+  startBlockedUserPolling();
   const user = getUserToken();
   if (!user || !user.isAdmin) {
     alert('Acesso restrito! Apenas administradores.');
@@ -38,46 +49,42 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
   document.getElementById('admin-nome').textContent = user.nome;
-
-  // Navegação sidebar
-  document.querySelectorAll('.admin-sidebar ul li').forEach(li => {
-    li.addEventListener('click', () => showSection(li.dataset.section));
-  });
-
-  // Logout
   document.getElementById('admin-logout').onclick = () => {
     sessionStorage.clear();
     window.location.href = 'index.html';
   };
-
-  // Modal: fechar
   document.getElementById('modal-bg').onclick = closeAllModals;
   document.querySelectorAll('.modal-close').forEach(x => x.onclick = closeAllModals);
   document.getElementById('btn-confirmar-cancelar').onclick = closeAllModals;
 
-  // DASHBOARD
+  // Navegação
+  document.querySelectorAll('.admin-sidebar ul li').forEach(li => {
+    li.addEventListener('click', () => showSection(li.dataset.section));
+  });
+  showSection('dashboard');
+
+  // Renderizações principais
   renderDashboard();
-
-  // USUÁRIOS
   renderUsuarios();
-  document.getElementById('busca-usuario').oninput = renderUsuarios;
-
-  // JOGOS
   renderJogos();
-
-  // RANKINGS
-  rankingsAdminInit();
-
-  // LOGS
+  renderRankings();
   renderLogs();
 
-  // "section-dashboard" default
-  showSection('dashboard');
+  // Filtros e busca usuários
+  document.getElementById('busca-usuario').oninput = renderUsuarios;
+  document.getElementById('filtro-status').onchange = renderUsuarios;
+  document.getElementById('filtro-tipo').onchange = renderUsuarios;
+  document.getElementById('btn-exportar-usuarios').onclick = exportarUsuariosCSV;
 });
 
-// ======================
-// DASHBOARD
-// ======================
+function showSection(id) {
+  document.querySelectorAll('.admin-section').forEach(sec => sec.style.display = 'none');
+  document.getElementById(`section-${id}`).style.display = 'block';
+  document.querySelectorAll('.admin-sidebar ul li').forEach(li => li.classList.remove('active'));
+  document.querySelector(`.admin-sidebar ul li[data-section="${id}"]`).classList.add('active');
+}
+
+// 1. Dashboard
 async function renderDashboard() {
   const user = getUserToken();
   const [usuarios, statsRes] = await Promise.all([
@@ -93,21 +100,97 @@ async function renderDashboard() {
     }).then(r => r.json()).then(d => d.stats || [])
   ]);
   document.getElementById('card-total-usuarios').textContent = usuarios.length;
+  document.getElementById('card-total-admins').textContent = usuarios.filter(u => u.isAdmin).length;
+  document.getElementById('card-total-jogos').textContent = statsRes.length;
+  document.getElementById('card-total-partidas').textContent = statsRes.reduce((a, b) => a + (b.totalPartidas || 0), 0);
+}
+
+// 2. Usuários
+
+
+// 3. Jogos
+// Função única, não duplicada
+// (mantém apenas a versão com os botões e status visual)
+
+// 4. Rankings
+async function renderRankings() {
+  // Implemente renderização de rankings conforme necessário
+  document.getElementById('rankings-lista').innerHTML = '<tr><td colspan="3">Funcionalidade de rankings não implementada</td></tr>';
+}
+
+// 5. Logs e Auditoria
+async function renderLogs() {
+  const user = getUserToken();
+  const tbody = document.getElementById('logs-lista');
+  tbody.innerHTML = '';
+  const res = await fetch(`${API_URL}/admin/logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: user.email })
+  });
+  const data = await res.json();
+  const logs = data.logs || [];
+  logs.forEach(log => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${log.data}</td><td>${log.usuario}</td><td>${log.acao}</td><td>${log.detalhes}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ======================
+// DASHBOARD
+// ======================
+async function renderDashboard() {
+  const user = getUserToken();
+  // Busca usuários e estatísticas dos jogos
+  const [usuarios, statsRes] = await Promise.all([
+    fetch(`${API_URL}/admin/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: user.email })
+    }).then(r => r.json()).then(d => d.users || []),
+    fetch(`${API_URL}/admin/game-stats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: user.email })
+    }).then(r => r.json()).then(d => d.stats || [])
+  ]);
+  // Quantidade de jogos: pelo statsRes
+  const totalJogos = statsRes.length;
+  document.getElementById('card-total-usuarios').textContent = usuarios.length;
   document.getElementById('card-total-partidas').textContent = statsRes.reduce((a, b) => a + (b.totalPartidas || 0), 0);
   document.getElementById('card-total-admins').textContent = usuarios.filter(u => u.isAdmin).length;
+  // Adiciona card de jogos se existir no HTML
+  if (document.getElementById('card-total-jogos')) {
+    document.getElementById('card-total-jogos').textContent = totalJogos;
+  }
+  // Últimos cadastros
   let ultimos = usuarios
     .slice().sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1))
     .slice(0, 5)
-    .map(u => `<li>${u.nome} <span style="color:#90caf9;">(${u.email})</span></li>`)
+    .map(u => `<li>${u.nome} <span style=\"color:#90caf9;\">(${u.email})</span></li>`)
     .join('');
   document.getElementById('ultimos-cadastros').innerHTML = ultimos || '<li>Nenhum usuário recente</li>';
+  // Últimos logins
   let ultimosLogins = usuarios
     .filter(u => u.ultimoLogin)
     .slice().sort((a, b) => (b.ultimoLogin > a.ultimoLogin ? 1 : -1))
     .slice(0, 5)
-    .map(u => `<li>${u.nome} <span style="color:#90caf9;">(${u.ultimoLogin})</span></li>`)
+    .map(u => `<li>${u.nome} <span style=\"color:#90caf9;\">(${u.ultimoLogin})</span></li>`)
     .join('');
   document.getElementById('ultimos-logins').innerHTML = ultimosLogins || '<li>Nenhum login recente</li>';
+
+  // Dica dinâmica: se não houver admins além do principal, alerta
+  if (usuarios.filter(u => u.isAdmin).length <= 1) {
+    const dicas = document.querySelector('#section-dashboard ul');
+    if (dicas && !document.getElementById('dica-admin-unico')) {
+      const li = document.createElement('li');
+      li.id = 'dica-admin-unico';
+      li.style.color = '#d32f2f';
+      li.innerHTML = '<b>Atenção:</b> Só existe 1 administrador cadastrado. Recomenda-se promover outro usuário para garantir acesso ao painel.';
+      dicas.appendChild(li);
+    }
+  }
 }
 
 // ======================
@@ -115,7 +198,268 @@ async function renderDashboard() {
 // ======================
 async function renderUsuarios() {
   const user = getUserToken();
-  const busca = document.getElementById('busca-usuario').value.trim().toLowerCase();
+  const tbody = document.getElementById('usuarios-lista');
+  const erroDiv = document.getElementById('usuarios-erro');
+  if (!tbody) return;
+  if (erroDiv) erroDiv.style.display = 'none';
+  try {
+    const busca = document.getElementById('busca-usuario') ? document.getElementById('busca-usuario').value.trim().toLowerCase() : '';
+    const filtroStatus = document.getElementById('filtro-status') ? document.getElementById('filtro-status').value : '';
+    const filtroTipo = document.getElementById('filtro-tipo') ? document.getElementById('filtro-tipo').value : '';
+    const res = await fetch(`${API_URL}/admin/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: user.email })
+    });
+    if (!res.ok) throw new Error('Erro ao buscar usuários');
+    const data = await res.json();
+    let usuariosOriginais = data.users || [];
+    let usuarios = usuariosOriginais;
+    if (busca) {
+      usuarios = usuarios.filter(u =>
+        u.nome.toLowerCase().includes(busca) || u.email.toLowerCase().includes(busca)
+      );
+    }
+    if (filtroStatus) {
+      usuarios = usuarios.filter(u => u.status === filtroStatus);
+    }
+    if (filtroTipo) {
+      if (filtroTipo === 'admin') usuarios = usuarios.filter(u => u.isAdmin);
+      if (filtroTipo === 'comum') usuarios = usuarios.filter(u => !u.isAdmin);
+    }
+    tbody.innerHTML = '';
+    const userLogged = getUserToken();
+    usuarios.forEach(u => {
+      const tr = document.createElement('tr');
+      let btns = '';
+      // Não permite editar/excluir o próprio admin logado
+      const isSelf = u.email === userLogged.email;
+      // Não permite excluir admin principal
+      const isAdminPrincipal = u.email === 'admin@admin.com';
+      if (!isSelf && !isAdminPrincipal) {
+        btns += `<button class="action-btn btn-delete" data-action="excluir" data-email="${u.email}"><i class='fa fa-trash'></i> Excluir</button>`;
+      }
+      if (!isSelf) {
+        // Botão promover/despromover
+        if (u.isAdmin) {
+          btns += `<button class="action-btn btn-promote" data-action="despromover" data-email="${u.email}"><i class='fa fa-user-minus'></i> Remover Admin</button>`;
+        } else {
+          btns += `<button class="action-btn btn-promote" data-action="promover" data-email="${u.email}"><i class='fa fa-user-plus'></i> Promover</button>`;
+        }
+        // Botão bloquear/desbloquear
+        if (u.status === 'ativo') {
+          btns += `<button class="action-btn btn-block" data-action="bloquear" data-email="${u.email}"><i class='fa fa-ban'></i> Bloquear</button>`;
+        } else {
+          btns += `<button class="action-btn btn-block" data-action="desbloquear" data-email="${u.email}"><i class='fa fa-check'></i> Ativar</button>`;
+        }
+      }
+      tr.innerHTML = `
+        <td><span class="user-detail-link" title="Ver detalhes" onclick="mostrarDetalhesUsuario('${u.email}')">${u.nome}</span></td>
+        <td><span class="user-detail-link" title="Ver detalhes" onclick="mostrarDetalhesUsuario('${u.email}')">${u.email}</span></td>
+        <td>
+          ${u.status === 'ativo'
+            ? '<span class="badge-active">Ativo</span>'
+            : '<span class="badge-blocked">Bloqueado</span>'}
+        </td>
+        <td>${u.ultimaAcao || u.ultimoLogin || '--'}</td>
+        <td>
+          <div class="user-actions-col">
+            ${btns}
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Delegação de eventos para botões de ação
+    document.querySelectorAll('.user-actions-col .action-btn').forEach(btn => {
+      btn.onclick = function(e) {
+        const email = this.getAttribute('data-email');
+        const action = this.getAttribute('data-action');
+        if (action === 'bloquear') window.bloquearUsuario(email);
+        if (action === 'desbloquear') window.desbloquearUsuario(email);
+        if (action === 'promover') window.promoverAdmin(email);
+        if (action === 'despromover') window.despromoverAdmin(email);
+        if (action === 'excluir') window.excluirUsuario(email);
+        if (action === 'editar') {
+          // Modal de edição de usuário funcional
+          const user = getUserToken();
+          if (email === user.email) {
+            showToast('Você não pode editar seus próprios dados por segurança.', 'erro');
+            return;
+          }
+          // Captura o email original para garantir update correto
+          const emailOriginal = email;
+          fetch(`${API_URL}/admin/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: user.email })
+          })
+            .then(r => r.json())
+            .then(data => {
+              const u = (data.users || []).find(u => u.email === emailOriginal);
+              if (!u) return;
+              let modal = document.getElementById('modal-edit-user');
+              if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'modal-edit-user';
+                modal.className = 'modal-admin';
+                modal.style = 'display:block;z-index:1005;min-width:340px;';
+                modal.innerHTML = `<div class="modal-content">
+                  <span class="modal-close" onclick="document.getElementById('modal-edit-user').remove()">&times;</span>
+                  <h3>Editar Usuário</h3>
+                  <form id="form-edit-user">
+                    <label>Nome:<br><input type="text" id="edit-user-nome" value="${u.nome}" required></label><br><br>
+                    <label>Email:<br><input type="email" id="edit-user-email" value="${u.email}" required></label><br><br>
+                    <label>Status:<br>
+                      <select id="edit-user-status">
+                        <option value="ativo" ${u.status === 'ativo' ? 'selected' : ''}>Ativo</option>
+                        <option value="bloqueado" ${u.status === 'bloqueado' ? 'selected' : ''}>Bloqueado</option>
+                      </select>
+                    </label><br><br>
+                    <button type="submit" class="action-btn btn-save"><i class='fa fa-save'></i> Salvar</button>
+                  </form>
+                </div>`;
+                document.body.appendChild(modal);
+              } else {
+                modal.style.display = 'block';
+              }
+              const form = modal.querySelector('#form-edit-user');
+              form.onsubmit = function(e) {
+                e.preventDefault();
+                const nome = document.getElementById('edit-user-nome').value.trim();
+                const novoEmail = document.getElementById('edit-user-email').value.trim();
+                const status = document.getElementById('edit-user-status').value;
+                if (!nome || !novoEmail) {
+                  showToast('Preencha todos os campos!', 'erro');
+                  return;
+                }
+                fetch(`${API_URL}/admin/users/${encodeURIComponent(emailOriginal)}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ nome, name: nome, email: novoEmail, status, adminEmail: user.email })
+                })
+                .then(res => res.json())
+                .then(data => {
+                  if (!data.success) {
+                    showToast(data.message || 'Erro ao atualizar usuário.', 'erro');
+                  } else {
+                    showToast('Usuário atualizado!', 'sucesso');
+                    renderUsuarios();
+                    renderDashboard();
+                    document.getElementById('modal-edit-user').remove();
+                  }
+                })
+                .catch(() => {
+                  showToast('Erro de conexão ao atualizar usuário.', 'erro');
+                });
+              };
+            });
+        }
+      };
+    });
+
+    // Exibe total filtrado
+    let totalInfo = document.getElementById('usuarios-total-info');
+    if (!totalInfo) {
+      totalInfo = document.createElement('div');
+      totalInfo.id = 'usuarios-total-info';
+      totalInfo.style = 'margin: 8px 0 0 0; color: #374785; font-size: 1.01em;';
+      tbody.parentElement.parentElement.insertBefore(totalInfo, tbody.parentElement.nextSibling);
+    }
+    totalInfo.textContent = `Exibindo ${usuarios.length} de ${usuariosOriginais.length} usuários`;
+
+    // Atualiza contadores no dashboard se existirem
+    if (document.getElementById('card-total-usuarios')) {
+      document.getElementById('card-total-usuarios').textContent = usuariosOriginais.length;
+    }
+    if (document.getElementById('card-total-admins')) {
+      document.getElementById('card-total-admins').textContent = usuariosOriginais.filter(u => u.isAdmin).length;
+    }
+  } catch (err) {
+    if (erroDiv) {
+      erroDiv.textContent = 'Erro ao carregar usuários: ' + (err.message || err);
+      erroDiv.style.display = 'block';
+    }
+    if (tbody) tbody.innerHTML = '';
+  }
+}
+
+// Toast visual para feedback de ações
+function showToast(msg, tipo = 'sucesso') {
+  let toast = document.getElementById('admin-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'admin-toast';
+    toast.style = 'position:fixed;top:24px;right:24px;z-index:9999;padding:16px 28px;border-radius:8px;font-size:1.08em;box-shadow:0 2px 12px #0002;transition:opacity .2s;opacity:0;pointer-events:none;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.background = tipo === 'erro' ? '#e53935' : '#43a047';
+  toast.style.color = '#fff';
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; }, 2200);
+}
+
+// Detalhes rápidos do usuário (mini-modal)
+window.mostrarDetalhesUsuario = function(email) {
+  const user = JSON.parse(sessionStorage.getItem('user'));
+  fetch(`${API_URL}/admin/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: user.email })
+  })
+    .then(r => r.json())
+    .then(data => {
+      const u = (data.users || []).find(u => u.email === email);
+      if (!u) return;
+      let modal = document.getElementById('modal-user-detail');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modal-user-detail';
+        modal.className = 'modal-admin';
+        modal.style = 'display:block;z-index:1004;min-width:320px;';
+        modal.innerHTML = `<div class="modal-content">
+          <span class="modal-close" onclick="document.getElementById('modal-user-detail').remove()">&times;</span>
+          <h3>Detalhes do Usuário</h3>
+          <div id="user-detail-content"></div>
+        </div>`;
+        document.body.appendChild(modal);
+      }
+      const content = modal.querySelector('#user-detail-content');
+      content.innerHTML = `
+        <b>Nome:</b> ${u.nome}<br>
+        <b>Email:</b> ${u.email}<br>
+        <b>Tipo:</b> ${u.isAdmin ? 'Administrador' : 'Comum'}<br>
+        <b>Status:</b> ${u.status}<br>
+        <b>Data de Cadastro:</b> ${u.createdAt || '--'}<br>
+        <b>Última Ação:</b> ${u.ultimaAcao || u.ultimoLogin || '--'}<br>
+      `;
+      modal.style.display = 'block';
+    });
+}
+
+// Adiciona feedback visual nas ações administrativas
+
+// Adiciona feedback visual nas ações administrativas (deve ser executado APÓS definir as funções no window)
+function wrapAdminActionsWithToast() {
+  ['bloquearUsuario','desbloquearUsuario','promoverAdmin','despromoverAdmin','excluirUsuario'].forEach(fn => {
+    const original = window[fn];
+    window[fn] = function(email) {
+      showToast('Processando...', 'sucesso');
+      setTimeout(() => {
+        original(email);
+      }, 200);
+    }
+  });
+}
+
+// Executa o wrap após todas as funções serem definidas
+wrapAdminActionsWithToast();
+
+// Exportação de usuários para CSV
+async function exportarUsuariosCSV() {
+  const user = getUserToken();
   const res = await fetch(`${API_URL}/admin/users`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -123,94 +467,99 @@ async function renderUsuarios() {
   });
   const data = await res.json();
   let usuarios = data.users || [];
-  if (busca) {
-    usuarios = usuarios.filter(u =>
-      u.nome.toLowerCase().includes(busca) || u.email.toLowerCase().includes(busca)
-    );
-  }
-  const tbody = document.getElementById('usuarios-lista');
-  tbody.innerHTML = '';
+  let csv = 'Nome,Email,Tipo,Status,Data de Cadastro,Última Ação\n';
   usuarios.forEach(u => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${u.nome}</td>
-      <td>${u.email}</td>
-      <td>${u.isAdmin ? '<span class="badge-admin">Admin</span>' : ''}</td>
-      <td>
-        ${u.status === 'ativo'
-          ? '<span class="badge-active">Ativo</span>'
-          : '<span class="badge-blocked">Bloqueado</span>'}
-      </td>
-      <td>${u.createdAt || '--'}</td>
-      <td>${u.ultimaAcao || '--'}</td>
-      <td>
-        ${u.status === 'ativo'
-          ? `<button class="action-btn" onclick="bloquearUsuario('${u.email}')">Bloquear</button>`
-          : `<button class="action-btn" onclick="desbloquearUsuario('${u.email}')">Desbloquear</button>`}
-        ${!u.isAdmin ? `<button class="action-btn" onclick="promoverAdmin('${u.email}')">Promover</button>` : ''}
-        ${u.isAdmin && u.email !== 'admin@admin.com'
-          ? `<button class="action-btn" onclick="despromoverAdmin('${u.email}')">Despromover</button>`
-          : ''}
-        ${u.email !== 'admin@admin.com'
-          ? `<button class="action-btn" onclick="excluirUsuario('${u.email}')">Excluir</button>` : ''}
-      </td>
-    `;
-    tbody.appendChild(tr);
+    csv += `"${u.nome}","${u.email}",${u.isAdmin ? 'Admin' : 'Comum'},${u.status},${u.createdAt || '--'},${u.ultimaAcao || u.ultimoLogin || '--'}\n`;
   });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'usuarios.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
+
 window.bloquearUsuario = function(email) {
   abrirConfirmacao('Bloquear usuário?', 'Tem certeza que deseja bloquear este usuário?', async () => {
     const user = getUserToken();
-    await fetch(`${API_URL}/admin/users/${email}/block`, {
+    const res = await fetch(`${API_URL}/admin/users/${email}/block`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user.email })
     });
-    renderUsuarios(); renderDashboard(); closeAllModals();
+    const data = await res.json();
+    if (!data.success) {
+      showToast(data.message || 'Ação não permitida.', 'erro');
+    } else {
+      renderUsuarios(); renderDashboard(); closeAllModals();
+    }
   });
 }
 window.desbloquearUsuario = function(email) {
   abrirConfirmacao('Desbloquear usuário?', 'Tem certeza que deseja desbloquear este usuário?', async () => {
     const user = getUserToken();
-    await fetch(`${API_URL}/admin/users/${email}/unblock`, {
+    const res = await fetch(`${API_URL}/admin/users/${email}/unblock`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user.email })
     });
-    renderUsuarios(); renderDashboard(); closeAllModals();
+    const data = await res.json();
+    if (!data.success) {
+      showToast(data.message || 'Ação não permitida.', 'erro');
+    } else {
+      renderUsuarios(); renderDashboard(); closeAllModals();
+    }
   });
 }
 window.promoverAdmin = function(email) {
   abrirConfirmacao('Promover para Admin?', 'Tem certeza que deseja promover este usuário para administrador?', async () => {
     const user = getUserToken();
-    await fetch(`${API_URL}/admin/users/${email}/promote`, {
+    const res = await fetch(`${API_URL}/admin/users/${email}/promote`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user.email })
     });
-    renderUsuarios(); renderDashboard(); closeAllModals();
+    const data = await res.json();
+    if (!data.success) {
+      showToast(data.message || 'Ação não permitida.', 'erro');
+    } else {
+      renderUsuarios(); renderDashboard(); closeAllModals();
+    }
   });
 }
 window.despromoverAdmin = function(email) {
   abrirConfirmacao('Remover Admin?', 'Tem certeza que deseja remover privilégios de administrador deste usuário?', async () => {
     const user = getUserToken();
-    await fetch(`${API_URL}/admin/users/${email}/demote`, {
+    const res = await fetch(`${API_URL}/admin/users/${email}/demote`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user.email })
     });
-    renderUsuarios(); renderDashboard(); closeAllModals();
+    const data = await res.json();
+    if (!data.success) {
+      showToast(data.message || 'Ação não permitida.', 'erro');
+    } else {
+      renderUsuarios(); renderDashboard(); closeAllModals();
+    }
   });
 }
 window.excluirUsuario = function(email) {
   abrirConfirmacao('Excluir Usuário?', 'Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.', async () => {
     const user = getUserToken();
-    await fetch(`${API_URL}/admin/users/${email}`, {
+    const res = await fetch(`${API_URL}/admin/users/${email}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user.email })
     });
-    renderUsuarios(); renderDashboard(); closeAllModals();
+    const data = await res.json();
+    if (!data.success) {
+      showToast(data.message || 'Ação não permitida.', 'erro');
+    } else {
+      renderUsuarios(); renderDashboard(); closeAllModals();
+    }
   });
 }
 
@@ -582,7 +931,7 @@ async function exportarRankingCSVAdmin() {
 }
 
 // ======================
-// LOGS
+// LOGS e AUDITORIA
 // ======================
 async function renderLogs() {
   const user = getUserToken();

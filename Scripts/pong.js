@@ -1,5 +1,10 @@
+
 // pong.js
 // Integrado ao ranking avançado via API
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkUserBlocked();
+  startBlockedUserPolling();
+});
 
 let modoIA = false;
 let dificuldade = 'facil';

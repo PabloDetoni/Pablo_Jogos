@@ -1,5 +1,10 @@
+
 // velha.js
 // Integrado ao ranking avançado via API
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkUserBlocked();
+  startBlockedUserPolling();
+});
 
 let jogador = 'X';
 let tabuleiro = Array(9).fill('');

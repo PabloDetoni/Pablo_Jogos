@@ -1,3 +1,5 @@
+// (A rota de edição de usuário foi movida para depois da criação do app)
+// ...existing code...
 // BACKEND Node.js/Express completo para login, registro, painel admin e ranking avançado (em memória)
 const express = require('express');
 const cors = require('cors');
@@ -83,8 +85,17 @@ app.post('/register', (req, res) => {
   }
 
   users.push({ nome, email, senha, isAdmin: false, status: 'ativo', createdAt: nowStr(), ultimoLogin: '' });
-  addLog(nome, 'Cadastro', email);
+  // Adiciona um log de cadastro usando o email como usuario para garantir que apareça na listagem imediatamente
+  addLog(email, 'Cadastro', email);
   return res.json({ success: true, user: { nome, email, isAdmin: false } });
+});
+
+// Nova rota pública para checar status do usuário (bloqueado ou não)
+app.post('/user/status', (req, res) => {
+  const { email } = req.body;
+  const user = findUser(email);
+  if (!user) return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+  res.json({ success: true, status: user.status });
 });
 
 // Login
@@ -132,52 +143,78 @@ app.post('/admin/users', requireAdmin, (req, res) => {
 // Bloquear usuário
 app.put('/admin/users/:email/block', requireAdmin, (req, res) => {
   const email = req.params.email;
+  const adminEmail = req.body.email;
   const user = findUser(email);
   if (!user || user.email === 'admin@admin.com') return res.json({ success: false, message: 'Não permitido.' });
+  if (email === adminEmail) return res.json({ success: false, message: 'Você não pode bloquear a si mesmo.' });
   user.status = 'bloqueado';
-  addLog(req.body.email, 'Bloqueou usuário', email);
+  addLog(adminEmail, 'Bloqueou usuário', email);
   res.json({ success: true });
 });
 
 // Desbloquear usuário
 app.put('/admin/users/:email/unblock', requireAdmin, (req, res) => {
   const email = req.params.email;
+  const adminEmail = req.body.email;
   const user = findUser(email);
   if (!user) return res.json({ success: false });
+  if (email === adminEmail) return res.json({ success: false, message: 'Você não pode desbloquear a si mesmo.' });
   user.status = 'ativo';
-  addLog(req.body.email, 'Desbloqueou usuário', email);
+  addLog(adminEmail, 'Desbloqueou usuário', email);
   res.json({ success: true });
 });
 
 // Promover admin
 app.put('/admin/users/:email/promote', requireAdmin, (req, res) => {
   const email = req.params.email;
+  const adminEmail = req.body.email;
   const user = findUser(email);
   if (!user || user.isAdmin) return res.json({ success: false });
+  if (email === adminEmail) return res.json({ success: false, message: 'Você não pode promover a si mesmo.' });
   user.isAdmin = true;
-  addLog(req.body.email, 'Promoveu usuário', email);
+  addLog(adminEmail, 'Promoveu usuário', email);
   res.json({ success: true });
 });
 
 // Despromover admin
 app.put('/admin/users/:email/demote', requireAdmin, (req, res) => {
   const email = req.params.email;
+  const adminEmail = req.body.email;
   if (email === 'admin@admin.com') return res.json({ success: false, message: 'Não permitido.' });
+  if (email === adminEmail) return res.json({ success: false, message: 'Você não pode remover seu próprio privilégio de admin.' });
   const user = findUser(email);
   if (!user || !user.isAdmin) return res.json({ success: false });
   user.isAdmin = false;
-  addLog(req.body.email, 'Removeu admin', email);
+  addLog(adminEmail, 'Removeu admin', email);
   res.json({ success: true });
 });
 
 // Excluir usuário
 app.delete('/admin/users/:email', requireAdmin, (req, res) => {
   const email = req.params.email;
+  const adminEmail = req.body.email;
   if (email === 'admin@admin.com') return res.json({ success: false, message: 'Não permitido.' });
+  if (email === adminEmail) return res.json({ success: false, message: 'Você não pode excluir a si mesmo.' });
   const idx = users.findIndex(u => u.email === email);
   if (idx === -1) return res.json({ success: false });
   users.splice(idx, 1);
-  addLog(req.body.email, 'Excluiu usuário', email);
+  addLog(adminEmail, 'Excluiu usuário', email);
+  res.json({ success: true });
+});
+
+// Adiciona rota de edição de usuário (nome, email, status) após a criação do app
+app.put('/admin/users/:email', requireAdmin, (req, res) => {
+  const email = req.params.email;
+  const { nome, email: novoEmail, status, adminEmail } = req.body;
+  const user = findUser(email);
+  if (!user) return res.json({ success: false, message: 'Usuário não encontrado.' });
+  if (novoEmail && novoEmail !== email && findUser(novoEmail)) {
+    return res.json({ success: false, message: 'Email já cadastrado.' });
+  }
+  if (nome) user.nome = nome;
+  if (novoEmail && novoEmail !== email) user.email = novoEmail;
+  if (status) user.status = status;
+  addLog(adminEmail, 'Editou usuário', email);
   res.json({ success: true });
 });
 
