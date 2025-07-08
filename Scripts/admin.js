@@ -45,13 +45,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   const user = getUserToken();
   if (!user || !user.isAdmin) {
     alert('Acesso restrito! Apenas administradores.');
-    window.location.href = 'index.html';
+    window.location.href = '/Visual/index.html';
     return;
   }
   document.getElementById('admin-nome').textContent = user.nome;
   document.getElementById('admin-logout').onclick = () => {
     sessionStorage.clear();
-    window.location.href = 'index.html';
+    window.location.href = '/Visual/index.html';
   };
   document.getElementById('modal-bg').onclick = closeAllModals;
   document.querySelectorAll('.modal-close').forEach(x => x.onclick = closeAllModals);
@@ -111,6 +111,81 @@ async function renderDashboard() {
 // 3. Jogos
 // Função única, não duplicada
 // (mantém apenas a versão com os botões e status visual)
+
+// Ajuste dinâmico das colunas da tabela de jogos conforme o tipo de jogo
+function renderJogosTabela(jogos) {
+  const jogosComEmpate = ['Jogo da Velha', 'PPT'];
+  const jogosComDerrota = ['Jogo da Velha', 'PPT', 'Campo Minado', 'Sudoku', 'Pong', 'Forca'];
+  const tbody = document.getElementById('jogos-lista');
+  tbody.innerHTML = '';
+  jogos.forEach(jogo => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${jogo.nome}</td>
+      <td>${jogo.bloqueado ? '<span style="color:red">Bloqueado</span>' : '<span style="color:green">Liberado</span>'}</td>
+      <td>${jogo.totalPartidas ?? '--'}</td>
+      <td>${jogo.mediaVitorias ?? '--'}</td>
+      ${jogosComEmpate.includes(jogo.nome) ? `<td>${jogo.mediaEmpates ?? '--'}</td>` : '<td style="color:#aaa">--</td>'}
+      ${jogosComDerrota.includes(jogo.nome) ? `<td>${jogo.mediaDerrotas ?? '--'}</td>` : '<td style="color:#aaa">--</td>'}
+      <td><!-- ações dinâmicas aqui --></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  // Oculta colunas de empate/derrota se todos os jogos exibidos não usam
+  const thEmpates = document.getElementById('th-media-empates');
+  const thDerrotas = document.getElementById('th-media-derrotas');
+  const temEmpate = jogos.some(j => jogosComEmpate.includes(j.nome));
+  const temDerrota = jogos.some(j => jogosComDerrota.includes(j.nome));
+  thEmpates.style.display = temEmpate ? '' : 'none';
+  thDerrotas.style.display = temDerrota ? '' : 'none';
+  // Esconde/mostra células
+  Array.from(tbody.rows).forEach(row => {
+    if (!temEmpate) row.cells[4].style.display = 'none';
+    if (!temDerrota) row.cells[5].style.display = 'none';
+  });
+}
+
+// Renderização dos cards de jogos na gestão
+function renderJogosCards(jogos) {
+  const container = document.getElementById('jogos-cards-list');
+  container.innerHTML = '';
+  const jogosComEmpate = ['Jogo da Velha', 'PPT'];
+  // Derrotas: mostrar para todos exceto 2048
+  const jogosSemDerrota = ['2048'];
+  const jogosComTempo = ['Sudoku', 'Memória', 'Campo Minado', 'Pong'];
+  jogos.forEach(jogo => {
+    const card = document.createElement('div');
+    card.className = 'jogo-card-admin';
+    let statsHtml = `<div><b>Partidas:</b> ${jogo.totalPartidas ?? '--'}</div>`;
+    if (jogo.nome === '2048') {
+      statsHtml += `<div><b>Pontuação média:</b> ${jogo.mediaPontuacao ?? '--'}</div>`;
+    } else {
+      if (jogosComEmpate.includes(jogo.nome)) {
+        statsHtml += `<div><b>Vitórias:</b> ${jogo.pctVitorias ? jogo.pctVitorias + '%' : '--'}</div>`;
+        statsHtml += `<div><b>Empates:</b> ${jogo.pctEmpates ? jogo.pctEmpates + '%' : '--'}</div>`;
+        statsHtml += `<div><b>Derrotas:</b> ${jogo.pctDerrotas ? jogo.pctDerrotas + '%' : '--'}</div>`;
+      } else {
+        statsHtml += `<div><b>Vitórias:</b> ${jogo.pctVitorias ? jogo.pctVitorias + '%' : '--'}</div>`;
+        statsHtml += `<div><b>Derrotas:</b> ${jogo.pctDerrotas ? jogo.pctDerrotas + '%' : '--'}</div>`;
+      }
+    }
+    if (jogosComTempo.includes(jogo.nome)) {
+      statsHtml += `<div><b>Tempo médio:</b> ${jogo.mediaTempoConclusao ?? '--'}</div>`;
+    }
+    card.innerHTML = `
+      <div class="jogo-card-header">
+        <span class="jogo-nome">${jogo.nome}</span>
+        <button class="jogo-status-btn ${jogo.bloqueado ? 'bloqueado' : 'liberado'}" title="${jogo.bloqueado ? 'Desbloquear' : 'Bloquear'}" onclick="${jogo.bloqueado ? `desbloquearJogo('${jogo.nome.replace(/'/g, '\'')}' )` : `bloquearJogo('${jogo.nome.replace(/'/g, '\'')}' )`}">
+          <i class="fa ${jogo.bloqueado ? 'fa-lock' : 'fa-unlock'}"></i>
+        </button>
+      </div>
+      <div class="jogo-card-stats">
+        ${statsHtml}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
 
 // 4. Rankings
 async function renderRankings() {
@@ -575,33 +650,8 @@ async function renderJogos() {
   });
   const data = await res.json();
   const stats = data.stats || [];
-  const tbody = document.getElementById('jogos-lista');
-  tbody.innerHTML = '';
-  stats.forEach(jogo => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${jogo.nome}</td>
-      <td>
-        ${
-          jogo.bloqueado
-            ? '<span class="badge-blocked" title="Jogo em manutenção">Bloqueado</span>'
-            : '<span class="badge-active" title="Jogo disponível">Ativo</span>'
-        }
-      </td>
-      <td>${jogo.totalPartidas ?? '--'}</td>
-      <td>${jogo.mediaVitorias ?? '--'}</td>
-      <td>${jogo.mediaDerrotas ?? '--'}</td>
-      <td>${jogo.mediaEmpates ?? '--'}</td>
-      <td>
-        ${
-          jogo.bloqueado
-            ? `<button onclick="desbloquearJogo('${jogo.nome}')"><i class="fa fa-lock-open"></i> Desbloquear</button>`
-            : `<button onclick="bloquearJogo('${jogo.nome}')"><i class="fa fa-lock"></i> Bloquear</button>`
-        }
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+  // Chama a renderização dos cards modernos
+  renderJogosCards(stats);
 }
 window.bloquearJogo = function(nome) {
   abrirConfirmacao('Bloquear jogo?', `Deseja bloquear o jogo "${nome}"? Usuários verão mensagem de manutenção.`, async () => {

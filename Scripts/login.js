@@ -64,7 +64,7 @@ async function login(event) {
         isAdmin: data.user.isAdmin // <- ESSENCIAL PARA FUNCIONAR O BOTÃO DO ADMIN!
       }));
       sessionStorage.removeItem('guest');
-      window.location.href = 'index.html';
+      window.location.href = '/Visual/index.html';
     } else {
       document.getElementById('login-error').textContent = data.message || 'Credenciais inválidas';
       document.getElementById('login-error').style.display = 'block';
@@ -130,7 +130,7 @@ async function register(event) {
         isAdmin: data.user.isAdmin // <- ESSENCIAL
       }));
       sessionStorage.removeItem('guest');
-      window.location.href = 'index.html';
+      window.location.href = '/Visual/index.html';
     } else {
       document.getElementById('register-error').textContent = data.message || 'Erro ao registrar';
       document.getElementById('register-error').style.display = 'block';
@@ -144,7 +144,7 @@ async function register(event) {
 function loginAsGuest() {
   sessionStorage.setItem('guest', 'true');
   sessionStorage.removeItem('user');
-  window.location.href = 'index.html';
+  window.location.href = '/Visual/index.html';
 }
 
 // Função utilitária para garantir que o endpoint bate com o host do frontend (localhost ou 127.0.0.1)

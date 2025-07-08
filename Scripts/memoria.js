@@ -1,3 +1,59 @@
+// --- BLOQUEIO DINÂMICO DE JOGO (admin) --- //
+const GAME_NAME = 'Memória';
+function checkGameBlocked() {
+  fetch('http://localhost:3001/game/status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome: GAME_NAME })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success && data.bloqueado) {
+      showBlockedOverlay();
+    } else {
+      hideBlockedOverlay();
+    }
+  });
+}
+setInterval(checkGameBlocked, 1000);
+function showBlockedOverlay() {
+  if (!document.getElementById('blocked-overlay')) {
+    const overlay = document.createElement('div');
+    overlay.id = 'blocked-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = 0;
+    overlay.style.left = 0;
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.background = 'rgba(0,0,0,0.8)';
+    overlay.style.color = '#fff';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = 9999;
+    overlay.innerHTML = '<div style="text-align:center"><h2>Este jogo foi bloqueado pelo administrador.</h2><p>Você será redirecionado.</p></div>';
+    document.body.appendChild(overlay);
+    // Desabilita todos os elementos interativos da página imediatamente
+    const allButtons = document.querySelectorAll('button');
+    allButtons.forEach(btn => { btn.disabled = true; btn.style.pointerEvents = 'none'; });
+    const allInputs = document.querySelectorAll('input, select, textarea');
+    allInputs.forEach(inp => { inp.disabled = true; inp.style.pointerEvents = 'none'; });
+    const allLinks = document.querySelectorAll('a');
+    allLinks.forEach(a => { a.onclickOld = a.onclick; a.onclick = function(e){e.preventDefault();}; a.style.pointerEvents = 'none'; a.style.opacity = '0.5'; });
+    setTimeout(() => { window.location.href = "/Visual/index.html"; }, 3000);
+  }
+}
+function hideBlockedOverlay() {
+  const overlay = document.getElementById('blocked-overlay');
+  if (overlay) overlay.remove();
+  // Reabilita todos os elementos interativos caso o jogo seja desbloqueado sem recarregar
+  const allButtons = document.querySelectorAll('button');
+  allButtons.forEach(btn => { btn.disabled = false; btn.style.pointerEvents = ''; });
+  const allInputs = document.querySelectorAll('input, select, textarea');
+  allInputs.forEach(inp => { inp.disabled = false; inp.style.pointerEvents = ''; });
+  const allLinks = document.querySelectorAll('a');
+  allLinks.forEach(a => { if(a.onclickOld){a.onclick = a.onclickOld; a.onclickOld = null;} a.style.pointerEvents = ''; a.style.opacity = ''; });
+}
 
 // memoria.js
 // Integrado ao ranking avançado via API
@@ -181,9 +237,24 @@ function formatTime(seconds) {
 
 // INTEGRAÇÃO RANKING - registra score ao vencer
 async function registrarPontuacaoRankingMemoria() {
+  // Pega o usuário antes de qualquer uso
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
+  // Defina dificuldadeLabel antes de qualquer uso
   let dificuldadeLabel = dificuldadeAtual === 'facil' ? 'Fácil' :
                          dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
+  // Salva partida real para estatísticas
+  await fetch('http://localhost:3001/api/partida', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jogo: 'Memória',
+      resultado: 'vitoria',
+      nome: user.nome,
+      tempo: typeof timerSec === 'number' ? timerSec : null,
+      dificuldade: dificuldadeLabel,
+      erros: errorsCount
+    })
+  });
 
   // 1. Ranking geral (mais vitórias totais)
   await atualizarRankingAdvanced({

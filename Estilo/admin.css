@@ -604,31 +604,94 @@ body {
   background: #b71c1c;
 }
 
-/* Responsividade */
+/* Jogos - Gestão de Jogos */
+.jogos-cards-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 18px;
+}
+.jogos-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  align-items: stretch;
+}
+.jogo-card-admin {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(55,71,133,0.10);
+  border: 1.5px solid #e3e6f0;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 22px 32px 16px 32px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  transition: box-shadow 0.2s;
+  position: relative;
+  min-height: 80px;
+}
+.jogo-card-admin:hover {
+  box-shadow: 0 4px 24px rgba(55,71,133,0.18);
+  border-color: #bfc8e6;
+}
+.jogo-card-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.jogo-nome {
+  font-size: 1.25em;
+  font-weight: 600;
+  color: #374785;
+  margin-right: 12px;
+}
+.jogo-status-btn {
+  border: none;
+  background: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #374785;
+  transition: color 0.2s;
+  margin-left: 8px;
+}
+.jogo-status-btn.liberado {
+  color: #2ecc40;
+}
+.jogo-status-btn.bloqueado {
+  color: #e74c3c;
+}
+.jogo-status-btn:focus {
+  outline: 2px solid #374785;
+}
+.jogo-card-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+  font-size: 1.08em;
+  color: #374785;
+  align-items: center;
+}
+.jogo-card-stats > div {
+  min-width: 90px;
+  margin-bottom: 2px;
+}
 @media (max-width: 900px) {
-  .admin-sidebar { width: 64px; }
-  .sidebar-header span { display: none; }
-  .admin-sidebar ul li { padding: 16px 12px 16px 12px; font-size: 1.2rem; justify-content: center; }
-  .admin-main { padding-left: 0; }
-  .admin-section { padding: 18px 4vw 12px 4vw; }
+  .jogo-card-admin {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 18px 10px 14px 10px;
+    min-width: 0;
+  }
+  .jogo-card-header {
+    margin-bottom: 10px;
+  }
+  .jogo-card-stats {
+    gap: 10px 18px;
+  }
 }
-@media (max-width: 600px) {
-  .admin-header { font-size: .97rem; padding: 0 10px; }
-  .sidebar-header { font-size: 1.1rem; padding-top: 18px; }
-  .admin-sidebar { min-width: 46px; }
-  .dashboard-card { padding: 16px 12px 16px 10px; }
-  .dashboard-last-rows > div { padding: 10px 6px; }
-  .admin-section { padding: 14px 2vw 8px 2vw; }
-  .modal-content { padding: 18px 8px 18px 8px; }
-}
-
-/* Scrollbar custom para tabelas */
-.tabela-scroll::-webkit-scrollbar {
-  height: 8px;
-  background: #e3eefd;
-  border-radius: 8px;
-}
-.tabela-scroll::-webkit-scrollbar-thumb {
-  background: #bbdefb;
-  border-radius: 8px;
-}
+/* ...existing code... */

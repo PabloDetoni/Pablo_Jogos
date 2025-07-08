@@ -112,14 +112,30 @@ function setupHeaderBtns() {
 
 // Botões dos jogos
 function setupGameBtns() {
-  document.getElementById('btn-velha').onclick = () => window.location.href = 'velha.html';
-  document.getElementById('btn-ppt').onclick = () => window.location.href = 'ppt.html';
-  document.getElementById('btn-forca').onclick = () => window.location.href = 'forca.html';
-  document.getElementById('btn-memoria').onclick = () => window.location.href = 'memoria.html';
-  document.getElementById('btn-campo-minado').onclick = () => window.location.href = 'campo_minado.html';
-  document.getElementById('btn-pong').onclick = () => window.location.href = 'pong.html';
-  document.getElementById('btn-2048').onclick = () => window.location.href = '2048.html';
-  document.getElementById('btn-sudoku').onclick = () => window.location.href = 'sudoku.html';
+  document.getElementById('btn-velha').onclick = function() {
+    entrarNoJogoSeNaoBloqueado('Jogo da Velha', '/Visual/velha.html');
+  };
+  document.getElementById('btn-ppt').onclick = function() {
+    entrarNoJogoSeNaoBloqueado('PPT', '/Visual/ppt.html');
+  };
+  document.getElementById('btn-forca').onclick = function() {
+    entrarNoJogoSeNaoBloqueado('Forca', '/Visual/forca.html');
+  };
+  document.getElementById('btn-memoria').onclick = function() {
+    entrarNoJogoSeNaoBloqueado('Memória', '/Visual/memoria.html');
+  };
+  document.getElementById('btn-campo-minado').onclick = function() {
+    entrarNoJogoSeNaoBloqueado('Campo Minado', '/Visual/campo_minado.html');
+  };
+  document.getElementById('btn-pong').onclick = function() {
+    entrarNoJogoSeNaoBloqueado('Pong', '/Visual/pong.html');
+  };
+  document.getElementById('btn-2048').onclick = function() {
+    entrarNoJogoSeNaoBloqueado('2048', '/Visual/2048.html');
+  };
+  document.getElementById('btn-sudoku').onclick = function() {
+    entrarNoJogoSeNaoBloqueado('Sudoku', '/Visual/sudoku.html');
+  };
 }
 
 // Botão estatísticas

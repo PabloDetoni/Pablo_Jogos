@@ -10,51 +10,43 @@ const jogosRanking = [
     chave: "Jogo da Velha", nome: "Jogo da Velha",
     dificuldades: ["Fácil", "Médio"],
     tipos: [
-      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
-      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
-      { chave: "mais_vitorias_consecutivas", label: "Mais vitórias consecutivas (Por dificuldade)", porDificuldade: true, colunas: ["Sequência"] }
+      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] }
     ]
   },
   {
     chave: "PPT", nome: "Pedra Papel Tesoura",
     dificuldades: [],
     tipos: [
-      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
-      { chave: "mais_vitorias_consecutivas", label: "Mais vitórias consecutivas", colunas: ["Sequência"] }
+      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] }
     ]
   },
   {
     chave: "Forca", nome: "Forca",
     dificuldades: ["Fácil", "Médio", "Difícil"],
     tipos: [
-      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
-      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
-      { chave: "mais_vitorias_consecutivas", label: "Mais vitórias consecutivas (Por dificuldade)", porDificuldade: true, colunas: ["Sequência"] }
+      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] }
     ]
   },
   {
     chave: "2048", nome: "2048",
     dificuldades: [],
     tipos: [
-      { chave: "maior_pontuacao", label: "Maior pontuação", colunas: ["Pontuação"] }
+      { chave: "pontuacao", label: "Maior pontuação", colunas: ["Pontuação"] }
     ]
   },
   {
     chave: "Memória", nome: "Memória",
     dificuldades: ["Fácil", "Médio", "Difícil"],
     tipos: [
-      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
-      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
+      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo", "Erros"] }
     ]
   },
   {
     chave: "Sudoku", nome: "Sudoku",
-    // Adicionado "Muito Difícil" aqui:
     dificuldades: ["Fácil", "Médio", "Difícil", "Muito Difícil"],
     tipos: [
-      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
-      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
+      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo", "Erros"] }
     ]
   },
@@ -62,8 +54,7 @@ const jogosRanking = [
     chave: "Pong", nome: "Pong",
     dificuldades: ["Fácil", "Médio", "Difícil"],
     tipos: [
-      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
-      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
+      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo"] }
     ]
   },
@@ -71,8 +62,7 @@ const jogosRanking = [
     chave: "Campo Minado", nome: "Campo Minado",
     dificuldades: ["Fácil", "Médio", "Difícil"],
     tipos: [
-      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
-      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
+      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo"] }
     ]
   }

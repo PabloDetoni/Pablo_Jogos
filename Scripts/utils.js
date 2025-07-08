@@ -61,3 +61,24 @@ async function checkUserBlocked(options = { redirect: true }) {
 function startBlockedUserPolling(intervalMs = 10000) {
   setInterval(() => checkUserBlocked({ redirect: true }), intervalMs);
 }
+
+// Função utilitária para checar bloqueio antes de entrar no jogo
+function entrarNoJogoSeNaoBloqueado(nomeJogo, urlDestino) {
+  fetch('http://localhost:3001/game/status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome: nomeJogo })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success && data.bloqueado) {
+      alert('Este jogo está bloqueado pelo administrador.');
+    } else {
+      window.location.href = urlDestino;
+    }
+  })
+  .catch(() => {
+    alert('Erro ao verificar status do jogo.');
+  });
+}
+window.entrarNoJogoSeNaoBloqueado = entrarNoJogoSeNaoBloqueado;

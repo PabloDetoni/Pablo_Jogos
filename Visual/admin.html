@@ -132,29 +132,20 @@
 
       <section id="section-jogos" class="admin-section" style="display:none;">
         <h2>Gestão de Jogos</h2>
-        <div class="jogos-toolbar">
-          <!-- Botão de adicionar jogo removido -->
-          <span id="jogos-loading" style="display:none; color:#888; margin-left:10px;">Carregando...</span>
+        <div class="jogos-cards-area">
+          <div id="jogos-cards-list" class="jogos-cards-list">
+            <!-- Cards dinâmicos dos jogos -->
+          </div>
         </div>
-        <div class="tabela-scroll">
-          <table class="jogos-tabela">
-            <thead>
-              <tr>
-                <th>Nome do Jogo</th>
-                <th>Status</th>
-                <th>Total de Partidas</th>
-                <th>Média de Vitórias</th>
-                <th>Média de Derrotas</th>
-                <th>Média de Empates</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="jogos-lista">
-              <!-- Linhas dinâmicas -->
-            </tbody>
-          </table>
+        <div id="jogos-erro" style="color:red; margin-top:18px; display:none;"></div>
+        <div style="margin-top:18px; color:#374785; font-size:1.04em;">
+          <b>Dicas:</b>
+          <ul style="margin-left:18px;">
+            <li>Bloqueie/desbloqueie jogos rapidamente usando o botão de status.</li>
+            <li>Veja as estatísticas principais de cada jogo de forma visual.</li>
+            <li>Colunas de empate/derrota só aparecem para jogos que fazem sentido.</li>
+          </ul>
         </div>
-        <div id="jogos-erro" style="color:red; margin-top:8px; display:none;"></div>
       </section>
 
       <section id="section-rankings" class="admin-section" style="display:none;">
@@ -237,4 +228,3 @@
   </script>
 </body>
  </html>
-</html>

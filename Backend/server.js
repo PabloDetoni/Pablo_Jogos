@@ -1,45 +1,154 @@
-// (A rota de edição de usuário foi movida para depois da criação do app)
-// ...existing code...
-// BACKEND Node.js/Express completo para login, registro, painel admin e ranking avançado (em memória)
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-
-// ---- DADOS EM MEMÓRIA ---- //
-const users = [
-  // Primeiro admin criado manualmente
-  { nome: "Administrador", email: "admin@admin.com", senha: "admin123", isAdmin: true, status: 'ativo', createdAt: '2024-06-01', ultimoLogin: '' }
-];
-
-// Para bloqueio de jogos (status) — estatísticas serão dinâmicas
-const jogosStatus = [
-  { nome: 'Jogo da Velha', bloqueado: false },
-  { nome: 'PPT', bloqueado: false },
-  { nome: 'Forca', bloqueado: false },
-  { nome: '2048', bloqueado: false },
-  { nome: 'Memória', bloqueado: false },
-  { nome: 'Sudoku', bloqueado: false },
-  { nome: 'Pong', bloqueado: false },
-  { nome: 'Campo Minado', bloqueado: false }
-];
-
-// Ranking avançado: { [jogo]: { [tipo]: { [dificuldade]: [entradas] } } }
-const advancedRankings = {};
-// Exemplo de entrada de ranking:
-// { nome, valor, tempo, erros, status: 'ativo'|'bloqueado' }
-
-const logs = [
-  { data: '2025-06-28 14:51', usuario: 'Administrador', acao: 'Criou sistema', detalhes: '-' }
-];
+const { requireGameNotBlocked } = require('./middleware');
 
 const app = express();
 const PORT = 3001;
 
+
+// CORS para todas as rotas e métodos (antes de tudo)
+const allowedOrigins = [
+  'http://localhost:5500',
+  'http://127.0.0.1:5500',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
 app.use(cors({
-  origin: ['http://localhost:5500', 'http://127.0.0.1:5500'],
-  credentials: true
+  origin: function(origin, callback) {
+    // Permite requests sem origin (ex: curl, mobile apps)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+
+// Body parser antes de tudo
 app.use(bodyParser.json());
+
+// Log de partidas individuais (para estatísticas reais)
+const { users, jogosStatus, advancedRankings, partidasLog } = require('./server-helpers');
+
+
+// Endpoint para registrar uma partida
+app.post('/api/partida', (req, res) => {
+  if (!req.body || typeof req.body !== 'object') {
+    return res.json({ success: false, message: 'Requisição inválida.' });
+  }
+  const { jogo, resultado, nome, tempo, pontuacao, dificuldade, erros } = req.body;
+  if (!jogo || !resultado || !nome) return res.json({ success: false, message: 'Dados obrigatórios ausentes.' });
+  partidasLog.push({
+    jogo,
+    resultado, // 'vitoria', 'derrota', 'empate'
+    nome,
+    tempo: typeof tempo === 'number' ? tempo : null,
+    pontuacao: typeof pontuacao === 'number' ? pontuacao : null,
+    dificuldade: dificuldade || null,
+    erros: typeof erros === 'number' ? erros : null,
+    data: new Date().toISOString()
+  });
+  res.json({ success: true });
+});
+
+
+// Removido duplicidade de declaração
+// (já está declarado e usado acima)
+
+// REMOVER CORS DUPLICADO ABAIXO (SE EXISTIR)
+
+// Rota pública para consultar status de bloqueio de um jogo
+const { getJogosStatus } = require('./server-helpers');
+app.post('/game/status', (req, res) => {
+  if (!req.body || typeof req.body !== 'object') {
+    return res.status(400).json({ success: false, message: 'Requisição inválida.' });
+  }
+  const { nome } = req.body;
+  if (!nome) return res.status(400).json({ success: false, message: 'Nome do jogo obrigatório.' });
+  const jogosStatus = getJogosStatus();
+  const jogo = jogosStatus.find(j => j.nome === nome);
+  if (!jogo) return res.status(404).json({ success: false, message: 'Jogo não encontrado.' });
+  res.json({ success: true, bloqueado: jogo.bloqueado });
+});
+
+// Rotas protegidas para todos os jogos principais
+app.post('/api/jogo-da-velha', requireGameNotBlocked('Jogo da Velha'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Jogo da Velha!' });
+});
+app.post('/api/ppt', requireGameNotBlocked('PPT'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao PPT!' });
+});
+app.post('/api/forca', requireGameNotBlocked('Forca'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Forca!' });
+});
+app.post('/api/2048', requireGameNotBlocked('2048'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao 2048!' });
+});
+app.post('/api/memoria', requireGameNotBlocked('Memória'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Memória!' });
+});
+app.post('/api/sudoku', requireGameNotBlocked('Sudoku'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Sudoku!' });
+});
+app.post('/api/pong', requireGameNotBlocked('Pong'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Pong!' });
+});
+app.post('/api/campo-minado', requireGameNotBlocked('Campo Minado'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Campo Minado!' });
+});
+// ...existing code...
+// BACKEND Node.js/Express completo para login, registro, painel admin e ranking avançado (em memória)
+// (Removido: já importado no topo do arquivo)
+
+
+
+// --- EXEMPLO DE USO DO MIDDLEWARE PARA BLOQUEIO DE JOGOS ---
+// Para cada rota de jogo real, adicione o middleware:
+// app.post('/api/jogo-da-velha', requireGameNotBlocked('Jogo da Velha'), (req, res) => { ... })
+// app.post('/api/ppt', requireGameNotBlocked('PPT'), (req, res) => { ... })
+// app.post('/api/forca', requireGameNotBlocked('Forca'), (req, res) => { ... })
+// app.post('/api/2048', requireGameNotBlocked('2048'), (req, res) => { ... })
+// app.post('/api/memoria', requireGameNotBlocked('Memória'), (req, res) => { ... })
+// app.post('/api/sudoku', requireGameNotBlocked('Sudoku'), (req, res) => { ... })
+// app.post('/api/pong', requireGameNotBlocked('Pong'), (req, res) => { ... })
+// app.post('/api/campo-minado', requireGameNotBlocked('Campo Minado'), (req, res) => { ... })
+const logs = [
+  { data: '2025-06-28 14:51', usuario: 'Administrador', acao: 'Criou sistema', detalhes: '-' }
+];
+
+// Removido duplicidade de declaração
+
+
+// Body parser já está no topo
+
+// Rotas protegidas para todos os jogos principais
+app.post('/api/jogo-da-velha', requireGameNotBlocked('Jogo da Velha'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Jogo da Velha!' });
+});
+app.post('/api/ppt', requireGameNotBlocked('PPT'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao PPT!' });
+});
+app.post('/api/forca', requireGameNotBlocked('Forca'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Forca!' });
+});
+app.post('/api/2048', requireGameNotBlocked('2048'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao 2048!' });
+});
+app.post('/api/memoria', requireGameNotBlocked('Memória'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Memória!' });
+});
+app.post('/api/sudoku', requireGameNotBlocked('Sudoku'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Sudoku!' });
+});
+app.post('/api/pong', requireGameNotBlocked('Pong'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Pong!' });
+});
+app.post('/api/campo-minado', requireGameNotBlocked('Campo Minado'), (req, res) => {
+  res.json({ success: true, message: 'Acesso permitido ao Campo Minado!' });
+});
 
 // --- HELPERS --- //
 function validateEmail(email) {
@@ -229,37 +338,51 @@ app.post('/admin/game-stats', requireAdmin, (req, res) => {
   const stats = [];
 
   nomesJogos.forEach(nome => {
-    let totalPartidas = 0;
+    // Filtra todas as partidas desse jogo
+    const partidas = partidasLog.filter(p => p.jogo === nome);
+    const totalPartidas = partidas.length;
     let totalVitorias = 0, totalDerrotas = 0, totalEmpates = 0;
-    let jogadoresSet = new Set();
-
-    // Busca as entradas de ranking para estatísticas
-    for (const tipo in (advancedRankings[nome] || {})) {
-      for (const dificuldade in (advancedRankings[nome][tipo] || {})) {
-        (advancedRankings[nome][tipo][dificuldade] || []).forEach(entry => {
-          jogadoresSet.add(entry.nome);
-
-          // Ajuste os tipos conforme seu padrão real de ranking
-          if (tipo.includes('vitoria')) totalVitorias += entry.valor || 0;
-          if (tipo.includes('derrota')) totalDerrotas += entry.valor || 0;
-          if (tipo.includes('empate'))  totalEmpates  += entry.valor || 0;
-          // Considera todas interações como partidas (ajuste se necessário)
-          if (tipo.includes('partida') || tipo.includes('vitoria') || tipo.includes('derrota') || tipo.includes('empate')) {
-            totalPartidas += entry.valor || 0;
-          }
-        });
+    let totalTempo = 0, countTempo = 0;
+    let totalPontuacao = 0, countPontuacao = 0;
+    partidas.forEach(p => {
+      if (p.resultado === 'vitoria') totalVitorias++;
+      if (p.resultado === 'derrota') totalDerrotas++;
+      if (p.resultado === 'empate') totalEmpates++;
+      if (["Sudoku","Memória","Campo Minado","Pong"].includes(nome) && typeof p.tempo === 'number') {
+        totalTempo += p.tempo;
+        countTempo++;
       }
-    }
-    const qtdJogadores = jogadoresSet.size || 1;
+      if (nome === '2048' && typeof p.pontuacao === 'number') {
+        totalPontuacao += p.pontuacao;
+        countPontuacao++;
+      }
+    });
     // Busca status de bloqueio
     const bloqueado = (jogosStatus.find(j => j.nome === nome) || {}).bloqueado || false;
+    // Porcentagens
+    const pct = (v, t) => (t > 0 ? ((v / t) * 100).toFixed(1) : '0.0');
+    // Tempo médio em segundos (para jogos de tempo)
+    let mediaTempoConclusao = null;
+    if (["Sudoku","Memória","Campo Minado","Pong"].includes(nome)) {
+      mediaTempoConclusao = countTempo > 0 ? (totalTempo / countTempo).toFixed(2) : null;
+    }
+    // Pontuação média (2048)
+    let mediaPontuacao = null;
+    if (nome === '2048') {
+      mediaPontuacao = countPontuacao > 0 ? (totalPontuacao / countPontuacao).toFixed(2) : null;
+    }
     stats.push({
       nome,
       bloqueado,
       totalPartidas,
-      mediaVitorias: (totalVitorias / qtdJogadores).toFixed(2),
-      mediaDerrotas: (totalDerrotas / qtdJogadores).toFixed(2),
-      mediaEmpates: (totalEmpates / qtdJogadores).toFixed(2)
+      vitorias: totalVitorias,
+      derrotas: totalDerrotas,
+      empates: totalEmpates,
+      pctVitorias: pct(totalVitorias, totalPartidas),
+      pctDerrotas: pct(totalDerrotas, totalPartidas),
+      pctEmpates: pct(totalEmpates, totalPartidas),
+      mediaTempoConclusao,
+      mediaPontuacao
     });
   });
 
@@ -268,6 +391,7 @@ app.post('/admin/game-stats', requireAdmin, (req, res) => {
 
 // Listar jogos (status apenas)
 app.post('/admin/games', requireAdmin, (req, res) => {
+  const jogosStatus = getJogosStatus();
   res.json({ success: true, jogos: jogosStatus });
 });
 
@@ -282,6 +406,7 @@ app.put('/admin/games/:nome/reset', requireAdmin, (req, res) => {
 // Bloquear/desbloquear jogo
 app.put('/admin/games/:nome/block', requireAdmin, (req, res) => {
   const nome = req.params.nome;
+  const jogosStatus = getJogosStatus();
   const jogo = jogosStatus.find(j => j.nome === nome);
   if (!jogo) return res.json({ success: false });
   jogo.bloqueado = true;
@@ -290,6 +415,7 @@ app.put('/admin/games/:nome/block', requireAdmin, (req, res) => {
 });
 app.put('/admin/games/:nome/unblock', requireAdmin, (req, res) => {
   const nome = req.params.nome;
+  const jogosStatus = getJogosStatus();
   const jogo = jogosStatus.find(j => j.nome === nome);
   if (!jogo) return res.json({ success: false });
   jogo.bloqueado = false;
@@ -311,28 +437,78 @@ Estrutura do advancedRankings:
 }
 */
 
-// Obter ranking avançado (admin ou público)
+// Obter ranking avançado (admin ou público) - agora baseado no partidasLog
 app.post('/rankings/advanced', (req, res) => {
   const { jogo, tipo, dificuldade } = req.body;
   if (!jogo || !tipo) return res.json({ success: false, ranking: [] });
 
+  // Ranking por tipo
   let entries = [];
-  if (advancedRankings[jogo] && advancedRankings[jogo][tipo]) {
-    if (dificuldade !== undefined && dificuldade !== null && dificuldade !== "") {
-      entries = (advancedRankings[jogo][tipo][dificuldade] || []);
-    } else {
-      // Se não há dificuldade, pega todos os que não tem dificuldade
-      entries = (advancedRankings[jogo][tipo][''] || []);
-    }
-  }
-  // Ordenação padrão: 
-  // valor decrescente (Vitórias/Pontuação/Sequência), tempo crescente (para menor tempo), erros crescente (para desempate se houver)
-  entries = entries.slice(); // copiar array
-  // Ordena por valor (maior primeiro), exceto se for ranking de tempo
-  if (tipo.startsWith('menor_tempo')) {
-    entries.sort((a, b) => (a.tempo ?? Infinity) - (b.tempo ?? Infinity) || (a.erros ?? 0) - (b.erros ?? 0));
+  // Exemplo de tipos: 'vitorias', 'pontuacao', 'menor_tempo'
+  if (tipo === 'vitorias') {
+    // Ranking por número de vitórias
+    const vitPorUser = {};
+    partidasLog.forEach(p => {
+      if (p.jogo === jogo && p.resultado === 'vitoria') {
+        vitPorUser[p.nome] = (vitPorUser[p.nome] || 0) + 1;
+      }
+    });
+    entries = Object.entries(vitPorUser).map(([nome, valor]) => ({ nome, valor }));
+    entries.sort((a, b) => b.valor - a.valor);
+  } else if (tipo === 'pontuacao') {
+    // Ranking por maior pontuação
+    const pontPorUser = {};
+    partidasLog.forEach(p => {
+      if (p.jogo === jogo && typeof p.pontuacao === 'number') {
+        if (!pontPorUser[p.nome] || p.pontuacao > pontPorUser[p.nome]) {
+          pontPorUser[p.nome] = p.pontuacao;
+        }
+      }
+    });
+    entries = Object.entries(pontPorUser).map(([nome, valor]) => ({ nome, valor }));
+    entries.sort((a, b) => b.valor - a.valor);
+  } else if (tipo === 'menor_tempo') {
+    // Ranking por menor tempo, considerando dificuldade
+    const tempoPorUser = {};
+    partidasLog.forEach(p => {
+      if (
+        p.jogo === jogo &&
+        typeof p.tempo === 'number' &&
+        ((dificuldade && p.dificuldade === dificuldade) || (!dificuldade && (!p.dificuldade || p.dificuldade === '')))
+      ) {
+        if (!tempoPorUser[p.nome] || p.tempo < tempoPorUser[p.nome]) {
+          tempoPorUser[p.nome] = p.tempo;
+        }
+      }
+    });
+    // Para exibir também erros, se existirem, busque o registro completo
+    entries = Object.entries(tempoPorUser).map(([nome, tempo]) => {
+      // Busca o registro da partida com o menor tempo desse usuário e dificuldade
+      const partida = partidasLog.find(p =>
+        p.jogo === jogo &&
+        typeof p.tempo === 'number' &&
+        p.nome === nome &&
+        p.tempo === tempo &&
+        ((dificuldade && p.dificuldade === dificuldade) || (!dificuldade && (!p.dificuldade || p.dificuldade === '')))
+      );
+      return {
+        nome,
+        valor: tempo, // para compatibilidade com frontend
+        tempo,
+        erros: partida && typeof partida.erros === 'number' ? partida.erros : null
+      };
+    });
+    entries.sort((a, b) => a.tempo - b.tempo);
   } else {
-    entries.sort((a, b) => (b.valor ?? 0) - (a.valor ?? 0));
+    // Outros tipos: empates, derrotas, etc
+    const countPorUser = {};
+    partidasLog.forEach(p => {
+      if (p.jogo === jogo && p.resultado === tipo) {
+        countPorUser[p.nome] = (countPorUser[p.nome] || 0) + 1;
+      }
+    });
+    entries = Object.entries(countPorUser).map(([nome, valor]) => ({ nome, valor }));
+    entries.sort((a, b) => b.valor - a.valor);
   }
   res.json({ success: true, ranking: entries });
 });
@@ -421,7 +597,16 @@ app.post('/admin/logs', requireAdmin, (req, res) => {
   res.json({ success: true, logs });
 });
 
+
 // --- INICIAR SERVIDOR --- //
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
+});
+
+
+
+// Middleware de erro global (deve ser o último)
+app.use((err, req, res, next) => {
+  console.error('Erro inesperado:', err);
+  res.status(500).json({ success: false, message: 'Erro interno do servidor.', error: err && err.message });
 });
