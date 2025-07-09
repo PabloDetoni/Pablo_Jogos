@@ -58,15 +58,23 @@ function hideBlockedOverlay() {
 // pong.js
 // Integrado ao ranking avançado via API
 document.addEventListener('DOMContentLoaded', async () => {
-  await checkUserBlocked();
-  startBlockedUserPolling();
+  try {
+    if (typeof checkUserBlocked === 'function') await checkUserBlocked();
+    if (typeof startBlockedUserPolling === 'function') startBlockedUserPolling();
+  } catch (e) {
+    console.error('Erro ao checar usuário bloqueado:', e);
+  }
 });
+
 
 let modoIA = false;
 let dificuldade = 'facil';
 let dificuldadeAtual = 'facil';
 let gameInterval;
 let jogador1Up = false, jogador1Down = false, jogador2Up = false, jogador2Down = false;
+
+// Definição global do usuário para evitar erro de escopo
+const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
 
 let canvas, ctx;
 const largura = 600, altura = 400;
@@ -261,7 +269,8 @@ function checarVencedor() {
     clearInterval(gameInterval);
     if (intervaloTempoPong) clearInterval(intervaloTempoPong);
     if (typeof endGameSession === "function") endGameSession('pong', 'vitoria', dificuldadeAtual, tempoPong);
-    registrarPontuacaoRankingPong(true);
+    // Só registra pontuação no ranking se for contra IA
+    if (modoIA) registrarPontuacaoRankingPong(true);
     setTimeout(() => {
       alert(modoIA ? "Você venceu!" : "Jogador 1 venceu!");
       document.getElementById('menu-inicial').style.display = 'block';
@@ -272,7 +281,8 @@ function checarVencedor() {
     clearInterval(gameInterval);
     if (intervaloTempoPong) clearInterval(intervaloTempoPong);
     if (typeof endGameSession === "function") endGameSession('pong', 'derrota', dificuldadeAtual, tempoPong);
-    registrarPontuacaoRankingPong(false);
+    // Só registra pontuação no ranking se for contra IA
+    if (modoIA) registrarPontuacaoRankingPong(false);
     setTimeout(() => {
       alert(modoIA ? "IA venceu!" : "Jogador 2 venceu!");
       document.getElementById('menu-inicial').style.display = 'block';
@@ -284,114 +294,46 @@ function checarVencedor() {
 // INTEGRAÇÃO RANKING - envia score ao terminar jogo
 async function registrarPontuacaoRankingPong(vitoria) {
   // Salva partida real para estatísticas
+  let dificuldadeLabel =
+    dificuldadeAtual === 'facil' ? 'Fácil' :
+    dificuldadeAtual === 'medio' ? 'Médio' :
+    dificuldadeAtual === 'dificil' ? 'Difícil' : dificuldadeAtual;
+
+  let resultadoApi = vitoria ? 'vitoria' : 'derrota';
   await fetch('http://localhost:3001/api/partida', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       jogo: 'Pong',
-      resultado: vitoria ? 'vitoria' : 'derrota',
+      resultado: resultadoApi,
       nome: user.nome,
-      tempo: typeof tempoPong === 'number' ? tempoPong : null
+      tempo: typeof tempoPong === 'number' ? tempoPong : null,
+      dificuldade: dificuldadeLabel
     })
   });
-  const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
-  let dificuldadeLabel = 
-    dificuldadeAtual === 'facil' ? 'Fácil' : 
-    dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
 
   if (vitoria) {
     // 1. Ranking geral (mais vitórias totais)
-    await atualizarRankingAdvanced({
-      jogo: "Pong",
+    await window.adicionarPontuacaoRanking("Pong", user.nome, {
       tipo: "mais_vitorias_total",
       dificuldade: "",
-      nome: user.nome,
-      valorNovo: 1
+      valor: 1
     });
-
     // 2. Ranking por dificuldade (mais vitórias por dificuldade)
-    await atualizarRankingAdvanced({
-      jogo: "Pong",
+    await window.adicionarPontuacaoRanking("Pong", user.nome, {
       tipo: "mais_vitorias_dificuldade",
       dificuldade: dificuldadeLabel,
-      nome: user.nome,
-      valorNovo: 1
+      valor: 1
     });
-
-    // 3. Ranking menor tempo por dificuldade: só atualiza se o tempo for menor
-    await atualizarRankingMenorTempo({
-      jogo: "Pong",
-      tipo: "menor_tempo",
-      dificuldade: dificuldadeLabel,
-      nome: user.nome,
-      tempo: tempoPong
-    });
-  }
-}
-
-// Helper para vitórias acumuladas (total e por dificuldade)
-async function atualizarRankingAdvanced({ jogo, tipo, dificuldade, nome, valorNovo }) {
-  let valorAntigo = 0;
-  try {
-    const res = await fetch("http://localhost:3001/rankings/advanced", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jogo, tipo, dificuldade })
-    });
-    const data = await res.json();
-    if (data.ranking && Array.isArray(data.ranking)) {
-      const registro = data.ranking.find(e => e.nome === nome);
-      if (registro && typeof registro.valor === "number") valorAntigo = registro.valor;
-    }
-  } catch (e) {}
-
-  try {
-    await fetch("http://localhost:3001/rankings/advanced/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jogo,
-        tipo,
-        dificuldade,
-        nome,
-        valor: valorAntigo + valorNovo
-      })
-    });
-  } catch (e) {}
-}
-
-// Helper para ranking de menor tempo (só salva se for o menor tempo do usuário)
-async function atualizarRankingMenorTempo({ jogo, tipo, dificuldade, nome, tempo }) {
-  let tempoAntigo = null;
-  try {
-    const res = await fetch("http://localhost:3001/rankings/advanced", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jogo, tipo, dificuldade })
-    });
-    const data = await res.json();
-    if (data.ranking && Array.isArray(data.ranking)) {
-      const registro = data.ranking.find(e => e.nome === nome);
-      if (registro && typeof registro.tempo === "number") tempoAntigo = registro.tempo;
-    }
-  } catch (e) {}
-
-  // Só envia se tempo for menor (ou se não existe registro)
-  if (tempoAntigo === null || tempo < tempoAntigo) {
-    try {
-      await fetch("http://localhost:3001/rankings/advanced/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jogo,
-          tipo,
-          dificuldade,
-          nome,
-          tempo,
-          valor: 1 // valor só para indicar vitória, ranking é pelo tempo
-        })
+    // 3. Ranking menor tempo por dificuldade (só envia se tempoPong > 0)
+    if (typeof tempoPong === 'number' && tempoPong > 0) {
+      await window.adicionarPontuacaoRanking("Pong", user.nome, {
+        tipo: "menor_tempo",
+        dificuldade: dificuldadeLabel,
+        tempo: tempoPong,
+        valor: 1
       });
-    } catch (e) {}
+    }
   }
 }
 

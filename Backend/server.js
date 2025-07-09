@@ -442,20 +442,50 @@ app.post('/rankings/advanced', (req, res) => {
   const { jogo, tipo, dificuldade } = req.body;
   if (!jogo || !tipo) return res.json({ success: false, ranking: [] });
 
-  // Ranking por tipo
+  // Mapeamento dos tipos do frontend para tipos internos
+  const tipoMap = {
+    'mais_vitorias_total': 'vitorias',
+    'mais_vitorias_dificuldade': 'vitorias',
+    'mais_vitorias_consecutivas': 'vitorias_consecutivas',
+    'pontuacao': 'pontuacao',
+    'menor_tempo': 'menor_tempo'
+  };
+  const tipoInterno = tipoMap[tipo] || tipo;
+
   let entries = [];
-  // Exemplo de tipos: 'vitorias', 'pontuacao', 'menor_tempo'
-  if (tipo === 'vitorias') {
-    // Ranking por número de vitórias
+  if (tipoInterno === 'vitorias') {
+    // Ranking por número de vitórias (total ou por dificuldade)
     const vitPorUser = {};
     partidasLog.forEach(p => {
-      if (p.jogo === jogo && p.resultado === 'vitoria') {
+      if (
+        p.jogo === jogo &&
+        p.resultado === 'vitoria' &&
+        (!dificuldade || p.dificuldade === dificuldade)
+      ) {
         vitPorUser[p.nome] = (vitPorUser[p.nome] || 0) + 1;
       }
     });
     entries = Object.entries(vitPorUser).map(([nome, valor]) => ({ nome, valor }));
     entries.sort((a, b) => b.valor - a.valor);
-  } else if (tipo === 'pontuacao') {
+  } else if (tipoInterno === 'vitorias_consecutivas') {
+    // Ranking por maior sequência de vitórias consecutivas (por dificuldade)
+    const seqPorUser = {};
+    const lastSeq = {};
+    partidasLog.forEach(p => {
+      if (p.jogo === jogo && (!dificuldade || p.dificuldade === dificuldade)) {
+        if (!seqPorUser[p.nome]) seqPorUser[p.nome] = 0;
+        if (!lastSeq[p.nome]) lastSeq[p.nome] = 0;
+        if (p.resultado === 'vitoria') {
+          lastSeq[p.nome] = (lastSeq[p.nome] || 0) + 1;
+          if (lastSeq[p.nome] > seqPorUser[p.nome]) seqPorUser[p.nome] = lastSeq[p.nome];
+        } else {
+          lastSeq[p.nome] = 0;
+        }
+      }
+    });
+    entries = Object.entries(seqPorUser).map(([nome, valor]) => ({ nome, valor }));
+    entries.sort((a, b) => b.valor - a.valor);
+  } else if (tipoInterno === 'pontuacao') {
     // Ranking por maior pontuação
     const pontPorUser = {};
     partidasLog.forEach(p => {
@@ -467,13 +497,14 @@ app.post('/rankings/advanced', (req, res) => {
     });
     entries = Object.entries(pontPorUser).map(([nome, valor]) => ({ nome, valor }));
     entries.sort((a, b) => b.valor - a.valor);
-  } else if (tipo === 'menor_tempo') {
+  } else if (tipoInterno === 'menor_tempo') {
     // Ranking por menor tempo, considerando dificuldade
     const tempoPorUser = {};
     partidasLog.forEach(p => {
       if (
         p.jogo === jogo &&
         typeof p.tempo === 'number' &&
+        p.resultado === 'vitoria' &&
         ((dificuldade && p.dificuldade === dificuldade) || (!dificuldade && (!p.dificuldade || p.dificuldade === '')))
       ) {
         if (!tempoPorUser[p.nome] || p.tempo < tempoPorUser[p.nome]) {
@@ -487,6 +518,7 @@ app.post('/rankings/advanced', (req, res) => {
       const partida = partidasLog.find(p =>
         p.jogo === jogo &&
         typeof p.tempo === 'number' &&
+        p.resultado === 'vitoria' &&
         p.nome === nome &&
         p.tempo === tempo &&
         ((dificuldade && p.dificuldade === dificuldade) || (!dificuldade && (!p.dificuldade || p.dificuldade === '')))
@@ -503,7 +535,7 @@ app.post('/rankings/advanced', (req, res) => {
     // Outros tipos: empates, derrotas, etc
     const countPorUser = {};
     partidasLog.forEach(p => {
-      if (p.jogo === jogo && p.resultado === tipo) {
+      if (p.jogo === jogo && p.resultado === tipoInterno) {
         countPorUser[p.nome] = (countPorUser[p.nome] || 0) + 1;
       }
     });

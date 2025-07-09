@@ -192,7 +192,8 @@ function verificarVencedor() {
         else endGameSession('velha', 'derrota');
       }
 
-      registrarPontuacaoRankingVelha(vencedor);
+      // Só registra no ranking se for contra IA
+      if (modoIA) registrarPontuacaoRankingVelha(vencedor);
       return;
     }
   }
@@ -200,7 +201,8 @@ function verificarVencedor() {
     jogoEncerrado = true;
     atualizarMensagem('Empate!');
     if (typeof endGameSession === "function") endGameSession('velha', 'empate');
-    registrarPontuacaoRankingVelha('empate');
+    // Só registra no ranking se for contra IA
+    if (modoIA) registrarPontuacaoRankingVelha('empate');
   }
 }
 
@@ -208,61 +210,56 @@ function verificarVencedor() {
 async function registrarPontuacaoRankingVelha(resultado) {
   // Pega o usuário antes de qualquer uso
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
-  // Salva partida real para estatísticas
+  // Padroniza label de dificuldade
+  let dificuldadeLabel = dificuldade === 'facil' ? 'Fácil' : 'Médio';
+  // Padroniza resultado para API
   let resultadoApi = resultado === 'X' ? 'vitoria' : (resultado === 'empate' ? 'empate' : 'derrota');
+  // Salva partida real para estatísticas (backend)
   await fetch('http://localhost:3001/api/partida', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       jogo: 'Jogo da Velha',
       resultado: resultadoApi,
-      nome: user.nome
+      nome: user.nome,
+      dificuldade: dificuldadeLabel
     })
   });
-  let dificuldadeLabel = dificuldade === 'facil' ? 'Fácil' : 'Médio';
-
-  // 1. Ranking geral (mais vitórias no Jogo da Velha)
-  if (resultado === 'X') {
-    await atualizarRankingAdvanced({
-      jogo: "Jogo da Velha",
-      tipo: "mais_vitorias_total",
-      dificuldade: "",
-      nome: user.nome
-    });
-  }
-
-  // 2. Ranking por dificuldade (mais vitórias por dificuldade)
-  if (resultado === 'X') {
-    await atualizarRankingAdvanced({
-      jogo: "Jogo da Velha",
-      tipo: "mais_vitorias_dificuldade",
-      dificuldade: dificuldadeLabel,
-      nome: user.nome
-    });
-  }
-
-  // 3. Ranking por sequência de vitórias consecutivas por dificuldade
+  // Sequência de vitórias consecutivas (por dificuldade)
   let seqKey = `velha_seq_vitoria_${user.nome}_${dificuldadeLabel}`;
   let seqAtual = Number(localStorage.getItem(seqKey)) || 0;
   if (resultado === 'X') {
+    // Ranking geral (mais vitórias total)
+    await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
+      tipo: "mais_vitorias_total",
+      dificuldade: "",
+      valor: 1
+    });
+    // Ranking por dificuldade
+    await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
+      tipo: "mais_vitorias_dificuldade",
+      dificuldade: dificuldadeLabel,
+      valor: 1
+    });
+    // Ranking por sequência de vitórias consecutivas por dificuldade
     seqAtual += 1;
-    await fetch("http://localhost:3001/rankings/advanced/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jogo: "Jogo da Velha",
-        tipo: "mais_vitorias_consecutivas",
-        dificuldade: dificuldadeLabel,
-        nome: user.nome,
-        valor: seqAtual
-      })
+    await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
+      tipo: "mais_vitorias_consecutivas",
+      dificuldade: dificuldadeLabel,
+      valor: seqAtual
     });
   } else {
-    seqAtual = 0; // zera a sequência ao perder ou empatar
+    // Zera sequência se perder ou empatar
+    seqAtual = 0;
+    // Atualiza ranking de sequência para 0 (opcional, mas mantém coerência)
+    await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
+      tipo: "mais_vitorias_consecutivas",
+      dificuldade: dificuldadeLabel,
+      valor: seqAtual
+    });
   }
   localStorage.setItem(seqKey, seqAtual);
 }
-
 // Helper para atualizar ranking acumulando vitórias
 async function atualizarRankingAdvanced({ jogo, tipo, dificuldade, nome }) {
   // Primeiro, busca o valor atual do ranking para este jogador/tipo/dificuldade

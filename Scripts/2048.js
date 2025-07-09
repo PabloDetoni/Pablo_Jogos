@@ -215,37 +215,12 @@ async function registrarPontuacaoRanking2048() {
   let tipo = "pontuacao";
   let valor = score;
 
-  // Busca o valor atual do ranking para este usuário
-  let valorAntigo = 0;
-  try {
-    const res = await fetch("http://localhost:3001/rankings/advanced", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jogo: "2048", tipo, dificuldade: "" })
-    });
-    const data = await res.json();
-    if (data.ranking && Array.isArray(data.ranking)) {
-      const registro = data.ranking.find(e => e.nome === user.nome);
-      if (registro && typeof registro.valor === "number") valorAntigo = registro.valor;
-    }
-  } catch (e) {}
-
-  // Só atualiza se o valor atual for maior que o antigo
-  if (valor > valorAntigo) {
-    try {
-      await fetch("http://localhost:3001/rankings/advanced/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jogo: "2048",
-          tipo,
-          dificuldade: "",
-          nome: user.nome,
-          valor
-        })
-      });
-    } catch (e) {}
-  }
+  // Atualiza ranking usando função global
+  await window.adicionarPontuacaoRanking("2048", user.nome, {
+    tipo,
+    dificuldade: "",
+    valor
+  });
 }
 
 document.addEventListener('keydown', function(e) {

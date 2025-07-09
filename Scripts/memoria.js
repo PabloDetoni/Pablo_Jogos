@@ -239,10 +239,10 @@ function formatTime(seconds) {
 async function registrarPontuacaoRankingMemoria() {
   // Pega o usuário antes de qualquer uso
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
-  // Defina dificuldadeLabel antes de qualquer uso
   let dificuldadeLabel = dificuldadeAtual === 'facil' ? 'Fácil' :
                          dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
-  // Salva partida real para estatísticas
+
+  // Salva partida real para estatísticas (painel admin)
   await fetch('http://localhost:3001/api/partida', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -257,97 +257,27 @@ async function registrarPontuacaoRankingMemoria() {
   });
 
   // 1. Ranking geral (mais vitórias totais)
-  await atualizarRankingAdvanced({
-    jogo: "Memória",
+  await window.adicionarPontuacaoRanking("Memória", user.nome, {
     tipo: "mais_vitorias_total",
     dificuldade: "",
-    nome: user.nome,
-    valorNovo: 1
+    valor: 1
   });
 
   // 2. Ranking por dificuldade (mais vitórias por dificuldade)
-  await atualizarRankingAdvanced({
-    jogo: "Memória",
+  await window.adicionarPontuacaoRanking("Memória", user.nome, {
     tipo: "mais_vitorias_dificuldade",
     dificuldade: dificuldadeLabel,
-    nome: user.nome,
-    valorNovo: 1
+    valor: 1
   });
 
-  // 3. Ranking menor tempo por dificuldade: só atualiza se o tempo for menor
-  await atualizarRankingMenorTempo({
-    jogo: "Memória",
-    tipo: "menor_tempo",
-    dificuldade: dificuldadeLabel,
-    nome: user.nome,
-    tempo: timerSec,
-    erros: errorsCount
-  });
-}
-
-// Helper para vitórias acumuladas (total e por dificuldade)
-async function atualizarRankingAdvanced({ jogo, tipo, dificuldade, nome, valorNovo }) {
-  let valorAntigo = 0;
-  try {
-    const res = await fetch("http://localhost:3001/rankings/advanced", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jogo, tipo, dificuldade })
+  // 3. Ranking menor tempo por dificuldade (só envia se tempo > 0)
+  if (typeof timerSec === 'number' && timerSec > 0) {
+    await window.adicionarPontuacaoRanking("Memória", user.nome, {
+      tipo: "menor_tempo",
+      dificuldade: dificuldadeLabel,
+      tempo: timerSec,
+      erros: errorsCount,
+      valor: 1
     });
-    const data = await res.json();
-    if (data.ranking && Array.isArray(data.ranking)) {
-      const registro = data.ranking.find(e => e.nome === nome);
-      if (registro && typeof registro.valor === "number") valorAntigo = registro.valor;
-    }
-  } catch (e) {}
-
-  try {
-    await fetch("http://localhost:3001/rankings/advanced/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jogo,
-        tipo,
-        dificuldade,
-        nome,
-        valor: valorAntigo + valorNovo
-      })
-    });
-  } catch (e) {}
-}
-
-// Helper para ranking de menor tempo (só salva se for o menor tempo do usuário)
-async function atualizarRankingMenorTempo({ jogo, tipo, dificuldade, nome, tempo, erros }) {
-  let tempoAntigo = null;
-  try {
-    const res = await fetch("http://localhost:3001/rankings/advanced", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jogo, tipo, dificuldade })
-    });
-    const data = await res.json();
-    if (data.ranking && Array.isArray(data.ranking)) {
-      const registro = data.ranking.find(e => e.nome === nome);
-      if (registro && typeof registro.tempo === "number") tempoAntigo = registro.tempo;
-    }
-  } catch (e) {}
-
-  // Só envia se tempo for menor (ou se não existe registro)
-  if (tempoAntigo === null || tempo < tempoAntigo) {
-    try {
-      await fetch("http://localhost:3001/rankings/advanced/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jogo,
-          tipo,
-          dificuldade,
-          nome,
-          tempo,
-          erros,
-          valor: 1 // valor só para indicar vitória, ranking é pelo tempo
-        })
-      });
-    } catch (e) {}
   }
 }

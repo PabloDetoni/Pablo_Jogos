@@ -157,47 +157,46 @@ async function atualizarRankingAdvanced({ jogo, tipo, dificuldade, nome, valorNo
 async function registrarPontuacaoRankingPPT(resultado) {
   // Pega o usuário antes de qualquer uso
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
+  // Padroniza resultado para API (sem acento)
+  let resultadoApi = resultado === 'vitoria' ? 'vitoria' : (resultado === 'derrota' ? 'derrota' : 'empate');
   // Salva partida real para estatísticas
   await fetch('http://localhost:3001/api/partida', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       jogo: 'PPT',
-      resultado,
+      resultado: resultadoApi,
       nome: user.nome
     })
   });
 
   // 1. Ranking geral (mais vitórias totais em PPT)
   if (resultado === 'vitoria') {
-    await atualizarRankingAdvanced({
-      jogo: "PPT",
-      tipo: "vitorias",
+    await window.adicionarPontuacaoRanking("PPT", user.nome, {
+      tipo: "mais_vitorias_total",
       dificuldade: "",
-      nome: user.nome,
-      valorNovo: 1
+      valor: 1
     });
   }
 
   // 2. Ranking por sequência de vitórias consecutivas
-  // Controle local da sequência
   let seqKey = `ppt_seq_vitoria_${user.nome}`;
   let seqAtual = Number(localStorage.getItem(seqKey)) || 0;
   if (resultado === 'vitoria') {
     seqAtual += 1;
-    await fetch("http://localhost:3001/rankings/advanced/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jogo: "PPT",
-        tipo: "mais_vitorias_consecutivas",
-        dificuldade: "",
-        nome: user.nome,
-        valor: seqAtual
-      })
+    await window.adicionarPontuacaoRanking("PPT", user.nome, {
+      tipo: "mais_vitorias_consecutivas",
+      dificuldade: "",
+      valor: seqAtual
     });
   } else {
     seqAtual = 0;
+    // Atualiza ranking de sequência para 0 (opcional, mantém coerência)
+    await window.adicionarPontuacaoRanking("PPT", user.nome, {
+      tipo: "mais_vitorias_consecutivas",
+      dificuldade: "",
+      valor: seqAtual
+    });
   }
   localStorage.setItem(seqKey, seqAtual);
 }

@@ -244,63 +244,56 @@ async function atualizarRankingAdvanced({ jogo, tipo, dificuldade, nome, valorNo
 
 // Função para registrar pontuação no ranking ao final do jogo
 async function registrarPontuacaoRankingForca() {
-  // Pega o usuário antes de qualquer uso
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
-  // Salva partida real para estatísticas
+  // Padroniza label de dificuldade
+  let dificuldadeLabel =
+    dificuldadeAtual === 'facil' ? 'Fácil' :
+    dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
+  // Padroniza resultado para API (sem acento)
+  let resultadoApi = venceuPartida ? 'vitoria' : 'derrota';
   await fetch('http://localhost:3001/api/partida', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       jogo: 'Forca',
-      resultado: venceuPartida ? 'vitoria' : 'derrota',
-      nome: user.nome
+      resultado: resultadoApi,
+      nome: user.nome,
+      dificuldade: dificuldadeLabel,
+      tempo: typeof tempoForca === 'number' ? tempoForca : null
     })
   });
-  let dificuldadeLabel =
-    dificuldadeAtual === 'facil' ? 'Fácil' :
-    dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
 
-  // 1. Ranking geral (mais vitórias totais)
-  if (venceuPartida) {
-    await atualizarRankingAdvanced({
-      jogo: "Forca",
-      tipo: "vitorias",
-      dificuldade: "",
-      nome: user.nome,
-      valorNovo: 1
-    });
-  }
-
-  // 2. Ranking por dificuldade (mais vitórias por dificuldade)
-  if (venceuPartida) {
-    await atualizarRankingAdvanced({
-      jogo: "Forca",
-      tipo: "mais_vitorias_dificuldade",
-      dificuldade: dificuldadeLabel,
-      nome: user.nome,
-      valorNovo: 1
-    });
-  }
-
-  // 3. Ranking por sequência de vitórias consecutivas por dificuldade
-  // Controle local da sequência
   let seqKey = `forca_seq_vitoria_${user.nome}_${dificuldadeLabel}`;
   let seqAtual = Number(localStorage.getItem(seqKey)) || 0;
   if (venceuPartida) {
+    // Ranking geral
+    await window.adicionarPontuacaoRanking("Forca", user.nome, {
+      tipo: "mais_vitorias_total",
+      dificuldade: "",
+      valor: 1
+    });
+    // Ranking por dificuldade
+    await window.adicionarPontuacaoRanking("Forca", user.nome, {
+      tipo: "mais_vitorias_dificuldade",
+      dificuldade: dificuldadeLabel,
+      valor: 1
+    });
+    // Ranking por sequência de vitórias consecutivas
     seqAtual += 1;
-    await fetch("http://localhost:3001/rankings/advanced/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jogo: "Forca",
-        tipo: "mais_vitorias_consecutivas",
-        dificuldade: dificuldadeLabel,
-        nome: user.nome,
-        valor: seqAtual
-      })
+    await window.adicionarPontuacaoRanking("Forca", user.nome, {
+      tipo: "mais_vitorias_consecutivas",
+      dificuldade: dificuldadeLabel,
+      valor: seqAtual
     });
   } else {
+    // Zera sequência se perder
     seqAtual = 0;
+    // Atualiza ranking de sequência para 0 (opcional, mantém coerência)
+    await window.adicionarPontuacaoRanking("Forca", user.nome, {
+      tipo: "mais_vitorias_consecutivas",
+      dificuldade: dificuldadeLabel,
+      valor: seqAtual
+    });
   }
   localStorage.setItem(seqKey, seqAtual);
 }

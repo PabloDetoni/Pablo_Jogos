@@ -10,21 +10,26 @@ const jogosRanking = [
     chave: "Jogo da Velha", nome: "Jogo da Velha",
     dificuldades: ["Fácil", "Médio"],
     tipos: [
-      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] }
+      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
+      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
+      { chave: "mais_vitorias_consecutivas", label: "Mais vitórias consecutivas (Por dificuldade)", porDificuldade: true, colunas: ["Sequência"] }
     ]
   },
   {
     chave: "PPT", nome: "Pedra Papel Tesoura",
     dificuldades: [],
     tipos: [
-      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] }
+      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
+      { chave: "mais_vitorias_consecutivas", label: "Mais vitórias consecutivas", colunas: ["Sequência"] }
     ]
   },
   {
     chave: "Forca", nome: "Forca",
     dificuldades: ["Fácil", "Médio", "Difícil"],
     tipos: [
-      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] }
+      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
+      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
+      { chave: "mais_vitorias_consecutivas", label: "Mais vitórias consecutivas (Por dificuldade)", porDificuldade: true, colunas: ["Sequência"] }
     ]
   },
   {
@@ -38,7 +43,8 @@ const jogosRanking = [
     chave: "Memória", nome: "Memória",
     dificuldades: ["Fácil", "Médio", "Difícil"],
     tipos: [
-      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
+      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
+      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
       { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo", "Erros"] }
     ]
   },
@@ -46,7 +52,8 @@ const jogosRanking = [
     chave: "Sudoku", nome: "Sudoku",
     dificuldades: ["Fácil", "Médio", "Difícil", "Muito Difícil"],
     tipos: [
-      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
+      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
+      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
       { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo", "Erros"] }
     ]
   },
@@ -54,16 +61,18 @@ const jogosRanking = [
     chave: "Pong", nome: "Pong",
     dificuldades: ["Fácil", "Médio", "Difícil"],
     tipos: [
-      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
-      { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo"] }
+      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
+      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
+      { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo", "Erros"] }
     ]
   },
   {
     chave: "Campo Minado", nome: "Campo Minado",
     dificuldades: ["Fácil", "Médio", "Difícil"],
     tipos: [
-      { chave: "vitorias", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
-      { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo"] }
+      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
+      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
+      { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo", "Erros"] }
     ]
   }
 ];
@@ -188,7 +197,8 @@ async function obterRankingAvancado(params) {
     });
     const data = await res.json();
     return data.ranking || [];
-  } catch {
+  } catch (e) {
+    console.error('Erro ao obter ranking:', e);
     return [];
   }
 }
@@ -201,10 +211,14 @@ async function adicionarPontuacaoRanking(jogo, nome, dados) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jogo, nome, ...dados })
     });
-  } catch {
+  } catch (e) {
+    console.error('Erro ao adicionar pontuação ao ranking:', e, { jogo, nome, dados });
     // pode exibir alerta se desejar
   }
 }
+
+// Torna a função global para uso em outros scripts
+window.adicionarPontuacaoRanking = adicionarPontuacaoRanking;
 
 // Utilitário para obter o nome do usuário logado (sessionStorage)
 function getNomeUsuario() {
