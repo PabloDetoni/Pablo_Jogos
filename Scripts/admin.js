@@ -82,6 +82,10 @@ function showSection(id) {
   document.getElementById(`section-${id}`).style.display = 'block';
   document.querySelectorAll('.admin-sidebar ul li').forEach(li => li.classList.remove('active'));
   document.querySelector(`.admin-sidebar ul li[data-section="${id}"]`).classList.add('active');
+  // Chama inicialização dinâmica de rankings ao abrir a seção de rankings
+  if (id === 'rankings') {
+    rankingsAdminInit();
+  }
 }
 
 // 1. Dashboard
@@ -189,8 +193,9 @@ function renderJogosCards(jogos) {
 
 // 4. Rankings
 async function renderRankings() {
-  // Implemente renderização de rankings conforme necessário
-  document.getElementById('rankings-lista').innerHTML = '<tr><td colspan="3">Funcionalidade de rankings não implementada</td></tr>';
+  // Não faz mais nada, pois rankingsAdminInit cuida da renderização dinâmica
+  // Mantido para compatibilidade, mas não exibe placeholder
+  return;
 }
 
 // 5. Logs e Auditoria
@@ -681,16 +686,54 @@ window.desbloquearJogo = function(nome) {
 // ======================
 function rankingsAdminInit() {
   const rankingsToolbar = document.querySelector('.rankings-toolbar');
+  // Garante que a toolbar e a área da tabela estejam limpas e presentes
+  if (!document.getElementById('ranking-jogo-select')) {
+    const jogoSel = document.createElement('select');
+    jogoSel.id = 'ranking-jogo-select';
+    jogoSel.style.marginLeft = '10px';
+    rankingsToolbar.appendChild(jogoSel);
+  }
   if (!document.getElementById('ranking-tipo-select')) {
     const tipoSel = document.createElement('select');
     tipoSel.id = 'ranking-tipo-select';
     tipoSel.style.marginLeft = '10px';
     rankingsToolbar.appendChild(tipoSel);
+  }
+  if (!document.getElementById('ranking-dificuldade-select')) {
     const difSel = document.createElement('select');
     difSel.id = 'ranking-dificuldade-select';
     difSel.style.marginLeft = '10px';
     difSel.style.display = 'none';
     rankingsToolbar.appendChild(difSel);
+  }
+  if (!document.getElementById('btn-exportar-csv')) {
+    const btnExport = document.createElement('button');
+    btnExport.id = 'btn-exportar-csv';
+    btnExport.textContent = 'Exportar CSV';
+    btnExport.style.marginLeft = '10px';
+    rankingsToolbar.appendChild(btnExport);
+  }
+  // Garante que a área da tabela exista
+  let tabelaScroll = document.querySelector('.tabela-scroll');
+  if (!tabelaScroll) {
+    // Tenta encontrar pelo id rankings-lista (caso o HTML tenha)
+    const rankingsLista = document.getElementById('rankings-lista');
+    if (rankingsLista) {
+      rankingsLista.classList.add('tabela-scroll');
+      tabelaScroll = rankingsLista;
+    } else {
+      tabelaScroll = document.createElement('div');
+      tabelaScroll.className = 'tabela-scroll';
+      rankingsToolbar.parentElement.appendChild(tabelaScroll);
+    }
+  }
+  let loading = document.getElementById('rankings-loading');
+  if (!loading) {
+    loading = document.createElement('div');
+    loading.id = 'rankings-loading';
+    loading.textContent = 'Carregando...';
+    loading.style.display = 'none';
+    rankingsToolbar.parentElement.appendChild(loading);
   }
   carregarJogosRankingAdmin();
   document.getElementById('btn-exportar-csv').onclick = exportarRankingCSVAdmin;
@@ -806,7 +849,9 @@ async function renderRankingAdminTabela() {
   const dificuldade = (tipoObj.porDificuldade && jogoObj.dificuldades.length > 0)
     ? document.getElementById('ranking-dificuldade-select').value
     : null;
-  const rankingsContainer = document.querySelector('.tabela-scroll');
+  // Seleciona o container de rankings apenas dentro da aba de rankings
+  const rankingsSection = document.getElementById('section-rankings');
+  const rankingsContainer = rankingsSection.querySelector('.tabela-scroll');
   const loading = document.getElementById('rankings-loading');
   loading.style.display = '';
   const params = { jogo: jogoObj.chave, tipo: tipoObj.chave, dificuldade };
@@ -832,18 +877,22 @@ function montarTabelaRankingAdmin(nomeJogo, tipoObj, ranking, dificuldade = null
         ${
           ranking.length === 0
           ? `<tr><td colspan="${4 + colunasExtras.length}"><em>Sem registros</em></td></tr>`
-          : ranking.map((item, idx) => `
+          : ranking.map((item, idx) => {
+              // Inputs editáveis para cada coluna relevante
+              let inputs = colunasExtras.map(c => {
+                if (c === "Pontuação" || c === "Vitórias" || c === "Sequência")
+                  return `<td><input type='number' id='valor-${item.nome}' value='${item.valor}' style='width:70px'></td>`;
+                if (c === "Tempo")
+                  return `<td><input type='number' id='tempo-${item.nome}' value='${item.tempo ?? ''}' style='width:70px'></td>`;
+                if (c === "Erros")
+                  return `<td><input type='number' id='erros-${item.nome}' value='${item.erros ?? 0}' style='width:60px'></td>`;
+                return `<td>-</td>`;
+              }).join('');
+              return `
               <tr${item.status === "bloqueado" ? ' class="bloqueado"' : ''}>
                 <td>${item.status === "bloqueado" ? "--" : (idx + 1) + "º"}</td>
                 <td>${item.nome}</td>
-                ${colunasExtras.map(c => {
-                  if (c === "Pontuação") return `<td>${item.valor}</td>`;
-                  if (c === "Vitórias") return `<td>${item.valor}</td>`;
-                  if (c === "Tempo") return `<td>${formatarTempo(item.tempo)}</td>`;
-                  if (c === "Sequência") return `<td>${item.valor}</td>`;
-                  if (c === "Erros") return `<td class="erros">${item.erros ?? 0}</td>`;
-                  return `<td>-</td>`;
-                }).join('')}
+                ${inputs}
                 <td>
                   ${item.status === "bloqueado"
                     ? '<span class="badge-blocked">Bloqueado</span>'
@@ -862,14 +911,41 @@ function montarTabelaRankingAdmin(nomeJogo, tipoObj, ranking, dificuldade = null
                         <i class="fa fa-user-check"></i>
                       </button>`
                   }
+                  <button class="btn-editar-ranking" title="Salvar edição" onclick="salvarEdicaoRanking('${nomeJogo.replace(/'/g, "\\'")}', '${tipoObj.chave}', '${dificuldade ?? ""}', '${item.nome.replace(/'/g, "\\'")}', '${colunasExtras.join(',')}')">
+                    <i class='fa fa-save'></i>
+                  </button>
                 </td>
               </tr>
-            `).join('')
+              `;
+            }).join('')
         }
       </tbody>
     </table>
   `;
   return html;
+}
+
+// Função global para salvar edição de ranking
+window.salvarEdicaoRanking = async function(jogo, tipo, dificuldade, nome, colunas) {
+  // colunas: string separada por vírgula
+  const colArr = colunas.split(',');
+  let body = { jogo, tipo, dificuldade, nome };
+  if (colArr.includes('Pontuação') || colArr.includes('Vitórias') || colArr.includes('Sequência')) {
+    body.valor = parseInt(document.getElementById(`valor-${nome}`).value);
+  }
+  if (colArr.includes('Tempo')) {
+    body.tempo = parseInt(document.getElementById(`tempo-${nome}`).value);
+  }
+  if (colArr.includes('Erros')) {
+    body.erros = parseInt(document.getElementById(`erros-${nome}`).value);
+  }
+  await fetch(`${API_URL}/rankings/advanced/add`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  showToast('Ranking atualizado!', 'sucesso');
+  renderRankingAdminTabela();
 }
 async function obterRankingAvancado(params) {
   try {
