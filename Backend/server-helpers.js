@@ -19,7 +19,27 @@ const jogosStatus = [
 ];
 
 
-const advancedRankings = {};
+const fs = require('fs');
+const path = require('path');
+const ADVANCED_RANKINGS_PATH = path.join(__dirname, 'advancedRankings.json');
+let advancedRankings = {};
+
+// Carrega rankings do arquivo se existir
+try {
+  if (fs.existsSync(ADVANCED_RANKINGS_PATH)) {
+    advancedRankings = JSON.parse(fs.readFileSync(ADVANCED_RANKINGS_PATH, 'utf8'));
+  }
+} catch (e) {
+  advancedRankings = {};
+}
+
+function saveAdvancedRankings() {
+  try {
+    fs.writeFileSync(ADVANCED_RANKINGS_PATH, JSON.stringify(advancedRankings, null, 2), 'utf8');
+  } catch (e) {
+    // erro silencioso
+  }
+}
 
 // Log global de partidas
 const partidasLog = [];
@@ -32,4 +52,4 @@ function findUser(email) {
   return users.find(u => u.email === email);
 }
 
-module.exports = { users, jogosStatus, advancedRankings, partidasLog, findUser, getJogosStatus };
+module.exports = { users, jogosStatus, advancedRankings, partidasLog, findUser, getJogosStatus, saveAdvancedRankings };

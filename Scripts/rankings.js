@@ -1,8 +1,14 @@
 
 // rankings.js - dinâmico, multi-tabela por dificuldade, colunas específicas por tipo, suporte a usuários bloqueados
+
+// Só executa lógica de ranking se os elementos existem (evita erro em memoria.html)
 document.addEventListener('DOMContentLoaded', async () => {
-  await checkUserBlocked();
-  startBlockedUserPolling();
+  if (typeof checkUserBlocked === 'function') await checkUserBlocked();
+  if (typeof startBlockedUserPolling === 'function') startBlockedUserPolling();
+  // Só chama preencherSelects se os elementos existem
+  if (document.getElementById('jogo-select') && document.getElementById('tipo-ranking')) {
+    preencherSelects();
+  }
 });
 
 const jogosRanking = [
@@ -190,7 +196,7 @@ function montarTabelaRanking(nomeJogo, tipoObj, ranking, dificuldade = null) {
 // Busca ranking avançado do backend
 async function obterRankingAvancado(params) {
   try {
-    const res = await fetch('http://localhost:3001/rankings/advanced', {
+    const res = await fetch((window.API_URL || 'http://localhost:3001') + '/rankings/advanced', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params)
@@ -206,10 +212,16 @@ async function obterRankingAvancado(params) {
 // Função para adicionar pontuação/dados ao ranking (chame no fim do jogo)
 async function adicionarPontuacaoRanking(jogo, nome, dados) {
   try {
-    await fetch('http://localhost:3001/rankings/advanced/add', {
+    // Garante valor=1 para tipos de vitória (total/dificuldade)
+    let tipo = dados.tipo;
+    let novoDados = { ...dados };
+    if (tipo === 'mais_vitorias_total' || tipo === 'mais_vitorias_dificuldade') {
+      novoDados.valor = 1;
+    }
+    await fetch((window.API_URL || 'http://localhost:3001') + '/rankings/advanced/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jogo, nome, ...dados })
+      body: JSON.stringify({ jogo, nome, ...novoDados })
     });
   } catch (e) {
     console.error('Erro ao adicionar pontuação ao ranking:', e, { jogo, nome, dados });

@@ -1,0 +1,173 @@
+{
+  "2048": {
+    "maior_pontuacao": {
+      "": []
+    },
+    "pontuacao": {
+      "": []
+    }
+  },
+  "Jogo da Velha": {
+    "mais_vitorias_total": {
+      "": [
+        {
+          "nome": "Pablo",
+          "valor": 1,
+          "status": "ativo"
+        }
+      ]
+    },
+    "mais_vitorias_dificuldade": {
+      "Fácil": [
+        {
+          "nome": "Pablo",
+          "valor": 1,
+          "status": "ativo"
+        }
+      ],
+      "Médio": []
+    },
+    "mais_vitorias_consecutivas": {
+      "Fácil": [
+        {
+          "nome": "Pablo",
+          "valor": 5,
+          "status": "ativo"
+        }
+      ],
+      "Médio": []
+    }
+  },
+  "PPT": {
+    "mais_vitorias_total": {
+      "": [
+        {
+          "nome": "Convidado",
+          "valor": 1,
+          "status": "ativo"
+        }
+      ]
+    },
+    "mais_vitorias_consecutivas": {
+      "": [
+        {
+          "nome": "Convidado",
+          "valor": 1,
+          "status": "ativo"
+        }
+      ]
+    }
+  },
+  "Forca": {
+    "mais_vitorias_total": {
+      "": []
+    },
+    "mais_vitorias_dificuldade": {
+      "Fácil": []
+    },
+    "mais_vitorias_consecutivas": {
+      "Fácil": []
+    }
+  },
+  "Memória": {
+    "mais_vitorias_total": {
+      "": []
+    },
+    "mais_vitorias_dificuldade": {
+      "Fácil": [],
+      "Médio": [],
+      "Difícil": []
+    },
+    "menor_tempo": {
+      "Fácil": [],
+      "Médio": [],
+      "Difícil": []
+    }
+  },
+  "Sudoku": {
+    "mais_vitorias_total": {
+      "": [
+        {
+          "nome": "Convidado",
+          "valor": 2,
+          "status": "ativo"
+        }
+      ]
+    },
+    "mais_vitorias_dificuldade": {
+      "Fácil": [
+        {
+          "nome": "Convidado",
+          "valor": 2,
+          "status": "ativo"
+        }
+      ],
+      "Médio": [],
+      "Difícil": [],
+      "Muito Difícil": []
+    },
+    "menor_tempo": {
+      "Fácil": [
+        {
+          "nome": "Convidado",
+          "valor": 1,
+          "tempo": 11,
+          "erros": 0,
+          "status": "ativo"
+        }
+      ],
+      "Médio": [],
+      "Difícil": [],
+      "Muito Difícil": []
+    }
+  },
+  "Pong": {
+    "mais_vitorias_total": {
+      "": [
+        {
+          "nome": "Convidado",
+          "valor": 5,
+          "status": "ativo"
+        }
+      ]
+    },
+    "mais_vitorias_dificuldade": {
+      "Fácil": [
+        {
+          "nome": "Convidado",
+          "valor": 5,
+          "status": "ativo"
+        }
+      ],
+      "Médio": [],
+      "Difícil": []
+    },
+    "menor_tempo": {
+      "Fácil": [
+        {
+          "nome": "Convidado",
+          "valor": 1,
+          "tempo": 1,
+          "status": "ativo"
+        }
+      ],
+      "Médio": [],
+      "Difícil": []
+    }
+  },
+  "Campo Minado": {
+    "mais_vitorias_total": {
+      "": []
+    },
+    "mais_vitorias_dificuldade": {
+      "Fácil": [],
+      "Médio": [],
+      "Difícil": []
+    },
+    "menor_tempo": {
+      "Fácil": [],
+      "Médio": [],
+      "Difícil": []
+    }
+  }
+}

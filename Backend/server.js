@@ -31,7 +31,7 @@ app.use(cors({
 app.use(bodyParser.json());
 
 // Log de partidas individuais (para estatísticas reais)
-const { users, jogosStatus, advancedRankings, partidasLog } = require('./server-helpers');
+const { users, jogosStatus, advancedRankings, partidasLog, saveAdvancedRankings } = require('./server-helpers');
 
 
 // Endpoint para registrar uma partida
@@ -424,6 +424,73 @@ app.put('/admin/games/:nome/unblock', requireAdmin, (req, res) => {
 });
 
 // --- RANKINGS AVANÇADO --- //
+// Remove usuário de todos os rankings (admin)
+app.post('/rankings/remove-all', requireAdmin, (req, res) => {
+  const { nome } = req.body;
+  if (!nome) return res.json({ success: false });
+  let count = 0;
+  for (const jogo in advancedRankings) {
+    for (const tipo in advancedRankings[jogo]) {
+      for (const dif in advancedRankings[jogo][tipo]) {
+        let arr = advancedRankings[jogo][tipo][dif];
+        let idx;
+        while ((idx = arr.findIndex(e => e.nome === nome)) !== -1) {
+          arr.splice(idx, 1);
+          count++;
+        }
+      }
+    }
+  }
+  saveAdvancedRankings();
+  addLog(req.body.email || nome, `Removeu "${nome}" de TODOS os rankings`, count);
+  res.json({ success: true, removidos: count });
+});
+
+// Bloquear usuário em todos os rankings (admin)
+app.post('/rankings/block-all', requireAdmin, (req, res) => {
+  const { nome } = req.body;
+  if (!nome) return res.json({ success: false });
+  let count = 0;
+  for (const jogo in advancedRankings) {
+    for (const tipo in advancedRankings[jogo]) {
+      for (const dif in advancedRankings[jogo][tipo]) {
+        let arr = advancedRankings[jogo][tipo][dif];
+        arr.forEach(e => {
+          if (e.nome === nome && e.status !== 'bloqueado') {
+            e.status = 'bloqueado';
+            count++;
+          }
+        });
+      }
+    }
+  }
+  saveAdvancedRankings();
+  addLog(req.body.email || nome, `Bloqueou "${nome}" em TODOS os rankings`, count);
+  res.json({ success: true, bloqueados: count });
+});
+
+// Desbloquear usuário em todos os rankings (admin)
+app.post('/rankings/unblock-all', requireAdmin, (req, res) => {
+  const { nome } = req.body;
+  if (!nome) return res.json({ success: false });
+  let count = 0;
+  for (const jogo in advancedRankings) {
+    for (const tipo in advancedRankings[jogo]) {
+      for (const dif in advancedRankings[jogo][tipo]) {
+        let arr = advancedRankings[jogo][tipo][dif];
+        arr.forEach(e => {
+          if (e.nome === nome && e.status === 'bloqueado') {
+            e.status = 'ativo';
+            count++;
+          }
+        });
+      }
+    }
+  }
+  saveAdvancedRankings();
+  addLog(req.body.email || nome, `Desbloqueou "${nome}" em TODOS os rankings`, count);
+  res.json({ success: true, desbloqueados: count });
+});
 /*
 Estrutura do advancedRankings:
 {
@@ -441,128 +508,178 @@ Estrutura do advancedRankings:
 app.post('/rankings/advanced', (req, res) => {
   const { jogo, tipo, dificuldade } = req.body;
   if (!jogo || !tipo) return res.json({ success: false, ranking: [] });
+  const keyDif = dificuldade || '';
+  let arr = (advancedRankings[jogo] && advancedRankings[jogo][tipo] && advancedRankings[jogo][tipo][keyDif]) || [];
+  let sorted = [];
 
-  // Mapeamento dos tipos do frontend para tipos internos
-  const tipoMap = {
-    'mais_vitorias_total': 'vitorias',
-    'mais_vitorias_dificuldade': 'vitorias',
-    'mais_vitorias_consecutivas': 'vitorias_consecutivas',
-    'pontuacao': 'pontuacao',
-    'menor_tempo': 'menor_tempo'
-  };
-  const tipoInterno = tipoMap[tipo] || tipo;
-
-  let entries = [];
-  if (tipoInterno === 'vitorias') {
-    // Ranking por número de vitórias (total ou por dificuldade)
-    const vitPorUser = {};
-    partidasLog.forEach(p => {
-      if (
-        p.jogo === jogo &&
-        p.resultado === 'vitoria' &&
-        (!dificuldade || p.dificuldade === dificuldade)
-      ) {
-        vitPorUser[p.nome] = (vitPorUser[p.nome] || 0) + 1;
-      }
-    });
-    entries = Object.entries(vitPorUser).map(([nome, valor]) => ({ nome, valor }));
-    entries.sort((a, b) => b.valor - a.valor);
-  } else if (tipoInterno === 'vitorias_consecutivas') {
-    // Ranking por maior sequência de vitórias consecutivas (por dificuldade)
-    const seqPorUser = {};
-    const lastSeq = {};
-    partidasLog.forEach(p => {
-      if (p.jogo === jogo && (!dificuldade || p.dificuldade === dificuldade)) {
-        if (!seqPorUser[p.nome]) seqPorUser[p.nome] = 0;
-        if (!lastSeq[p.nome]) lastSeq[p.nome] = 0;
-        if (p.resultado === 'vitoria') {
-          lastSeq[p.nome] = (lastSeq[p.nome] || 0) + 1;
-          if (lastSeq[p.nome] > seqPorUser[p.nome]) seqPorUser[p.nome] = lastSeq[p.nome];
-        } else {
-          lastSeq[p.nome] = 0;
+  // 1. Mais Vitórias (todas as dificuldades somadas)
+  if (tipo === 'mais_vitorias_total') {
+    // Agrupa por nome, somando valor de todas as dificuldades
+    let totalPorNome = {};
+    let tipos = advancedRankings[jogo] && advancedRankings[jogo][tipo];
+    if (tipos) {
+      for (const dif in tipos) {
+        for (const entry of tipos[dif]) {
+          if (!totalPorNome[entry.nome]) totalPorNome[entry.nome] = 0;
+          totalPorNome[entry.nome] += entry.valor || 0;
         }
       }
-    });
-    entries = Object.entries(seqPorUser).map(([nome, valor]) => ({ nome, valor }));
-    entries.sort((a, b) => b.valor - a.valor);
-  } else if (tipoInterno === 'pontuacao') {
-    // Ranking por maior pontuação
-    const pontPorUser = {};
-    partidasLog.forEach(p => {
-      if (p.jogo === jogo && typeof p.pontuacao === 'number') {
-        if (!pontPorUser[p.nome] || p.pontuacao > pontPorUser[p.nome]) {
-          pontPorUser[p.nome] = p.pontuacao;
-        }
+    }
+    sorted = Object.entries(totalPorNome).map(([nome, valor]) => {
+      // Pega status do usuário na dificuldade principal (se bloqueado em todas, mostra bloqueado)
+      let status = 'ativo';
+      for (const dif in tipos) {
+        let found = tipos[dif].find(e => e.nome === nome);
+        if (found && found.status === 'bloqueado') status = 'bloqueado';
       }
+      return { nome, valor, status };
     });
-    entries = Object.entries(pontPorUser).map(([nome, valor]) => ({ nome, valor }));
-    entries.sort((a, b) => b.valor - a.valor);
-  } else if (tipoInterno === 'menor_tempo') {
-    // Ranking por menor tempo, considerando dificuldade
-    const tempoPorUser = {};
-    partidasLog.forEach(p => {
-      if (
-        p.jogo === jogo &&
-        typeof p.tempo === 'number' &&
-        p.resultado === 'vitoria' &&
-        ((dificuldade && p.dificuldade === dificuldade) || (!dificuldade && (!p.dificuldade || p.dificuldade === '')))
-      ) {
-        if (!tempoPorUser[p.nome] || p.tempo < tempoPorUser[p.nome]) {
-          tempoPorUser[p.nome] = p.tempo;
-        }
-      }
-    });
-    // Para exibir também erros, se existirem, busque o registro completo
-    entries = Object.entries(tempoPorUser).map(([nome, tempo]) => {
-      // Busca o registro da partida com o menor tempo desse usuário e dificuldade
-      const partida = partidasLog.find(p =>
-        p.jogo === jogo &&
-        typeof p.tempo === 'number' &&
-        p.resultado === 'vitoria' &&
-        p.nome === nome &&
-        p.tempo === tempo &&
-        ((dificuldade && p.dificuldade === dificuldade) || (!dificuldade && (!p.dificuldade || p.dificuldade === '')))
-      );
-      return {
-        nome,
-        valor: tempo, // para compatibilidade com frontend
-        tempo,
-        erros: partida && typeof partida.erros === 'number' ? partida.erros : null
-      };
-    });
-    entries.sort((a, b) => a.tempo - b.tempo);
-  } else {
-    // Outros tipos: empates, derrotas, etc
-    const countPorUser = {};
-    partidasLog.forEach(p => {
-      if (p.jogo === jogo && p.resultado === tipoInterno) {
-        countPorUser[p.nome] = (countPorUser[p.nome] || 0) + 1;
-      }
-    });
-    entries = Object.entries(countPorUser).map(([nome, valor]) => ({ nome, valor }));
-    entries.sort((a, b) => b.valor - a.valor);
+    sorted.sort((a, b) => (b.valor ?? 0) - (a.valor ?? 0));
   }
-  res.json({ success: true, ranking: entries });
+  // 2. Mais Vitórias por dificuldade (só soma na dificuldade)
+  else if (tipo === 'mais_vitorias_dificuldade') {
+    sorted = [...arr];
+    sorted.sort((a, b) => (b.valor ?? 0) - (a.valor ?? 0));
+  }
+  // 3. Mais Vitórias Consecutivas (por dificuldade, só conta sequência máxima)
+  else if (tipo === 'mais_vitorias_consecutivas') {
+    // Para cada usuário, pega o maior valor de sequência já registrada na dificuldade
+    sorted = [...arr];
+    sorted.sort((a, b) => (b.valor ?? 0) - (a.valor ?? 0));
+  }
+  // 4. Menor tempo (por dificuldade)
+  else if (tipo === 'menor_tempo') {
+    sorted = [...arr];
+    sorted.sort((a, b) => (a.tempo ?? Infinity) - (b.tempo ?? Infinity));
+  }
+  // 5. Outros rankings (pontuação, etc)
+  else {
+    sorted = [...arr];
+    sorted.sort((a, b) => (b.valor ?? 0) - (a.valor ?? 0));
+  }
+  res.json({ success: true, ranking: sorted });
 });
 
 // Adicionar entrada ao ranking avançado (public)
 app.post('/rankings/advanced/add', (req, res) => {
   const { jogo, tipo, dificuldade, nome, valor, tempo, erros } = req.body;
+  console.log('REQ /rankings/advanced/add', { jogo, tipo, dificuldade, nome, valor, tempo, erros });
   if (!jogo || !tipo || !nome || valor === undefined) {
+    console.log('FALHA: Dados inválidos', { jogo, tipo, nome, valor });
     return res.json({ success: false, message: 'Dados inválidos.' });
   }
   // status padrão: ativo
-  if (!advancedRankings[jogo]) advancedRankings[jogo] = {};
-  if (!advancedRankings[jogo][tipo]) advancedRankings[jogo][tipo] = {};
-  const keyDif = dificuldade || '';
-  if (!advancedRankings[jogo][tipo][keyDif]) advancedRankings[jogo][tipo][keyDif] = [];
-  // Remove duplicado do mesmo nome (por simplicidade)
+  if (!advancedRankings[jogo]) {
+    console.log('Criando jogo em advancedRankings:', jogo);
+    advancedRankings[jogo] = {};
+  }
+  if (!advancedRankings[jogo][tipo]) {
+    // Cria estrutura correta para tipos com dificuldade
+    if (["mais_vitorias_dificuldade", "mais_vitorias_consecutivas", "menor_tempo"].includes(tipo)) {
+      let difs = [];
+      if (jogo === "Memória" || jogo === "Pong" || jogo === "Campo Minado") difs = ["Fácil", "Médio", "Difícil"];
+      else if (jogo === "Sudoku") difs = ["Fácil", "Médio", "Difícil", "Muito Difícil"];
+      else if (jogo === "Forca") difs = ["Fácil", "Médio", "Difícil"];
+      else if (jogo === "Jogo da Velha") difs = ["Fácil", "Médio"];
+      else difs = [dificuldade || ""];
+      advancedRankings[jogo][tipo] = {};
+      for (const d of difs) advancedRankings[jogo][tipo][d] = [];
+    } else {
+      advancedRankings[jogo][tipo] = { "": [] };
+    }
+  }
+  const keyDif = (dificuldade !== undefined && dificuldade !== null) ? dificuldade : '';
+  if (!advancedRankings[jogo][tipo][keyDif]) {
+    console.log('Criando array para dificuldade:', keyDif, 'em', tipo);
+    advancedRankings[jogo][tipo][keyDif] = [];
+  }
   let arr = advancedRankings[jogo][tipo][keyDif];
-  let idx = arr.findIndex(e => e.nome === nome);
-  if (idx !== -1) arr.splice(idx, 1);
-  arr.push({ nome, valor, tempo, erros, status: "ativo" });
-  addLog(nome, `Pontuou em ${jogo} [${tipo}]${dificuldade ? " ("+dificuldade+")" : ""}`, valor);
-  res.json({ success: true });
+  // Lógica especial para mais_vitorias_total: somar vitórias entre dificuldades
+  if (tipo === 'mais_vitorias_total') {
+    console.log('Adicionando mais_vitorias_total', { arrTotal: advancedRankings[jogo][tipo][''] });
+    // Sempre salva na keyDif = '' (global)
+    let arrTotal = advancedRankings[jogo][tipo][''];
+    let idx = arrTotal.findIndex(e => e.nome === nome);
+    if (idx !== -1) {
+      arrTotal[idx].valor = (arrTotal[idx].valor || 0) + (valor || 0);
+      // Mantém status, tempo, erros se existirem
+      if (tempo !== undefined) arrTotal[idx].tempo = tempo;
+      if (erros !== undefined) arrTotal[idx].erros = erros;
+    } else {
+      arrTotal.push({ nome, valor: valor || 0, tempo, erros, status: "ativo" });
+    }
+    addLog(nome, `Pontuou em ${jogo} [${tipo}]${dificuldade ? " ("+dificuldade+")" : ""}`, valor);
+    saveAdvancedRankings();
+    console.log('Salvo mais_vitorias_total:', advancedRankings[jogo][tipo]['']);
+    return res.json({ success: true });
+  }
+  // Para mais_vitorias_dificuldade: soma vitórias na dificuldade
+  if (tipo === 'mais_vitorias_dificuldade') {
+    console.log('Adicionando mais_vitorias_dificuldade', { arr });
+    let idx = arr.findIndex(e => e.nome === nome);
+    if (idx !== -1) {
+      arr[idx].valor = (arr[idx].valor || 0) + (valor || 0);
+      if (tempo !== undefined) arr[idx].tempo = tempo;
+      if (erros !== undefined) arr[idx].erros = erros;
+    } else {
+      arr.push({ nome, valor: valor || 0, tempo, erros, status: "ativo" });
+    }
+    addLog(nome, `Pontuou em ${jogo} [${tipo}]${dificuldade ? " ("+dificuldade+")" : ""}`, valor);
+    saveAdvancedRankings();
+    console.log('Salvo mais_vitorias_dificuldade:', arr);
+    return res.json({ success: true });
+  }
+  // Para mais_vitorias_consecutivas: só atualiza se for recorde
+  if (tipo === 'mais_vitorias_consecutivas') {
+    console.log('Adicionando mais_vitorias_consecutivas', { arr });
+    let idx = arr.findIndex(e => e.nome === nome);
+    if (idx !== -1) {
+      // Só atualiza se o novo valor for maior que o anterior
+      if ((valor || 0) > (arr[idx].valor || 0)) {
+        arr[idx].valor = valor;
+        if (tempo !== undefined) arr[idx].tempo = tempo;
+        if (erros !== undefined) arr[idx].erros = erros;
+        addLog(nome, `Novo recorde de vitórias consecutivas em ${jogo}${dificuldade ? " ("+dificuldade+")" : ""}`, valor);
+      } // Se não for recorde, não altera
+    } else {
+      arr.push({ nome, valor: valor || 0, tempo, erros, status: "ativo" });
+      addLog(nome, `Entrou no ranking de vitórias consecutivas em ${jogo}${dificuldade ? " ("+dificuldade+")" : ""}`, valor);
+    }
+    saveAdvancedRankings();
+    console.log('Salvo mais_vitorias_consecutivas:', arr);
+    return res.json({ success: true });
+  }
+  // Lógica especial para menor_tempo: só atualiza se for menor tempo, ou mesmo tempo com menos erros
+  if (tipo === 'menor_tempo') {
+    let idx = arr.findIndex(e => e.nome === nome);
+    if (idx !== -1) {
+      let atual = arr[idx];
+      // Só atualiza se tempo for menor, ou mesmo tempo com menos erros
+      if (
+        (typeof tempo === 'number' && (typeof atual.tempo !== 'number' || tempo < atual.tempo)) ||
+        (typeof tempo === 'number' && tempo === atual.tempo && typeof erros === 'number' && (typeof atual.erros !== 'number' || erros < atual.erros))
+      ) {
+        arr[idx] = { nome, valor, tempo, erros, status: "ativo" };
+        addLog(nome, `Novo recorde de menor tempo em ${jogo}${dificuldade ? " ("+dificuldade+")" : ""}`, tempo);
+      } // Se não for melhor, não altera
+    } else {
+      arr.push({ nome, valor, tempo, erros, status: "ativo" });
+      addLog(nome, `Entrou no ranking de menor tempo em ${jogo}${dificuldade ? " ("+dificuldade+")" : ""}`, tempo);
+    }
+    saveAdvancedRankings();
+    console.log('Salvo menor_tempo:', arr);
+    return res.json({ success: true });
+  }
+  // Para outros tipos, só sobrescreve se não for menor_tempo
+  if (tipo !== 'menor_tempo') {
+    let idx = arr.findIndex(e => e.nome === nome);
+    if (idx !== -1) arr.splice(idx, 1);
+    arr.push({ nome, valor, tempo, erros, status: "ativo" });
+    addLog(nome, `Pontuou em ${jogo} [${tipo}]${dificuldade ? " ("+dificuldade+")" : ""}`, valor);
+    saveAdvancedRankings();
+    console.log('Salvo tipo generico', tipo, arr);
+    return res.json({ success: true });
+  }
 });
 
 // Remover entrada do ranking (admin)
@@ -574,6 +691,7 @@ app.post('/rankings/remove', requireAdmin, (req, res) => {
   let idx = arr.findIndex(e => e.nome === nome);
   if (idx !== -1) {
     arr.splice(idx, 1);
+    saveAdvancedRankings();
     addLog(req.body.email, `Removeu "${nome}" do ranking (${jogo} - ${tipo} ${keyDif})`, '-');
     return res.json({ success: true });
   }
@@ -589,6 +707,7 @@ app.post('/rankings/block', requireAdmin, (req, res) => {
   let idx = arr.findIndex(e => e.nome === nome);
   if (idx !== -1) {
     arr[idx].status = "bloqueado";
+    saveAdvancedRankings();
     addLog(req.body.email, `Bloqueou "${nome}" no ranking (${jogo} - ${tipo} ${keyDif})`, '-');
     return res.json({ success: true });
   }
@@ -602,6 +721,7 @@ app.post('/rankings/unblock', requireAdmin, (req, res) => {
   let idx = arr.findIndex(e => e.nome === nome);
   if (idx !== -1) {
     arr[idx].status = "ativo";
+    saveAdvancedRankings();
     addLog(req.body.email, `Desbloqueou "${nome}" no ranking (${jogo} - ${tipo} ${keyDif})`, '-');
     return res.json({ success: true });
   }
@@ -620,6 +740,7 @@ app.post('/rankings/edit', requireAdmin, (req, res) => {
   if (tempo !== undefined) arr[idx].tempo = tempo;
   if (erros !== undefined) arr[idx].erros = erros;
   if (status === "ativo" || status === "bloqueado") arr[idx].status = status;
+  saveAdvancedRankings();
   addLog(req.body.email, `Editou "${nome}" no ranking (${jogo} - ${tipo} ${keyDif})`, `valor=${valor}, tempo=${tempo}, erros=${erros}, status=${status}`);
   res.json({ success: true });
 });

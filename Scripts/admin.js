@@ -878,16 +878,16 @@ function montarTabelaRankingAdmin(nomeJogo, tipoObj, ranking, dificuldade = null
           ranking.length === 0
           ? `<tr><td colspan="${4 + colunasExtras.length}"><em>Sem registros</em></td></tr>`
           : ranking.map((item, idx) => {
-              // Inputs editáveis para cada coluna relevante
               let inputs = colunasExtras.map(c => {
                 if (c === "Pontuação" || c === "Vitórias" || c === "Sequência")
-                  return `<td><input type='number' id='valor-${item.nome}' value='${item.valor}' style='width:70px'></td>`;
+                  return `<td><input type='number' id='valor-${item.nome}' value='${item.valor}' style='width:70px' disabled></td>`;
                 if (c === "Tempo")
-                  return `<td><input type='number' id='tempo-${item.nome}' value='${item.tempo ?? ''}' style='width:70px'></td>`;
+                  return `<td><input type='number' id='tempo-${item.nome}' value='${item.tempo ?? ''}' style='width:70px' disabled></td>`;
                 if (c === "Erros")
-                  return `<td><input type='number' id='erros-${item.nome}' value='${item.erros ?? 0}' style='width:60px'></td>`;
+                  return `<td><input type='number' id='erros-${item.nome}' value='${item.erros ?? 0}' style='width:60px' disabled></td>`;
                 return `<td>-</td>`;
               }).join('');
+              // Botões com data-attrs para delegação
               return `
               <tr${item.status === "bloqueado" ? ' class="bloqueado"' : ''}>
                 <td>${item.status === "bloqueado" ? "--" : (idx + 1) + "º"}</td>
@@ -900,20 +900,17 @@ function montarTabelaRankingAdmin(nomeJogo, tipoObj, ranking, dificuldade = null
                   }
                 </td>
                 <td>
-                  <button class="btn-remover-ranking" title="Remover" onclick="removerLinhaRanking('${nomeJogo.replace(/'/g, "\\'")}', '${tipoObj.chave}', '${dificuldade ?? ""}', '${item.nome.replace(/'/g, "\\'")}')">
+                  <button class="btn-remover-ranking" title="Remover" data-action="remover" data-nome="${item.nome.replace(/'/g, "&apos;")}" data-jogo="${nomeJogo.replace(/'/g, "&apos;")}" data-tipo="${tipoObj.chave}" data-dificuldade="${dificuldade ?? ''}">
                     <i class="fa fa-trash"></i>
                   </button>
                   ${item.status !== "bloqueado"
-                    ? `<button class="btn-remover-ranking" title="Bloquear deste Ranking" onclick="bloquearNoRanking('${nomeJogo.replace(/'/g, "\\'")}', '${tipoObj.chave}', '${dificuldade ?? ""}', '${item.nome.replace(/'/g, "\\'")}')">
+                    ? `<button class="btn-remover-ranking" title="Bloquear usuário em todos os rankings" data-action="bloquear-todos" data-nome="${item.nome.replace(/'/g, "&apos;")}">
                         <i class="fa fa-user-slash"></i>
                       </button>`
-                    : `<button class="btn-remover-ranking" title="Desbloquear deste Ranking" onclick="desbloquearNoRanking('${nomeJogo.replace(/'/g, "\\'")}', '${tipoObj.chave}', '${dificuldade ?? ""}', '${item.nome.replace(/'/g, "\\'")}')">
+                    : `<button class="btn-remover-ranking" title="Desbloquear usuário em todos os rankings" data-action="desbloquear-todos" data-nome="${item.nome.replace(/'/g, "&apos;")}">
                         <i class="fa fa-user-check"></i>
                       </button>`
                   }
-                  <button class="btn-editar-ranking" title="Salvar edição" onclick="salvarEdicaoRanking('${nomeJogo.replace(/'/g, "\\'")}', '${tipoObj.chave}', '${dificuldade ?? ""}', '${item.nome.replace(/'/g, "\\'")}', '${colunasExtras.join(',')}')">
-                    <i class='fa fa-save'></i>
-                  </button>
                 </td>
               </tr>
               `;
@@ -922,31 +919,134 @@ function montarTabelaRankingAdmin(nomeJogo, tipoObj, ranking, dificuldade = null
       </tbody>
     </table>
   `;
+  // Após montar, adiciona delegação de eventos para os botões
+  setTimeout(() => {
+    const rankingsSection = document.getElementById('section-rankings');
+    if (!rankingsSection) return;
+    const container = rankingsSection.querySelector('.tabela-scroll');
+    if (!container) return;
+    container.querySelectorAll('.btn-remover-ranking').forEach(btn => {
+      btn.onclick = async function(e) {
+        if (btn.disabled) return;
+        btn.disabled = true;
+        const action = btn.getAttribute('data-action');
+        const nome = btn.getAttribute('data-nome');
+        if (action === 'remover') {
+          const jogo = btn.getAttribute('data-jogo');
+          const tipo = btn.getAttribute('data-tipo');
+          const dificuldade = btn.getAttribute('data-dificuldade');
+          window.abrirModalExcluirRanking(nome, jogo, tipo, dificuldade);
+        } else if (action === 'bloquear-todos') {
+          try {
+            await window.bloquearNoRankingTodosAsync(nome, btn);
+          } catch {}
+        } else if (action === 'desbloquear-todos') {
+          try {
+            await window.desbloquearNoRankingTodosAsync(nome, btn);
+          } catch {}
+        }
+        setTimeout(() => { btn.disabled = false; }, 1200);
+      };
+    });
+  }, 10);
   return html;
 }
 
-// Função global para salvar edição de ranking
-window.salvarEdicaoRanking = async function(jogo, tipo, dificuldade, nome, colunas) {
-  // colunas: string separada por vírgula
-  const colArr = colunas.split(',');
-  let body = { jogo, tipo, dificuldade, nome };
-  if (colArr.includes('Pontuação') || colArr.includes('Vitórias') || colArr.includes('Sequência')) {
-    body.valor = parseInt(document.getElementById(`valor-${nome}`).value);
+// Modal de exclusão de ranking
+window.abrirModalExcluirRanking = function(nome, jogo, tipo, dificuldade) {
+  showModal('modal-confirmar');
+  document.getElementById('confirmar-titulo').textContent = 'Excluir do Ranking';
+  document.getElementById('confirmar-msg').innerHTML = `Deseja excluir <b>${nome}</b> do ranking?<br><br>Excluir apenas deste jogo ou de todos os jogos?`;
+  const btnOk = document.getElementById('btn-confirmar-ok');
+  btnOk.textContent = 'Excluir deste jogo';
+  // Remove event listeners antigos
+  btnOk.onclick = null;
+  btnOk.onclick = function() {
+    window.removerLinhaRanking(jogo, tipo, dificuldade, nome, true, btnOk);
+    // O closeAllModals será chamado dentro do removerLinhaRanking
+  };
+  // Cria botão extra para "todos os jogos"
+  let btnTodos = document.getElementById('btn-confirmar-todos');
+  if (!btnTodos) {
+    btnTodos = document.createElement('button');
+    btnTodos.id = 'btn-confirmar-todos';
+    btnTodos.style.marginLeft = '10px';
+    document.querySelector('#modal-confirmar .modal-actions').appendChild(btnTodos);
   }
-  if (colArr.includes('Tempo')) {
-    body.tempo = parseInt(document.getElementById(`tempo-${nome}`).value);
+  btnTodos.textContent = 'Excluir de TODOS os jogos';
+  btnTodos.onclick = null;
+  btnTodos.onclick = function() {
+    window.removerLinhaRankingTodos(nome, true, btnTodos);
+    // O closeAllModals será chamado dentro do removerLinhaRankingTodos
+  };
+  // Garante que o botão cancelar sempre fecha o modal
+  const btnCancelar = document.getElementById('btn-confirmar-cancelar');
+  if (btnCancelar) btnCancelar.onclick = closeAllModals;
+};
+window.removerLinhaRankingTodos = async function(nome, fechaModal) {
+  let btn = arguments[2];
+  if (btn) btn.disabled = true;
+  try {
+    const user = getUserToken();
+    const res = await fetch(`${API_URL}/rankings/remove-all`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ nome, email: user && user.email })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Removido de todos os rankings!', 'sucesso');
+      await renderRankingAdminTabela();
+      if (fechaModal) closeAllModals();
+    } else {
+      showToast(data.message || 'Erro ao remover usuário.', 'erro');
+    }
+  } catch (e) {
+    showToast('Erro de conexão.', 'erro');
   }
-  if (colArr.includes('Erros')) {
-    body.erros = parseInt(document.getElementById(`erros-${nome}`).value);
+  if (btn) btn.disabled = false;
+};
+// Bloquear/desbloquear em todos os rankings
+window.bloquearNoRankingTodosAsync = async function(nome, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch(`${API_URL}/rankings/block-all`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      showToast(data.message || 'Erro ao bloquear usuário.', 'erro');
+    } else {
+      showToast('Usuário bloqueado em todos os rankings!', 'sucesso');
+      await renderRankingAdminTabela();
+    }
+  } catch (e) {
+    showToast('Erro de conexão.', 'erro');
   }
-  await fetch(`${API_URL}/rankings/advanced/add`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  showToast('Ranking atualizado!', 'sucesso');
-  renderRankingAdminTabela();
-}
+  if (btn) btn.disabled = false;
+};
+window.desbloquearNoRankingTodosAsync = async function(nome, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch(`${API_URL}/rankings/unblock-all`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      showToast(data.message || 'Erro ao desbloquear usuário.', 'erro');
+    } else {
+      showToast('Usuário desbloqueado em todos os rankings!', 'sucesso');
+      await renderRankingAdminTabela();
+    }
+  } catch (e) {
+    showToast('Erro de conexão.', 'erro');
+  }
+  if (btn) btn.disabled = false;
+};
 async function obterRankingAvancado(params) {
   try {
     const res = await fetch(`${API_URL}/rankings/advanced`, {
@@ -960,24 +1060,62 @@ async function obterRankingAvancado(params) {
     return [];
   }
 }
-window.removerLinhaRanking = function(jogo, tipo, dificuldade, nome) {
-  abrirConfirmacao(
-    'Remover Registro?',
-    `Deseja remover o registro de "${nome}" do ranking?`,
-    async () => {
-      await fetch(`${API_URL}/rankings/remove`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          jogo,
-          tipo,
-          dificuldade: dificuldade || null,
-          nome
-        })
-      });
-      renderRankingAdminTabela();
+// Remove o usuário de TODOS os tipos de ranking de um jogo específico
+window.removerLinhaRanking = async function(jogo, tipo, dificuldade, nome, fechaModal) {
+  let btn = arguments[5];
+  if (btn) btn.disabled = true;
+  try {
+    const user = getUserToken();
+    // Busca todos os tipos de ranking do jogo
+    const jogoObj = jogosRanking.find(j => j.nome === jogo || j.chave === jogo);
+    if (!jogoObj) throw new Error('Jogo não encontrado');
+    let sucesso = false;
+    for (const tipoObj of jogoObj.tipos) {
+      if (tipoObj.porDificuldade && Array.isArray(jogoObj.dificuldades) && jogoObj.dificuldades.length > 0) {
+        // Remove de todas as dificuldades desse tipo
+        for (const dif of jogoObj.dificuldades) {
+          const res = await fetch(`${API_URL}/rankings/remove`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              jogo,
+              tipo: tipoObj.chave,
+              dificuldade: dif,
+              nome,
+              email: user && user.email
+            })
+          });
+          const data = await res.json();
+          if (data.success) sucesso = true;
+        }
+      } else {
+        // Para tipos globais, remove sem dificuldade
+        const res = await fetch(`${API_URL}/rankings/remove`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            jogo,
+            tipo: tipoObj.chave,
+            dificuldade: null,
+            nome,
+            email: user && user.email
+          })
+        });
+        const data = await res.json();
+        if (data.success) sucesso = true;
+      }
     }
-  );
+    if (sucesso) {
+      showToast('Removido de todos os rankings deste jogo!', 'sucesso');
+      await renderRankingAdminTabela();
+      if (fechaModal) closeAllModals();
+    } else {
+      showToast('Usuário não estava em nenhum ranking deste jogo.', 'erro');
+    }
+  } catch (e) {
+    showToast('Erro de conexão.', 'erro');
+  }
+  if (btn) btn.disabled = false;
 };
 window.bloquearNoRanking = function(jogo, tipo, dificuldade, nome) {
   abrirConfirmacao(
