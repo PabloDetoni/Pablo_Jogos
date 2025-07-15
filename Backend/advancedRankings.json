@@ -14,6 +14,11 @@
           "nome": "Pablo",
           "valor": 1,
           "status": "ativo"
+        },
+        {
+          "nome": "Convidado",
+          "valor": 1,
+          "status": "ativo"
         }
       ]
     },
@@ -21,6 +26,11 @@
       "Fácil": [
         {
           "nome": "Pablo",
+          "valor": 1,
+          "status": "ativo"
+        },
+        {
+          "nome": "Convidado",
           "valor": 1,
           "status": "ativo"
         }
@@ -74,6 +84,11 @@
       "": []
     },
     "mais_vitorias_dificuldade": {
+      "Fácil": [],
+      "Médio": [],
+      "Difícil": []
+    },
+    "mais_vitorias_consecutivas": {
       "Fácil": [],
       "Médio": [],
       "Difícil": []

@@ -31,7 +31,18 @@ app.use(cors({
 app.use(bodyParser.json());
 
 // Log de partidas individuais (para estatísticas reais)
-const { users, jogosStatus, advancedRankings, partidasLog, saveAdvancedRankings } = require('./server-helpers');
+const {
+  users,
+  jogosStatus,
+  advancedRankings,
+  partidasLog,
+  saveAdvancedRankings,
+  advancedRankingsBlacklist,
+  saveAdvancedRankingsBlacklist,
+  addToConsecutiveWinsBlacklist,
+  removeFromConsecutiveWinsBlacklist,
+  isInConsecutiveWinsBlacklist
+} = require('./server-helpers');
 
 
 // Endpoint para registrar uma partida
@@ -99,7 +110,6 @@ app.post('/api/pong', requireGameNotBlocked('Pong'), (req, res) => {
 app.post('/api/campo-minado', requireGameNotBlocked('Campo Minado'), (req, res) => {
   res.json({ success: true, message: 'Acesso permitido ao Campo Minado!' });
 });
-// ...existing code...
 // BACKEND Node.js/Express completo para login, registro, painel admin e ranking avançado (em memória)
 // (Removido: já importado no topo do arquivo)
 
@@ -436,6 +446,10 @@ app.post('/rankings/remove-all', requireAdmin, (req, res) => {
         let idx;
         while ((idx = arr.findIndex(e => e.nome === nome)) !== -1) {
           arr.splice(idx, 1);
+          // Se for vitórias consecutivas, adiciona à blacklist
+          if (tipo === 'mais_vitorias_consecutivas') {
+            addToConsecutiveWinsBlacklist(jogo, dif, nome);
+          }
           count++;
         }
       }
@@ -504,7 +518,7 @@ Estrutura do advancedRankings:
 }
 */
 
-// Obter ranking avançado (admin ou público) - agora baseado no partidasLog
+// --- PATCH: Obter ranking avançado (admin ou público) ---
 app.post('/rankings/advanced', (req, res) => {
   const { jogo, tipo, dificuldade } = req.body;
   if (!jogo || !tipo) return res.json({ success: false, ranking: [] });
@@ -512,9 +526,7 @@ app.post('/rankings/advanced', (req, res) => {
   let arr = (advancedRankings[jogo] && advancedRankings[jogo][tipo] && advancedRankings[jogo][tipo][keyDif]) || [];
   let sorted = [];
 
-  // 1. Mais Vitórias (todas as dificuldades somadas)
   if (tipo === 'mais_vitorias_total') {
-    // Agrupa por nome, somando valor de todas as dificuldades
     let totalPorNome = {};
     let tipos = advancedRankings[jogo] && advancedRankings[jogo][tipo];
     if (tipos) {
@@ -526,7 +538,6 @@ app.post('/rankings/advanced', (req, res) => {
       }
     }
     sorted = Object.entries(totalPorNome).map(([nome, valor]) => {
-      // Pega status do usuário na dificuldade principal (se bloqueado em todas, mostra bloqueado)
       let status = 'ativo';
       for (const dif in tipos) {
         let found = tipos[dif].find(e => e.nome === nome);
@@ -535,32 +546,29 @@ app.post('/rankings/advanced', (req, res) => {
       return { nome, valor, status };
     });
     sorted.sort((a, b) => (b.valor ?? 0) - (a.valor ?? 0));
-  }
-  // 2. Mais Vitórias por dificuldade (só soma na dificuldade)
-  else if (tipo === 'mais_vitorias_dificuldade') {
+  } else if (tipo === 'mais_vitorias_dificuldade') {
     sorted = [...arr];
     sorted.sort((a, b) => (b.valor ?? 0) - (a.valor ?? 0));
-  }
-  // 3. Mais Vitórias Consecutivas (por dificuldade, só conta sequência máxima)
-  else if (tipo === 'mais_vitorias_consecutivas') {
-    // Para cada usuário, pega o maior valor de sequência já registrada na dificuldade
-    sorted = [...arr];
+  } else if (tipo === 'mais_vitorias_consecutivas') {
+    // Filtra blacklist
+    let blacklist = (advancedRankingsBlacklist['mais_vitorias_consecutivas'] &&
+      advancedRankingsBlacklist['mais_vitorias_consecutivas'][jogo] &&
+      advancedRankingsBlacklist['mais_vitorias_consecutivas'][jogo][keyDif])
+      ? advancedRankingsBlacklist['mais_vitorias_consecutivas'][jogo][keyDif]
+      : [];
+    sorted = arr.filter(e => !blacklist.includes(e.nome));
     sorted.sort((a, b) => (b.valor ?? 0) - (a.valor ?? 0));
-  }
-  // 4. Menor tempo (por dificuldade)
-  else if (tipo === 'menor_tempo') {
+  } else if (tipo === 'menor_tempo') {
     sorted = [...arr];
     sorted.sort((a, b) => (a.tempo ?? Infinity) - (b.tempo ?? Infinity));
-  }
-  // 5. Outros rankings (pontuação, etc)
-  else {
+  } else {
     sorted = [...arr];
     sorted.sort((a, b) => (b.valor ?? 0) - (a.valor ?? 0));
   }
   res.json({ success: true, ranking: sorted });
 });
 
-// Adicionar entrada ao ranking avançado (public)
+// --- PATCH: Adicionar entrada ao ranking avançado (public) ---
 app.post('/rankings/advanced/add', (req, res) => {
   const { jogo, tipo, dificuldade, nome, valor, tempo, erros } = req.body;
   console.log('REQ /rankings/advanced/add', { jogo, tipo, dificuldade, nome, valor, tempo, erros });
@@ -568,7 +576,6 @@ app.post('/rankings/advanced/add', (req, res) => {
     console.log('FALHA: Dados inválidos', { jogo, tipo, nome, valor });
     return res.json({ success: false, message: 'Dados inválidos.' });
   }
-  // status padrão: ativo
   if (!advancedRankings[jogo]) {
     console.log('Criando jogo em advancedRankings:', jogo);
     advancedRankings[jogo] = {};
@@ -629,55 +636,51 @@ app.post('/rankings/advanced/add', (req, res) => {
     console.log('Salvo mais_vitorias_dificuldade:', arr);
     return res.json({ success: true });
   }
-  // Para mais_vitorias_consecutivas: só atualiza se for recorde
+  // PATCH: Blacklist para vitórias consecutivas
   if (tipo === 'mais_vitorias_consecutivas') {
-    console.log('Adicionando mais_vitorias_consecutivas', { arr });
+    if (isInConsecutiveWinsBlacklist(jogo, keyDif, nome)) {
+      console.log('Usuário na blacklist de vitórias consecutivas, não será readicionado:', nome, jogo, keyDif);
+      return res.json({ success: false, message: 'Usuário removido permanentemente deste ranking.' });
+    }
     let idx = arr.findIndex(e => e.nome === nome);
     if (idx !== -1) {
-      // Só atualiza se o novo valor for maior que o anterior
       if ((valor || 0) > (arr[idx].valor || 0)) {
         arr[idx].valor = valor;
         if (tempo !== undefined) arr[idx].tempo = tempo;
         if (erros !== undefined) arr[idx].erros = erros;
         addLog(nome, `Novo recorde de vitórias consecutivas em ${jogo}${dificuldade ? " ("+dificuldade+")" : ""}`, valor);
-      } // Se não for recorde, não altera
+      }
     } else {
       arr.push({ nome, valor: valor || 0, tempo, erros, status: "ativo" });
       addLog(nome, `Entrou no ranking de vitórias consecutivas em ${jogo}${dificuldade ? " ("+dificuldade+")" : ""}`, valor);
     }
     saveAdvancedRankings();
-    console.log('Salvo mais_vitorias_consecutivas:', arr);
     return res.json({ success: true });
   }
-  // Lógica especial para menor_tempo: só atualiza se for menor tempo, ou mesmo tempo com menos erros
   if (tipo === 'menor_tempo') {
     let idx = arr.findIndex(e => e.nome === nome);
     if (idx !== -1) {
       let atual = arr[idx];
-      // Só atualiza se tempo for menor, ou mesmo tempo com menos erros
       if (
         (typeof tempo === 'number' && (typeof atual.tempo !== 'number' || tempo < atual.tempo)) ||
         (typeof tempo === 'number' && tempo === atual.tempo && typeof erros === 'number' && (typeof atual.erros !== 'number' || erros < atual.erros))
       ) {
         arr[idx] = { nome, valor, tempo, erros, status: "ativo" };
         addLog(nome, `Novo recorde de menor tempo em ${jogo}${dificuldade ? " ("+dificuldade+")" : ""}`, tempo);
-      } // Se não for melhor, não altera
+      }
     } else {
       arr.push({ nome, valor, tempo, erros, status: "ativo" });
       addLog(nome, `Entrou no ranking de menor tempo em ${jogo}${dificuldade ? " ("+dificuldade+")" : ""}`, tempo);
     }
     saveAdvancedRankings();
-    console.log('Salvo menor_tempo:', arr);
     return res.json({ success: true });
   }
-  // Para outros tipos, só sobrescreve se não for menor_tempo
   if (tipo !== 'menor_tempo') {
     let idx = arr.findIndex(e => e.nome === nome);
     if (idx !== -1) arr.splice(idx, 1);
     arr.push({ nome, valor, tempo, erros, status: "ativo" });
     addLog(nome, `Pontuou em ${jogo} [${tipo}]${dificuldade ? " ("+dificuldade+")" : ""}`, valor);
     saveAdvancedRankings();
-    console.log('Salvo tipo generico', tipo, arr);
     return res.json({ success: true });
   }
 });
@@ -691,6 +694,10 @@ app.post('/rankings/remove', requireAdmin, (req, res) => {
   let idx = arr.findIndex(e => e.nome === nome);
   if (idx !== -1) {
     arr.splice(idx, 1);
+    // Se for vitórias consecutivas, adiciona à blacklist
+    if (tipo === 'mais_vitorias_consecutivas') {
+      addToConsecutiveWinsBlacklist(jogo, keyDif, nome);
+    }
     saveAdvancedRankings();
     addLog(req.body.email, `Removeu "${nome}" do ranking (${jogo} - ${tipo} ${keyDif})`, '-');
     return res.json({ success: true });
