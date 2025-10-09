@@ -1,0 +1,194 @@
+/* admin-gestao.css - Estilo para painel de gestão com tabs e grids */
+.gestao-tabs {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 32px;
+}
+.gestao-tab {
+  padding: 14px 32px;
+  font-size: 1.13rem;
+  color: #6366f1;
+  background: #e0e7ff;
+  border: none;
+  border-radius: 12px 12px 0 0;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  outline: none;
+  box-shadow: 0 2px 10px #818cf820;
+}
+.gestao-tab.active, .gestao-tab:hover {
+  background: linear-gradient(90deg, #6366f1 10%, #818cf8 100%);
+  color: #fff;
+  box-shadow: 0 8px 28px #6366f180;
+}
+.gestao-content {
+  background: rgba(255,255,255,0.97);
+  border-radius: 0 0 18px 18px;
+  box-shadow: 0 8px 48px #6366f140, 0 2px 8px #0001;
+  padding: 32px 18px 38px 18px;
+}
+.gestao-section {
+  display: none;
+}
+.gestao-section.active {
+  display: block;
+  animation: fadeInGestao .4s;
+}
+@keyframes fadeInGestao {
+  from { opacity: 0; transform: translateY(-10px);}
+  to   { opacity: 1; transform: translateY(0);}
+}
+.gestao-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+.gestao-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 28px;
+}
+/* Cards base para cada CRUD */
+.gestao-card {
+  background: linear-gradient(120deg, #6366f1 60%, #818cf8 100%);
+  color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px #6366f180;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1.13rem;
+  font-weight: 500;
+  position: relative;
+  transition: box-shadow 0.18s, transform 0.14s;
+}
+.gestao-card:hover {
+  box-shadow: 0 8px 36px #6366f1bb;
+  transform: translateY(-4px) scale(1.025);
+}
+.gestao-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gestao-card-title {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #e0e7ff;
+}
+.gestao-card-desc {
+  font-size: 1.01rem;
+  color: #c7d2fe;
+}
+.gestao-card-actions {
+  display: flex;
+  gap: 10px;
+}
+.btn-danger {
+  background: linear-gradient(90deg, #f87171 0%, #ef4444 100%);
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 2px 7px #ef444450;
+  transition: background 0.18s, box-shadow 0.12s, transform 0.12s;
+}
+.btn-danger:hover {
+  background: linear-gradient(90deg, #dc2626 0%, #f87171 100%);
+  box-shadow: 0 4px 20px #ef444470;
+}
+.crud-form {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px #6366f133;
+  padding: 32px 28px 24px 28px;
+  max-width: 420px;
+  margin: 32px auto 24px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  align-items: stretch;
+}
+.crud-form label {
+  font-weight: 600;
+  color: #23235b;
+  margin-bottom: 6px;
+  display: block;
+}
+.crud-form .form-group {
+  margin-bottom: 18px;
+}
+.crud-form input, .crud-form textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #c7d2fe;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  background: #f3f4fa;
+  color: #23235b;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px #6366f111;
+}
+.crud-form input:focus, .crud-form textarea:focus {
+  border: 1.5px solid #6366f1;
+  outline: none;
+  background: #fff;
+  box-shadow: 0 2px 8px #6366f122;
+}
+.btn-save, .btn-primary, .btn-secondary, .btn-danger, .btn-cancel {
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  margin-right: 8px;
+  margin-top: 8px;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px #6366f122;
+}
+.btn-save { background: #22c55e; color: #fff; }
+.btn-save:hover { background: #16a34a; }
+.btn-primary { background: #6366f1; color: #fff; }
+.btn-primary:hover { background: #23235b; }
+.btn-secondary { background: #818cf8; color: #fff; }
+.btn-secondary:hover { background: #6366f1; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-danger:hover { background: #b91c1c; }
+.btn-cancel { background: #e0e7ff; color: #23235b; }
+.btn-cancel:hover { background: #c7d2fe; }
+.message-container {
+  position: fixed;
+  top: 32px;
+  right: 40px;
+  z-index: 9999;
+  min-width: 240px;
+  max-width: 340px;
+  padding: 16px 22px;
+  border-radius: 12px;
+  font-size: 1.12rem;
+  font-weight: 600;
+  box-shadow: 0 4px 24px #6366f133;
+  background: #fff;
+  color: #23235b;
+  opacity: 0.98;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.message-container .msg.success { color: #22c55e; }
+.message-container .msg.error { color: #ef4444; }
+.message-container .msg.info { color: #6366f1; }
+@media (max-width: 900px) {
+  .gestao-list-grid { grid-template-columns: 1fr; gap: 14px; }
+  .gestao-card { padding: 14px 7px; font-size: 0.97rem; }
+  .gestao-tabs { flex-direction: column; gap: 8px; }
+}
+@media (max-width: 600px) {
+  .gestao-actions-bar { flex-direction: column; gap: 8px; }
+  .gestao-card { flex-direction: column; align-items: flex-start; }
+  .crud-form { max-width: 98vw; padding: 18px 4vw; }
+  .message-container { right: 4vw; top: 16px; }
+}

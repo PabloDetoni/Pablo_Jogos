@@ -1,0 +1,321 @@
+/* Reset e base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #c7d2fe 0%, #e0e7ff 60%, #f9fafb 100%);
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  color: #23235b;
+  overflow: hidden; /* bloqueia scroll global */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* HEADER layout, glassmorphism */
+.site-header {
+  position: fixed;
+  top: 0; left: 0; width: 100vw;
+  height: 120px;
+  background: rgba(130, 142, 230, 0.20);
+  box-shadow: 0 6px 32px 0 #3f51b538;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 0;
+  border-bottom: 2px solid #818cf8;
+}
+
+/* Barra central do header */
+.page-title-bar {
+  width: 100vw;
+  height: 120px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  position: relative;
+  background: transparent;
+}
+
+/* Título centralizado com botões nas laterais */
+.page-title-fixed {
+  flex: 0 1 auto;
+  margin: 0 24px;
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  z-index: 2;
+  font-size: 3rem;
+  text-align: center;
+  color: #23235b;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 18px #818cf830, 0 1px 1px #a5b4fc44;
+}
+
+/* Botão ranking à esquerda */
+.page-title-bar > #btn-ranking {
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+/* Área dos botões de login/admin à direita */
+.page-title-bar .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+/* Botões gerais do header */
+#btn-ranking,
+#user-actions button,
+#admin-actions button {
+  padding: 13px 30px;
+  font-size: 1.09rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #6366f1 10%, #818cf8 100%);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 0;
+  box-shadow: 0 2px 10px #818cf860;
+  transition: background 0.15s, box-shadow 0.18s, transform 0.12s;
+  outline: none;
+  letter-spacing: 0.5px;
+}
+#btn-ranking:hover,
+#user-actions button:hover,
+#admin-actions button:hover {
+  background: linear-gradient(90deg, #312e81 0%, #6366f1 100%);
+  box-shadow: 0 8px 28px #6366f180;
+  transform: translateY(-2px) scale(1.035);
+}
+
+#user-actions, #admin-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Espaço para não cobrir o conteúdo, área scrolável só nos jogos */
+.main-scroll-area {
+  position: fixed;
+  top: 120px;
+  left: 0;
+  width: 100vw;
+  bottom: 90px; /* altura do footer */
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  /* Sombra suave para destacar área de scroll */
+  background: linear-gradient(180deg, #e0e7ff 70%, #f9fafb 100%);
+  z-index: 10;
+  padding-top: 72px; /* espaço para o título */
+}
+
+/* grid de jogos centralizável e responsivo */
+.grid-jogos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 38px;
+  width: 90vw;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 38px; /* espaço pro footer não cobrir */
+}
+
+/* Botões dos jogos - com efeito glass/elevação */
+.jogo-btn {
+  padding: 38px 10px;
+  font-size: 1.35rem;
+  color: #fff;
+  background: linear-gradient(135deg, #6366f1 80%, #818cf8 100%);
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 8px 40px #6366f150, 0 2px 8px #0001;
+  transition: background 0.26s, transform 0.18s, box-shadow 0.18s;
+  letter-spacing: 0.8px;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+}
+.jogo-btn:hover, .jogo-btn:focus {
+  background: linear-gradient(135deg, #6366f1 60%, #312e81 100%);
+  transform: translateY(-5px) scale(1.045);
+  box-shadow: 0 16px 48px #6366f1bb;
+}
+.jogo-btn:active {
+  background: linear-gradient(135deg, #312e81 90%, #6366f1 100%);
+  transform: scale(0.99);
+}
+
+/* Modal de Perfil */
+.profile-modal {
+  display: none;
+  position: fixed;
+  top: 120px;
+  right: 60px;
+  background: rgba(255,255,255, 0.97);
+  border: 2px solid #818cf8;
+  border-radius: 15px;
+  box-shadow: 0 4px 32px #6366f14a;
+  z-index: 2000;
+  padding: 32px 40px 32px 40px;
+  min-width: 220px;
+  text-align: left;
+  animation: fadeInModal .4s;
+}
+@keyframes fadeInModal {
+  from { opacity: 0; transform: translateY(-10px);}
+  to   { opacity: 1; transform: translateY(0);}
+}
+.profile-modal.show {
+  display: block;
+}
+.profile-modal span {
+  font-weight: bold;
+  font-size: 1.17em;
+}
+.profile-modal button {
+  margin-top: 21px;
+  width: 100%;
+  background: linear-gradient(90deg, #f87171 0%, #ef4444 100%);
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 7px;
+  padding: 11px 0;
+  font-size: 1.09em;
+  cursor: pointer;
+  box-shadow: 0 2px 7px #ef444450;
+  transition: background 0.18s, box-shadow 0.12s, transform 0.12s;
+}
+.profile-modal button:hover {
+  background: linear-gradient(90deg, #dc2626 0%, #f87171 100%);
+  box-shadow: 0 4px 20px #ef444470;
+  transform: translateY(-1.5px) scale(1.03);
+}
+
+/* Painel do Administrador (usando admin-btn) */
+.admin-btn {
+  padding: 12px 24px;
+  font-size: 1.08rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #4f8cff 0%, #6366f1 100%);
+  color: #fff;
+  box-shadow: 0 2px 10px #3f51b560, 0 1.5px 2px #0002;
+  cursor: pointer;
+  margin: 0 8px;
+  margin-top: 10px;
+  transition: background 0.22s, box-shadow 0.18s, transform 0.14s;
+  outline: none;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+.admin-btn:hover,
+.admin-btn:focus {
+  background: linear-gradient(90deg, #2563eb 0%, #818cf8 100%);
+  box-shadow: 0 4px 18px #6366f180, 0 2px 4px #0003;
+  transform: translateY(-1.5px) scale(1.045);
+}
+.admin-btn:active {
+  background: linear-gradient(90deg, #3759c7 0%, #1e2e7a 100%);
+  box-shadow: 0 2px 7px #1e3a8a90;
+  transform: scale(0.98);
+}
+
+/* Footer fixo */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  background: rgba(30, 41, 59, 0.04);
+  border-top: 2px solid #6366f1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 34px 0 23px 0;
+  z-index: 1000;
+  box-shadow: 0 -2px 22px #6366f120;
+  height: 90px;
+}
+
+.ver-estatisticas-btn {
+  padding: 19px 58px;
+  font-size: 1.09rem;
+  color: #ffffff;
+  background: linear-gradient(90deg, #22d3ee 0%, #2563eb 90%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 2px 14px #22d3ee50;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, transform 0.12s, box-shadow 0.18s;
+}
+.ver-estatisticas-btn:hover {
+  background: linear-gradient(90deg, #2563eb 10%, #22d3ee 100%);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 26px #22d3ee90;
+}
+
+/* Scrollbar estilizada */
+.main-scroll-area::-webkit-scrollbar {
+  width: 10px;
+  background: #f1f1f1;
+}
+.main-scroll-area::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 7px;
+  border: 2px solid #e0e7ff;
+}
+
+/* Responsivo */
+@media (max-width: 1200px) {
+  .grid-jogos {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .site-header { padding: 0 10px; }
+  .page-title-bar { gap: 14px; }
+  .site-header h1, .page-title-fixed { font-size: 2.1rem; }
+  .grid-jogos { max-width: 98vw; gap: 18px; }
+  .profile-modal { right: 4vw; min-width: 130px; padding: 14px 9px; }
+  .main-scroll-area { padding-top: 52px; }
+}
+@media (max-width: 600px) {
+  .site-header { height: 90px; }
+  .page-title-bar { height: 90px; }
+  .site-header h1, .page-title-fixed { font-size: 1.2rem; }
+  .main-scroll-area { padding-top: 30px; }
+  .grid-jogos { grid-template-columns: 1fr; gap: 12px; }
+  .profile-modal { top: 85px; right: 1vw; min-width: 90px; padding: 8px 2px; font-size: .92em; }
+  .jogo-btn { padding: 18px 2px; font-size: 1rem; }
+  .ver-estatisticas-btn { padding: 11px 18vw; font-size: 0.96rem; }
+}

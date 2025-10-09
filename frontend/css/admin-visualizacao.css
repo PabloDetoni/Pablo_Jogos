@@ -1,0 +1,97 @@
+/* admin-visualizacao.css - Estilo para visualização de rankings, logs e tabelas do painel admin */
+.visualizacao-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px #0002;
+  overflow: hidden;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+.visualizacao-table th {
+  background: linear-gradient(90deg, #6366f1 70%, #818cf8 100%);
+  color: #fff;
+  padding: 16px 10px;
+  font-size: 1.08rem;
+  border: none;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.visualizacao-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #e0e7ff;
+  color: #23235b;
+  font-size: 1rem;
+  word-break: break-word;
+}
+.visualizacao-table tr {
+  transition: background 0.2s;
+}
+.visualizacao-table tr:nth-child(even) {
+  background: #f3f4fa;
+}
+.visualizacao-table tr:hover {
+  background: #e0e7ff;
+}
+.visualizacao-table tr:last-child td {
+  border-bottom: none;
+}
+.table-title {
+  font-weight: bold;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  color: #23235b;
+}
+.btn-export {
+  margin-left: auto;
+  background: linear-gradient(90deg, #6366f1 70%, #818cf8 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px #6366f133;
+  transition: background 0.2s;
+}
+.btn-export:hover {
+  background: #23235b;
+}
+.btn-toggle {
+  background: #fff;
+  color: #6366f1;
+  border: 2px solid #6366f1;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  box-shadow: 0 2px 8px #6366f133;
+}
+.btn-toggle.active {
+  background: #6366f1;
+  color: #fff;
+  border-color: #23235b;
+}
+.loading, .error {
+  color: #6366f1;
+  font-weight: bold;
+  margin: 16px 0;
+  font-size: 1.08rem;
+}
+@media (max-width: 900px) {
+  .visualizacao-table th, .visualizacao-table td { font-size: 0.97rem; }
+  .btn-toggle { width: 28px; height: 28px; font-size: 1.1rem; }
+  .table-title { font-size: 1rem; }
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Pablo Jogos - Login</title>
+  <link rel="stylesheet" href="../css/login.css">
+</head>
+<body>
+  <div class="login-container">
+    <h1>Pablo Jogos</h1>
+    <div id="main-buttons">
+      <button onclick="showLoginForm()">Logar</button>
+      <button onclick="showRegisterForm()">Registrar</button>
+      <button onclick="loginAsGuest()">Entrar como Convidado</button>
+    </div>
+    <form id="login-form" style="display:none" onsubmit="login(event)">
+      <input type="email" id="login-email" placeholder="Email" required>
+      <input type="password" id="login-password" placeholder="Senha" required>
+      <button type="submit">Entrar</button>
+      <button type="button" onclick="hideForms()">Cancelar</button>
+      <div id="login-error" class="error"></div>
+    </form>
+    <form id="register-form" style="display:none" onsubmit="register(event)">
+      <input type="text" id="register-name" placeholder="Nome" required maxlength="20">
+      <input type="email" id="register-email" placeholder="Email" required>
+      <input type="password" id="register-password" placeholder="Senha" required minlength="8" maxlength="20">
+      <input type="password" id="register-confirm" placeholder="Confirmar senha" required minlength="8" maxlength="20">
+      <button type="submit">Registrar</button>
+      <button type="button" onclick="hideForms()">Cancelar</button>
+      <div id="register-error" class="error"></div>
+    </form>
+  </div>
+  <script src="../js/login.js"></script>
+</body>
+</html>

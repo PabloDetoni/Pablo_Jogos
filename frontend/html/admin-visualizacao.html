@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visualização</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/admin-visualizacao.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="page-title-bar">
+      <h1 class="page-title-fixed">Visualização</h1>
+    </div>
+  </header>
+  <div class="admin-layout">
+    <nav class="admin-sidepanel">
+      <ul>
+        <li><a href="admin-dashboard.html">Dashboard</a></li>
+        <li><a href="admin-gestao.html">Gestão</a></li>
+        <li><a href="admin-visualizacao.html" class="active">Visualização</a></li>
+        <li><a href="admin-ferramentas.html">Ferramentas</a></li>
+        <li><button id="btn-logout">Sair do Painel</button></li>
+      </ul>
+    </nav>
+    <main class="admin-main-content">
+      <section>
+        <h2><i class="fa-solid fa-users"></i> Usuários
+          <button class="btn-toggle" id="toggle-usuarios"><i class="fa-solid fa-plus"></i></button>
+        </h2>
+        <div id="visualizacao-usuarios" style="display:none"></div>
+      </section>
+      <section>
+        <h2><i class="fa-solid fa-gamepad"></i> Jogos
+          <button class="btn-toggle" id="toggle-jogos"><i class="fa-solid fa-plus"></i></button>
+        </h2>
+        <div id="visualizacao-jogos" style="display:none"></div>
+      </section>
+      <section>
+        <h2><i class="fa-solid fa-ranking-star"></i> Ranking
+          <button class="btn-toggle" id="toggle-rankings"><i class="fa-solid fa-plus"></i></button>
+        </h2>
+        <div id="visualizacao-rankings" style="display:none"></div>
+      </section>
+    </main>
+  </div>
+  <script src="../js/admin-visualizacao.js"></script>
+</body>
+</html>

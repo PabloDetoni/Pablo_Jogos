@@ -1,0 +1,68 @@
+<!-- memoria.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jogo da Memória</title>
+  <link rel="stylesheet" href="../css/memoria.css" />
+</head>
+<body>
+  <!-- Menu inicial: seleção de dificuldade -->
+  <div id="menu-inicial">
+    <h1>Jogo da Memória</h1>
+    <label for="dificuldade">Dificuldade:</label><br />
+    <select id="dificuldade">
+      <option value="facil">Fácil</option>
+      <option value="medio">Médio</option>
+      <option value="dificil">Difícil</option>
+    </select>
+    <br /><br />
+    <button id="btn-iniciar">Iniciar Jogo</button>
+  </div>
+
+  <!-- Painel superior: rótulos e valores -->
+  <div id="info">
+    <div class="info-item">
+      <span class="label">Acertos</span>
+      <span class="value" id="acertos">0</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Tempo</span>
+      <span class="value" id="timer">00:00</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Erros</span>
+      <span class="value" id="erros">0</span>
+    </div>
+  </div>
+
+  <!-- Área do jogo: tabuleiro de cartas -->
+  <div id="jogo" style="display:none; text-align:center;">
+    <div id="tabuleiro"></div>
+  </div>
+
+  <!-- Botões de rodapé: Voltar e Estatísticas -->
+  <div class="botoes-footer">
+    <button onclick="window.location.href='index.html'">Voltar</button>
+    <button onclick="window.location.href='estatisticas.html'">Estatísticas</button>
+  </div>
+
+  <!-- Scripts: estatísticas e lógica do jogo -->
+  <script src="../js/utils.js"></script>
+  <script src="../js/memoria.js"></script>
+  <script src="../js/stats.js"></script>
+  <script>
+    // Vincular botão Iniciar à função iniciarJogo e exibir painel
+    document.getElementById('btn-iniciar').addEventListener('click', function() {
+      iniciarJogo();
+      document.getElementById('menu-inicial').style.display = 'none';
+      document.getElementById('info').style.display = 'flex';
+      document.getElementById('jogo').style.display = 'block';
+    });
+
+    // Esconde painel info até iniciar
+    document.getElementById('info').style.display = 'none';
+  </script>
+</body>
+</html>

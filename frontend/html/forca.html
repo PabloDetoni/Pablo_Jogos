@@ -1,0 +1,59 @@
+<!-- forca.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jogo da Forca</title>
+  <link rel="stylesheet" href="../css/forca.css" />
+</head>
+<body>
+  <div id="menu-inicial">
+    <h1>Jogo da Forca</h1>
+    <label for="dificuldade">Dificuldade:</label><br />
+    <select id="dificuldade">
+      <option value="facil">Fácil</option>
+      <option value="medio">Médio</option>
+      <option value="dificil">Difícil</option>
+    </select>
+    <br /><br />
+    <button id="btn-iniciar">Iniciar Partida</button>
+  </div>
+
+  <div id="jogo" style="display:none; text-align:center;">
+    <h1>Forca</h1>
+    <p id="dica"></p>
+    <div id="forca-desenho">
+      <div class="traco base"></div>
+      <div class="traco haste"></div>
+      <div class="traco topo"></div>
+      <div class="traco corda"></div>
+      <div class="boneco cabeca"></div>
+      <div class="boneco tronco"></div>
+      <div class="boneco braco-esq"></div>
+      <div class="boneco braco-dir"></div>
+      <div class="boneco perna-esq"></div>
+      <div class="boneco perna-dir"></div>
+    </div>
+    <div class="painel-palavra">
+      <span id="palavra-oculta"></span>
+    </div>
+    <input id="entrada-letra" maxlength="1" />
+    <button id="btn-tentar">Tentar</button>
+    <p id="letras-usadas"></p>
+    <p id="resultado-forca"></p>
+    <!-- Botão Reiniciar: aparece apenas durante o jogo -->
+    <button id="btn-reiniciar">Reiniciar</button>
+  </div>
+
+  <div class="botoes-footer">
+    <button onclick="window.location.href='index.html'">Voltar</button>
+    <button onclick="window.location.href='estatisticas.html'">Estatísticas</button>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../js/utils.js"></script>
+  <script src="../js/forca.js"></script>
+  <script src="../js/stats.js"></script>
+</body>
+</html>
