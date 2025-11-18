@@ -555,3 +555,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     sudoku.iniciarJogo(dif);
   });
 });
+
+// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
+// Exemplo:
+// adicionarPontuacaoRanking('Sudoku', user.nome, { tipo: 'menor_tempo', valor: null, dificuldade: dificuldadeSelecionada, tempo: tempoFinal, erros: errosCometidos });

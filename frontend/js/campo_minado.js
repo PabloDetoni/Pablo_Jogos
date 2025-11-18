@@ -406,6 +406,10 @@ async function registrarPontuacaoRankingCampoMinado(vitoria) {
   }
 }
 
+// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
+// Exemplo:
+// adicionarPontuacaoRanking('Campo Minado', user.nome, { tipo: 'menor_tempo', valor: null, dificuldade: dificuldadeSelecionada, tempo: tempoFinal, erros: errosCometidos });
+
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;

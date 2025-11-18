@@ -1,4 +1,3 @@
-
 // rankings.js - dinâmico, multi-tabela por dificuldade, colunas específicas por tipo, suporte a usuários bloqueados
 
 // Só executa lógica de ranking se os elementos existem (evita erro em memoria.html)
@@ -78,7 +77,7 @@ const jogosRanking = [
     tipos: [
       { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
-      { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo", "Erros"] }
+      { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)", porDificuldade: true, colunas: ["Tempo"] }
     ]
   }
 ];
@@ -212,11 +211,10 @@ async function obterRankingAvancado(params) {
 // Função para adicionar pontuação/dados ao ranking (chame no fim do jogo)
 async function adicionarPontuacaoRanking(jogo, nome, dados) {
   try {
-    // Garante valor=1 para tipos de vitória (total/dificuldade)
-    let tipo = dados.tipo;
+    // Sanitiza dificuldade: nunca undefined ou string vazia
     let novoDados = { ...dados };
-    if (tipo === 'mais_vitorias_total' || tipo === 'mais_vitorias_dificuldade') {
-      novoDados.valor = 1;
+    if (novoDados.dificuldade === undefined || novoDados.dificuldade === '' || novoDados.dificuldade === 'null') {
+      novoDados.dificuldade = null;
     }
     await fetch((window.API_URL || 'http://localhost:3001') + '/rankings/advanced/add', {
       method: 'POST',

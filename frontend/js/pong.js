@@ -316,7 +316,7 @@ async function registrarPontuacaoRankingPong(vitoria) {
     // 1. Ranking geral (mais vitórias totais)
     await window.adicionarPontuacaoRanking("Pong", user.nome, {
       tipo: "mais_vitorias_total",
-      dificuldade: "",
+      dificuldade: null,
       valor: 1
     });
     // 2. Ranking por dificuldade (mais vitórias por dificuldade)
@@ -336,6 +336,10 @@ async function registrarPontuacaoRankingPong(vitoria) {
     }
   }
 }
+
+// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
+// Exemplo:
+// adicionarPontuacaoRanking('Pong', user.nome, { tipo: 'mais_vitorias_total', valor: 1, dificuldade: dificuldadeSelecionada, tempo: tempoFinal, erros: errosCometidos });
 
 document.addEventListener('keydown', e => {
   if (document.getElementById('jogo').style.display === 'none') return;

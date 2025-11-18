@@ -211,7 +211,7 @@ async function registrarPontuacaoRankingVelha(resultado) {
   // Pega o usuário antes de qualquer uso
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
   // Padroniza label de dificuldade
-  let dificuldadeLabel = dificuldade === 'facil' ? 'Fácil' : 'Médio';
+  let dificuldadeLabel = (modoIA && (dificuldade === 'facil' || dificuldade === 'medio')) ? (dificuldade === 'facil' ? 'Fácil' : 'Médio') : null;
   // Padroniza resultado para API
   let resultadoApi = resultado === 'X' ? 'vitoria' : (resultado === 'empate' ? 'empate' : 'derrota');
   // Salva partida real para estatísticas (backend)
@@ -228,35 +228,41 @@ async function registrarPontuacaoRankingVelha(resultado) {
   // Sequência de vitórias consecutivas (por dificuldade)
   let seqKey = `velha_seq_vitoria_${user.nome}_${dificuldadeLabel}`;
   let seqAtual = Number(localStorage.getItem(seqKey)) || 0;
+  let totalKey = `velha_total_vitorias_${user.nome}`;
+  let totalVitorias = Number(localStorage.getItem(totalKey)) || 0;
   if (resultado === 'X') {
-    // Ranking geral (mais vitórias total)
+    // Acumula total de vitórias independente da dificuldade
+    totalVitorias += 1;
+    localStorage.setItem(totalKey, totalVitorias);
     await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
       tipo: "mais_vitorias_total",
-      dificuldade: "",
-      valor: 1
+      dificuldade: null,
+      valor: totalVitorias
     });
     // Ranking por dificuldade
-    await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
-      tipo: "mais_vitorias_dificuldade",
-      dificuldade: dificuldadeLabel,
-      valor: 1
-    });
+    if (dificuldadeLabel) {
+      await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
+        tipo: "mais_vitorias_dificuldade",
+        dificuldade: dificuldadeLabel,
+        valor: 1
+      });
+    }
     // Ranking por sequência de vitórias consecutivas por dificuldade
     seqAtual += 1;
-    await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
-      tipo: "mais_vitorias_consecutivas",
-      dificuldade: dificuldadeLabel,
-      valor: seqAtual
-    });
+    // Só atualiza o ranking se a sequência for maior que a anterior
+    let seqMaxKey = `velha_seq_max_${user.nome}_${dificuldadeLabel}`;
+    let seqMax = Number(localStorage.getItem(seqMaxKey)) || 0;
+    if (seqAtual > seqMax && dificuldadeLabel) {
+      localStorage.setItem(seqMaxKey, seqAtual);
+      await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
+        tipo: "mais_vitorias_consecutivas",
+        dificuldade: dificuldadeLabel,
+        valor: seqAtual
+      });
+    }
   } else {
     // Zera sequência se perder ou empatar
     seqAtual = 0;
-    // Atualiza ranking de sequência para 0 (opcional, mas mantém coerência)
-    await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
-      tipo: "mais_vitorias_consecutivas",
-      dificuldade: dificuldadeLabel,
-      valor: seqAtual
-    });
   }
   localStorage.setItem(seqKey, seqAtual);
 }
@@ -307,3 +313,7 @@ function alternarDificuldade() {
   const modo = document.getElementById('modoJogo').value;
   document.getElementById('dificuldade-container').style.display = (modo === 'ia') ? 'block' : 'none';
 }
+
+// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
+// Exemplo:
+// adicionarPontuacaoRanking('Jogo da Velha', user.nome, { tipo: 'mais_vitorias_total', valor: 1, dificuldade: dificuldadeSelecionada });

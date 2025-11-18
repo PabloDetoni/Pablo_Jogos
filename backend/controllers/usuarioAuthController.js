@@ -1,9 +1,8 @@
 // backend/controllers/usuarioAuthController.js
 const Usuario = require('../models/usuarioModel');
 const Admin = require('../models/adminModel');
-const bcrypt = require('bcrypt');
+const Jogo = require('../models/jogoModel');
 
-// Simples: email único, senha hash, admin fixo
 const ADMIN_EMAIL = 'admin@admin.com';
 const ADMIN_NOME = 'Administrador';
 const ADMIN_SENHA = 'admin123'; // senha padrão pedida
@@ -14,8 +13,8 @@ async function ensureAdmin() {
   const { rows } = await Usuario.getByEmail(ADMIN_EMAIL);
   let adminUser;
   if (!rows.length) {
-    const hash = await bcrypt.hash(ADMIN_SENHA, 10);
-    const { rows: created } = await Usuario.create({ nome: ADMIN_NOME, email: ADMIN_EMAIL, senha: hash, status: 'admin' });
+    // Salva senha em texto puro
+    const { rows: created } = await Usuario.create({ nome: ADMIN_NOME, email: ADMIN_EMAIL, senha: ADMIN_SENHA, status: 'admin' });
     adminUser = created[0];
     console.log('Usuário admin criado!');
   } else {
@@ -30,6 +29,27 @@ async function ensureAdmin() {
   }
 }
 
+// Garante que os jogos principais existem no banco
+async function ensureJogos() {
+  const jogosPadrao = [
+    { titulo: 'PPT', genero: 'Clássico', descricao: 'Pedra Papel Tesoura' },
+    { titulo: 'Forca', genero: 'Palavras', descricao: 'Jogo da Forca' },
+    { titulo: '2048', genero: 'Puzzle', descricao: 'Jogo 2048' },
+    { titulo: 'Memória', genero: 'Puzzle', descricao: 'Jogo da Memória' },
+    { titulo: 'Sudoku', genero: 'Puzzle', descricao: 'Jogo Sudoku' },
+    { titulo: 'Pong', genero: 'Arcade', descricao: 'Jogo Pong' },
+    { titulo: 'Campo Minado', genero: 'Puzzle', descricao: 'Campo Minado' },
+    { titulo: 'Jogo da Velha', genero: 'Clássico', descricao: 'Jogo da Velha' }
+  ];
+  for (const jogo of jogosPadrao) {
+    const { rows } = await Jogo.getAll();
+    if (!rows.find(j => j.titulo === jogo.titulo)) {
+      await Jogo.create(jogo);
+      console.log(`Jogo '${jogo.titulo}' criado!`);
+    }
+  }
+}
+
 module.exports = {
   // Login
   async login(req, res) {
@@ -38,8 +58,8 @@ module.exports = {
     const { rows } = await Usuario.getByEmail(email);
     if (!rows.length) return res.status(401).json({ success: false, message: 'Usuário não encontrado.' });
     const user = rows[0];
-    const match = await bcrypt.compare(senha, user.senha);
-    if (!match) return res.status(401).json({ success: false, message: 'Senha incorreta.' });
+    // Comparação direta, sem hash
+    if (senha !== user.senha) return res.status(401).json({ success: false, message: 'Senha incorreta.' });
     res.json({ success: true, user: { nome: user.nome, email: user.email, isAdmin: user.status === 'admin' } });
   },
   // Registro
@@ -49,10 +69,11 @@ module.exports = {
     if (senha.length < 8) return res.status(400).json({ success: false, message: 'Senha muito curta.' });
     const { rows } = await Usuario.getByEmail(email);
     if (rows.length) return res.status(400).json({ success: false, message: 'Email já cadastrado.' });
-    const hash = await bcrypt.hash(senha, 10);
-    const { rows: created } = await Usuario.create({ nome, email, senha: hash, status: 'user' });
+    // Salva senha em texto puro
+    const { rows: created } = await Usuario.create({ nome, email, senha, status: 'user' });
     const user = created[0];
     res.json({ success: true, user: { nome: user.nome, email: user.email, isAdmin: false } });
   },
-  ensureAdmin
+  ensureAdmin,
+  ensureJogos
 };

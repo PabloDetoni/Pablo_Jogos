@@ -3,6 +3,14 @@
 
 const API_URL = 'http://localhost:3001';
 
+function formatarDataBR(isoString) {
+  const data = new Date(isoString);
+  const dia = String(data.getDate()).padStart(2, '0');
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const ano = data.getFullYear();
+  return `${dia}/${mes}/${ano}`;
+}
+
 async function fetchAndRender(url, containerId, columns) {
   const container = document.getElementById(containerId);
   try {
@@ -68,10 +76,15 @@ async function renderTable(url, containerId, columns, title, icon) {
       html += '<tr>';
       columns.forEach(col => {
         let value = row[col.key] ?? '';
+        // Formata campos de data
+        if ((col.key === 'criado_em' || col.key === 'data' || col.key === 'data_criacao' || col.key === 'data_registro') && value) {
+          value = formatarDataBR(value);
+        }
         // Truncar campos longos (email, nome, descricao, etc)
         if (col.key === 'senha' && value.length > 8) {
           value = value.substring(0, 8) + '...';
-        } else if ((col.key === 'email' || col.key === 'nome' || col.key === 'descricao') && value.length > 22) {
+        } else if ((col.key === 'email' || col.key === 'nome' || 
+          col.key === 'descricao') && value.length > 22) {
           value = value.substring(0, 19) + '...';
         }
         html += `<td title="${row[col.key] ?? ''}">${value}</td>`;

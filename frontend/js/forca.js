@@ -257,11 +257,17 @@ async function registrarPontuacaoRankingForca() {
     body: JSON.stringify({
       jogo: 'Forca',
       resultado: resultadoApi,
-      nome: user.nome,
+      usuario: user.nome, // Corrigido de 'nome' para 'usuario'
       dificuldade: dificuldadeLabel,
       tempo: typeof tempoForca === 'number' ? tempoForca : null
     })
   });
+
+  // Garante que rankings.js foi carregado
+  if (typeof window.adicionarPontuacaoRanking !== 'function') {
+    alert('Erro: rankings.js não foi carregado antes de forca.js! Ranking não será registrado.');
+    return;
+  }
 
   let seqKey = `forca_seq_vitoria_${user.nome}_${dificuldadeLabel}`;
   let seqAtual = Number(localStorage.getItem(seqKey)) || 0;
@@ -269,7 +275,7 @@ async function registrarPontuacaoRankingForca() {
     // Ranking geral
     await window.adicionarPontuacaoRanking("Forca", user.nome, {
       tipo: "mais_vitorias_total",
-      dificuldade: "",
+      dificuldade: null,
       valor: 1
     });
     // Ranking por dificuldade
@@ -297,3 +303,7 @@ async function registrarPontuacaoRankingForca() {
   }
   localStorage.setItem(seqKey, seqAtual);
 }
+
+// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
+// Exemplo:
+// adicionarPontuacaoRanking('Forca', user.nome, { tipo: 'mais_vitorias_total', valor: 1, dificuldade: dificuldadeSelecionada });

@@ -174,7 +174,7 @@ async function registrarPontuacaoRankingPPT(resultado) {
   if (resultado === 'vitoria') {
     await window.adicionarPontuacaoRanking("PPT", user.nome, {
       tipo: "mais_vitorias_total",
-      dificuldade: "",
+      dificuldade: null,
       valor: 1
     });
   }
@@ -186,7 +186,7 @@ async function registrarPontuacaoRankingPPT(resultado) {
     seqAtual += 1;
     await window.adicionarPontuacaoRanking("PPT", user.nome, {
       tipo: "mais_vitorias_consecutivas",
-      dificuldade: "",
+      dificuldade: null,
       valor: seqAtual
     });
   } else {
@@ -194,9 +194,13 @@ async function registrarPontuacaoRankingPPT(resultado) {
     // Atualiza ranking de sequência para 0 (opcional, mantém coerência)
     await window.adicionarPontuacaoRanking("PPT", user.nome, {
       tipo: "mais_vitorias_consecutivas",
-      dificuldade: "",
+      dificuldade: null,
       valor: seqAtual
     });
   }
   localStorage.setItem(seqKey, seqAtual);
 }
+
+// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
+// Exemplo:
+// adicionarPontuacaoRanking('PPT', user.nome, { tipo: 'mais_vitorias_total', valor: 1, dificuldade: null });

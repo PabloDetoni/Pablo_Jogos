@@ -63,12 +63,18 @@ const adminRoutes = require('./routes/adminRoutes');
 console.log('adminRoutes OK');
 const rankingRoutes = require('./routes/rankingRoutes');
 console.log('rankingRoutes OK');
+const rankingAvancadoRoutes = require('./routes/rankingAvancadoRoutes');
+console.log('rankingAvancadoRoutes OK');
+const partidaRoutes = require('./routes/partidaRoutes');
+console.log('partidaRoutes OK');
 
 app.use('/jogo', jogoRoutes);
 app.use('/usuario', usuarioRoutes);
 app.use('/estatistica', estatisticaRoutes);
 app.use('/admin', adminRoutes);
 app.use('/ranking', rankingRoutes);
+app.use('/rankings', rankingAvancadoRoutes);
+app.use('/api/partida', partidaRoutes);
 console.log('Todas as rotas aplicadas');
 
 // Rota padrão
@@ -141,6 +147,8 @@ const startServer = async () => {
     console.log('✅ PostgreSQL conectado com sucesso');
     // Garante que o admin existe
     await usuarioAuthController.ensureAdmin();
+    // Garante que os jogos principais existem
+    await usuarioAuthController.ensureJogos();
     const PORT = process.env.PORT || PORT_FIXA;
     app.listen(PORT, () => {
       console.log(`🚀 Servidor rodando em http://${HOST}:${PORT}`);

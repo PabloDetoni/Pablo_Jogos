@@ -223,6 +223,10 @@ async function registrarPontuacaoRanking2048() {
   });
 }
 
+// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
+// Exemplo:
+// adicionarPontuacaoRanking('2048', user.nome, { tipo: 'pontuacao', valor: pontuacaoFinal, dificuldade: null });
+
 document.addEventListener('keydown', function(e) {
   if (gameOver) return;
   if (bloqueado) return;

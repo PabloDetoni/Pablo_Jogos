@@ -281,3 +281,7 @@ async function registrarPontuacaoRankingMemoria() {
     });
   }
 }
+
+// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
+// Exemplo:
+// adicionarPontuacaoRanking('Memória', user.nome, { tipo: 'mais_vitorias_total', valor: 1, dificuldade: dificuldadeSelecionada, tempo: tempoFinal, erros: errosCometidos });

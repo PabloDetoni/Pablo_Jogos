@@ -14,15 +14,15 @@
       <button onclick="loginAsGuest()">Entrar como Convidado</button>
     </div>
     <form id="login-form" style="display:none" onsubmit="login(event)">
-      <input type="email" id="login-email" placeholder="Email" required>
-      <input type="password" id="login-password" placeholder="Senha" required>
+      <input type="email" id="login-email" placeholder="Email" required maxlength="40">
+      <input type="password" id="login-password" placeholder="Senha" required minlength="8" maxlength="20">
       <button type="submit">Entrar</button>
       <button type="button" onclick="hideForms()">Cancelar</button>
       <div id="login-error" class="error"></div>
     </form>
     <form id="register-form" style="display:none" onsubmit="register(event)">
       <input type="text" id="register-name" placeholder="Nome" required maxlength="20">
-      <input type="email" id="register-email" placeholder="Email" required>
+      <input type="email" id="register-email" placeholder="Email" required maxlength="40">
       <input type="password" id="register-password" placeholder="Senha" required minlength="8" maxlength="20">
       <input type="password" id="register-confirm" placeholder="Confirmar senha" required minlength="8" maxlength="20">
       <button type="submit">Registrar</button>

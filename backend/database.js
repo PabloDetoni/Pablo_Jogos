@@ -83,3 +83,6 @@ module.exports = {
   transaction,
   testConnection
 };
+
+// ALTER USER pablodetoni WITH PASSWORD '123mudar';
+// \q

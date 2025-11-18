@@ -23,15 +23,29 @@ CREATE TABLE jogo (
   criado_em TIMESTAMP DEFAULT NOW()
 );
 
--- Tabela de Estatísticas do Usuário por Jogo
-CREATE TABLE estatistica_usuario_jogo (
+-- Tabela de Ranking Avançado
+CREATE TABLE ranking_avancado (
   id SERIAL PRIMARY KEY,
   id_usuario INTEGER NOT NULL REFERENCES usuario(id),
   id_jogo INTEGER NOT NULL REFERENCES jogo(id),
-  id_dificuldade INTEGER,
-  vitorias INTEGER DEFAULT 0,
-  vitorias_consecutivas INTEGER DEFAULT 0,
-  pontuacao INTEGER DEFAULT 0,
-  menor_tempo INTEGER,
-  erros INTEGER DEFAULT 0
+  tipo VARCHAR(40) NOT NULL,      -- Ex: 'mais_vitorias_total', 'menor_tempo', etc
+  dificuldade VARCHAR(20),        -- Ex: 'Fácil', 'Médio', etc (pode ser NULL)
+  valor INTEGER,                  -- Pontuação, vitórias, sequência, etc
+  tempo INTEGER,                  -- Para rankings de menor tempo (em segundos)
+  erros INTEGER,                  -- Para rankings que usam erros
+  data_registro TIMESTAMP DEFAULT NOW()
 );
+
+-- Tabela de Partidas
+CREATE TABLE partida (
+  id SERIAL PRIMARY KEY,
+  id_usuario INTEGER REFERENCES usuario(id),
+  id_jogo INTEGER REFERENCES jogo(id),
+  resultado VARCHAR(20),
+  dificuldade VARCHAR(50),
+  tempo INTEGER,
+  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_ranking_jogo_tipo_dif ON ranking_avancado (id_jogo, tipo, dificuldade);
+CREATE INDEX idx_ranking_usuario ON ranking_avancado (id_usuario);
