@@ -44,6 +44,50 @@
         </h2>
         <div id="visualizacao-rankings" style="display:none"></div>
       </section>
+      <section>
+        <h2><i class="fa-solid fa-star"></i> Ranking Avançado
+          <button class="btn-toggle" id="toggle-rankings-avancados"><i class="fa-solid fa-plus"></i></button>
+        </h2>
+        <div id="visualizacao-rankings-avancados" style="display:none">
+          <form id="filtros-ranking-avancado" class="filtros-admin" onsubmit="return false;">
+            <label>Jogo:
+              <select id="filtro-jogo"></select>
+            </label>
+            <label>Tipo Ranking:
+              <select id="filtro-tipo"></select>
+            </label>
+            <button id="btn-filtros-avancados" type="button" style="margin-left:16px;"><i class="fa-solid fa-sliders"></i> Filtros Avançados</button>
+          </form>
+          <div id="container-tabela-ranking"></div>
+          <!-- Modal de filtros avançados -->
+          <div id="modal-filtros-avancados" class="modal-filtros" style="display:none;">
+            <div class="modal-filtros-content">
+              <span class="close-modal-filtros" id="close-modal-filtros">&times;</span>
+              <h3>Filtros Avançados</h3>
+              <label>Dificuldade:
+                <select id="filtro-dificuldade"></select>
+              </label>
+              <label>Usuário:
+                <input type="text" id="filtro-usuario" placeholder="Nome ou ID">
+              </label>
+              <label>Status:
+                <select id="filtro-status">
+                  <option value="">Todos</option>
+                  <option value="ativo">Ativo</option>
+                  <option value="bloqueado">Bloqueado</option>
+                </select>
+              </label>
+              <label>Data Inicial:
+                <input type="date" id="filtro-data-inicial">
+              </label>
+              <label>Data Final:
+                <input type="date" id="filtro-data-final">
+              </label>
+              <button id="btn-aplicar-filtros-avancados" type="button"><i class="fa-solid fa-filter"></i> Aplicar Filtros</button>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
   <script src="../js/admin-visualizacao.js"></script>

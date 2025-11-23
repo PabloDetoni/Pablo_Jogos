@@ -33,7 +33,7 @@ CREATE TABLE ranking_avancado (
   valor INTEGER,                  -- Pontuação, vitórias, sequência, etc
   tempo INTEGER,                  -- Para rankings de menor tempo (em segundos)
   erros INTEGER,                  -- Para rankings que usam erros
-  data_registro TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW() -- Data/hora de criação do registro
 );
 
 -- Tabela de Partidas

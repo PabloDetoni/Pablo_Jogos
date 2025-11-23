@@ -4,20 +4,38 @@ const db = require('../database');
 module.exports = {
   // Busca os 10 melhores para o ranking solicitado
   async buscarRanking(req, res) {
-    let { jogo, tipo, dificuldade } = req.body;
+    let { jogo, tipo, dificuldade, usuario, status, dataInicial, dataFinal } = req.body;
     // Normaliza dificuldade: null para rankings gerais
     if (dificuldade === undefined || dificuldade === '' || dificuldade === 'null') dificuldade = null;
-    let query = `SELECT r.id, u.nome, u.status, r.valor, r.tempo, r.erros
+    let query = `SELECT r.id, u.nome, u.status, r.valor, r.tempo, r.erros, r.created_at
       FROM ranking_avancado r
       JOIN usuario u ON u.id = r.id_usuario
       JOIN jogo j ON j.id = r.id_jogo
       WHERE j.titulo = $1 AND r.tipo = $2`;
     const params = [jogo, tipo];
+    let idx = 3;
     if (dificuldade !== null) {
-      query += ' AND r.dificuldade = $3';
+      query += ` AND r.dificuldade = $${idx++}`;
       params.push(dificuldade);
     } else {
       query += ' AND r.dificuldade IS NULL';
+    }
+    if (usuario) {
+      query += ` AND (u.nome ILIKE $${idx} OR u.id::text = $${idx})`;
+      params.push(usuario);
+      idx++;
+    }
+    if (status) {
+      query += ` AND u.status = $${idx++}`;
+      params.push(status);
+    }
+    if (dataInicial) {
+      query += ` AND r.created_at >= $${idx++}`;
+      params.push(dataInicial);
+    }
+    if (dataFinal) {
+      query += ` AND r.created_at <= $${idx++}`;
+      params.push(dataFinal);
     }
     // Ordenação dinâmica
     if (tipo === 'menor_tempo') {
@@ -25,7 +43,7 @@ module.exports = {
     } else {
       query += ' ORDER BY r.valor DESC NULLS LAST';
     }
-    query += ' LIMIT 10';
+    query += ' LIMIT 100';
     try {
       const { rows } = await db.query(query, params);
       res.json({ ranking: rows });

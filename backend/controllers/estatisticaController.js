@@ -1,4 +1,4 @@
-// Controller para CRUD de estatistica_usuario_jogo
+// Controller para CRUD de estatistica
 const Estatistica = require('../models/estatisticaModel');
 
 // Adaptação para nomes esperados nas rotas
@@ -21,7 +21,7 @@ module.exports = {
             res.status(500).json({ error: 'Erro ao buscar estatística' });
         }
     },
-    // Criar nova estatística (associar usuário + jogo)
+    // Criar nova estatística
     async criar(req, res) {
         const { id_usuario, id_jogo, id_dificuldade, vitorias, vitorias_consecutivas, pontuacao, menor_tempo, erros } = req.body;
         try {
@@ -43,7 +43,7 @@ module.exports = {
             res.status(500).json({ error: 'Erro ao atualizar estatística' });
         }
     },
-    // Deletar estatística (remover associação usuário-jogo)
+    // Deletar estatística
     async deletar(req, res) {
         const { id } = req.params;
         try {

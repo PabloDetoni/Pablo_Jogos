@@ -5,4 +5,7 @@ const rankingController = require('../controllers/rankingController');
 
 router.get('/', rankingController.listarRanking);
 
-module.exports = router;
+// Arquivo de rotas /ranking desabilitado pois a tabela estatistica_usuario_jogo não existe mais
+// Nenhuma rota exportada
+
+module.exports = {};

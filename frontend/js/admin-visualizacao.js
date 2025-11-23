@@ -11,6 +11,13 @@ function formatarDataBR(isoString) {
   return `${dia}/${mes}/${ano}`;
 }
 
+function formatarTempo(segundos) {
+  if (typeof segundos !== "number" || isNaN(segundos)) return "-";
+  const min = Math.floor(segundos / 60);
+  const sec = Math.floor(segundos % 60);
+  return `${min}:${sec < 10 ? "0" : ""}${sec}`;
+}
+
 async function fetchAndRender(url, containerId, columns) {
   const container = document.getElementById(containerId);
   try {
@@ -97,23 +104,106 @@ async function renderTable(url, containerId, columns, title, icon) {
     showError(container, 'Erro ao carregar dados.');
   }
 }
-function toggleSection(sectionId, btnId) {
-  const section = document.getElementById(sectionId);
-  const btn = document.getElementById(btnId);
-  if (section.style.display === 'none') {
-    section.style.display = 'block';
-    btn.classList.add('active');
-    btn.innerHTML = '<i class="fa-solid fa-minus"></i>';
-  } else {
-    section.style.display = 'none';
-    btn.classList.remove('active');
-    btn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+
+// Função para buscar e renderizar o ranking avançado
+async function fetchRankingAvancadoAdmin(filtros = {}) {
+  const tabelaContainer = document.getElementById('container-tabela-ranking');
+  if (!tabelaContainer) return;
+  tabelaContainer.innerHTML = '<div class="loading">Carregando...</div>';
+  try {
+    const res = await fetch(`${API_URL}/rankings/advanced`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(filtros)
+    });
+    const data = await res.json();
+    const ranking = data.ranking || [];
+    let html = `<div class='table-title'><i class='fa-solid fa-star'></i> ${filtros.jogo || ''} ${filtros.tipo ? '('+filtros.tipo.replace(/_/g, ' ')+')' : ''}</div>`;
+    if (ranking.length === 0) {
+      html += '<p>Nenhum dado encontrado.</p>';
+    } else {
+      html += `<div class='table-responsive'><table class='visualizacao-table'><thead><tr>
+        <th style='text-align:center;'>#</th>
+        <th style='text-align:center;'>Nome</th>
+        <th style='text-align:center;'>Valor</th>
+        <th style='text-align:center;'>Tempo</th>
+        <th style='text-align:center;'>Erros</th>
+        <th style='text-align:center;'>Status</th>
+        <th style='text-align:center;'>Data</th>
+      </tr></thead><tbody>`;
+      ranking.forEach((row, idx) => {
+        let statusBadge = row.status === 'ativo'
+          ? '<span class="status-badge status-ativo">Ativo</span>'
+          : '<span class="status-badge status-bloqueado">Bloqueado</span>';
+        let nomeTd = `<td title="${row.nome}" style='text-align:center;'>${row.nome.length > 18 ? row.nome.substring(0, 16) + '...' : row.nome}</td>`;
+        let valorTd = `<td style='text-align:center;'>${row.valor ?? '-'}</td>`;
+        let tempoTd = `<td style='text-align:center;'>${row.tempo !== null && row.tempo !== undefined ? formatarTempo(row.tempo) : '-'}</td>`;
+        let errosTd = `<td style='text-align:center;'>${row.erros ?? '-'}</td>`;
+        let dataTd = `<td style='text-align:center;'>${row.created_at ? formatarDataBR(row.created_at) : '-'}</td>`;
+        let trClass = '';
+        html += `<tr class="${trClass}"><td style='text-align:center;'>${idx + 1}</td>${nomeTd}${valorTd}${tempoTd}${errosTd}<td style='text-align:center;'>${statusBadge}</td>${dataTd}</tr>`;
+      });
+      html += '</tbody></table></div>';
+    }
+    tabelaContainer.innerHTML = html;
+    tabelaContainer.style.display = 'block';
+  } catch (err) {
+    tabelaContainer.innerHTML = '<p class="error">Erro ao carregar ranking avançado.</p>';
+    tabelaContainer.style.display = 'block';
   }
 }
+
+// --- Filtros avançados para Ranking Avançado (Admin) ---
+const jogosRanking = [
+  {
+    chave: "Jogo da Velha", nome: "Jogo da Velha",
+    dificuldades: ["Fácil", "Médio"],
+    tipos: [
+      { chave: "mais_vitorias_total", label: "Mais vitórias (Total)" },
+      { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)" },
+      { chave: "mais_vitorias_consecutivas", label: "Mais vitórias consecutivas (Por dificuldade)" }
+    ]
+  },
+  { chave: "PPT", nome: "Pedra Papel Tesoura", dificuldades: [], tipos: [ { chave: "mais_vitorias_total", label: "Mais vitórias (Total)" }, { chave: "mais_vitorias_consecutivas", label: "Mais vitórias consecutivas" } ] },
+  { chave: "Forca", nome: "Forca", dificuldades: ["Fácil", "Médio", "Difícil"], tipos: [ { chave: "mais_vitorias_total", label: "Mais vitórias (Total)" }, { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)" }, { chave: "mais_vitorias_consecutivas", label: "Mais vitórias consecutivas (Por dificuldade)" } ] },
+  { chave: "2048", nome: "2048", dificuldades: [], tipos: [ { chave: "pontuacao", label: "Maior pontuação" } ] },
+  { chave: "Memória", nome: "Memória", dificuldades: ["Fácil", "Médio", "Difícil"], tipos: [ { chave: "mais_vitorias_total", label: "Mais vitórias (Total)" }, { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)" }, { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)" } ] },
+  { chave: "Sudoku", nome: "Sudoku", dificuldades: ["Fácil", "Médio", "Difícil", "Muito Difícil"], tipos: [ { chave: "mais_vitorias_total", label: "Mais vitórias (Total)" }, { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)" }, { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)" } ] },
+  { chave: "Pong", nome: "Pong", dificuldades: ["Fácil", "Médio", "Difícil"], tipos: [ { chave: "mais_vitorias_total", label: "Mais vitórias (Total)" }, { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)" }, { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)" } ] },
+  { chave: "Campo Minado", nome: "Campo Minado", dificuldades: ["Fácil", "Médio", "Difícil"], tipos: [ { chave: "mais_vitorias_total", label: "Mais vitórias (Total)" }, { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)" }, { chave: "menor_tempo", label: "Menor tempo (Por dificuldade)" } ] }
+];
+
+function preencherFiltrosRankingAdmin() {
+  const jogoSel = document.getElementById('filtro-jogo');
+  const tipoSel = document.getElementById('filtro-tipo');
+  const difSel = document.getElementById('filtro-dificuldade');
+  if (!jogoSel || !tipoSel || !difSel) return; // Evita erro se algum filtro não existe
+  // Preenche jogos
+  jogoSel.innerHTML = jogosRanking.map((j, i) => `<option value="${i}">${j.nome}</option>`).join('');
+  // Atualiza tipos e dificuldades ao trocar jogo
+  function atualizarTiposEDificuldades() {
+    const idx = jogoSel.value;
+    const jogo = jogosRanking[idx];
+    tipoSel.innerHTML = jogo.tipos.map((t, i) => `<option value="${i}">${t.label}</option>`).join('');
+    // Dificuldades
+    if (jogo.dificuldades.length > 0) {
+      difSel.innerHTML = '<option value="">Todas</option>' + jogo.dificuldades.map(d => `<option value="${d}">${d}</option>`).join('');
+      difSel.disabled = false;
+    } else {
+      difSel.innerHTML = '<option value="">N/A</option>';
+      difSel.disabled = true;
+    }
+  }
+  jogoSel.onchange = atualizarTiposEDificuldades;
+  tipoSel.onchange = atualizarTiposEDificuldades;
+  atualizarTiposEDificuldades();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('toggle-usuarios').onclick = () => toggleSection('visualizacao-usuarios', 'toggle-usuarios');
   document.getElementById('toggle-jogos').onclick = () => toggleSection('visualizacao-jogos', 'toggle-jogos');
   document.getElementById('toggle-rankings').onclick = () => toggleSection('visualizacao-rankings', 'toggle-rankings');
+  document.getElementById('toggle-rankings-avancados').onclick = () => toggleSection('visualizacao-rankings-avancados', 'toggle-rankings-avancados');
 
   renderTable(`${API_URL}/usuario`, 'visualizacao-usuarios', [
     { key: 'id', label: 'ID' },
@@ -130,12 +220,70 @@ document.addEventListener('DOMContentLoaded', () => {
     { key: 'descricao', label: 'Descrição' },
     { key: 'criado_em', label: 'Criado em' }
   ], 'Jogos', 'fa-solid fa-gamepad');
-  renderTable(`${API_URL}/ranking`, 'visualizacao-rankings', [
-    { key: 'posicao', label: 'Posição' },
-    { key: 'id_usuario', label: 'Usuário' },
-    { key: 'id_jogo', label: 'Jogo' },
-    { key: 'pontuacao', label: 'Pontuação' },
-    { key: 'vitorias', label: 'Vitórias' },
-    { key: 'menor_tempo', label: 'Menor Tempo' }
-  ], 'Ranking', 'fa-solid fa-ranking-star');
+
+  // --- NOVO: Ranking Avançado ---
+  fetchRankingAvancadoAdmin();
 });
+
+// Ao expandir ranking avançado, mostra filtros e mensagem inicial
+function mostrarRankingAvancado() {
+  const tabelaContainer = document.getElementById('container-tabela-ranking');
+  if (!tabelaContainer) return;
+  tabelaContainer.innerHTML = '<div class="ranking-msg-inicial">Aplique a filtragem para ver os dados</div>';
+  preencherFiltrosRankingAdmin();
+  const btnFiltros = document.getElementById('btn-filtros-avancados');
+  if (btnFiltros) btnFiltros.onclick = () => {
+    document.getElementById('modal-filtros-avancados').style.display = 'flex';
+  };
+  const btnClose = document.getElementById('close-modal-filtros');
+  if (btnClose) btnClose.onclick = () => {
+    document.getElementById('modal-filtros-avancados').style.display = 'none';
+  };
+  const btnAplicar = document.getElementById('btn-aplicar-filtros-avancados');
+  if (btnAplicar) btnAplicar.onclick = () => {
+    filtrarRankingAvancadoAdmin();
+    document.getElementById('modal-filtros-avancados').style.display = 'none';
+  };
+}
+
+// Substitui toggleSection para ranking avançado
+function toggleSection(sectionId, btnId) {
+  const section = document.getElementById(sectionId);
+  const btn = document.getElementById(btnId);
+  if (section.style.display === 'none') {
+    section.style.display = 'block';
+    btn.classList.add('active');
+    btn.innerHTML = '<i class="fa-solid fa-minus"></i>';
+    if (sectionId === 'visualizacao-rankings-avancados') mostrarRankingAvancado();
+  } else {
+    section.style.display = 'none';
+    btn.classList.remove('active');
+    btn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+  }
+}
+
+// Ao aplicar filtro, remove mensagem inicial e mostra tabela normalmente
+async function filtrarRankingAvancadoAdmin() {
+  const tabelaContainer = document.getElementById('container-tabela-ranking');
+  if (!tabelaContainer) return;
+  tabelaContainer.innerHTML = '';
+  const jogoIdx = document.getElementById('filtro-jogo').value;
+  const tipoIdx = document.getElementById('filtro-tipo').value;
+  const dificuldade = document.getElementById('filtro-dificuldade').value || null;
+  const usuario = document.getElementById('filtro-usuario').value.trim();
+  const status = document.getElementById('filtro-status').value;
+  const dataInicial = document.getElementById('filtro-data-inicial').value;
+  const dataFinal = document.getElementById('filtro-data-final').value;
+  const jogoObj = jogosRanking[jogoIdx];
+  const tipoObj = jogoObj.tipos[tipoIdx];
+  const params = {
+    jogo: jogoObj.chave,
+    tipo: tipoObj.chave,
+    dificuldade: dificuldade || null,
+    usuario,
+    status,
+    dataInicial,
+    dataFinal
+  };
+  await fetchRankingAvancadoAdmin(params);
+}
