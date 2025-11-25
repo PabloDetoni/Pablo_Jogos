@@ -111,33 +111,13 @@ function setupHeaderBtns() {
 }
 
 // Botões dos jogos
-function setupGameBtns() {
-  document.getElementById('btn-velha').onclick = function() {
-    entrarNoJogoSeNaoBloqueado('Jogo da Velha', '/frontend/html/velha.html');
-  };
-  document.getElementById('btn-ppt').onclick = function() {
-    entrarNoJogoSeNaoBloqueado('PPT', '/frontend/html/ppt.html');
-  };
-  document.getElementById('btn-forca').onclick = function() {
-    entrarNoJogoSeNaoBloqueado('Forca', '/frontend/html/forca.html');
-  };
-  document.getElementById('btn-memoria').onclick = function() {
-    entrarNoJogoSeNaoBloqueado('Memória', '/frontend/html/memoria.html');
-  };
-  document.getElementById('btn-campo-minado').onclick = function() {
-    entrarNoJogoSeNaoBloqueado('Campo Minado', '/frontend/html/campo_minado.html');
-  };
-  document.getElementById('btn-pong').onclick = function() {
-    entrarNoJogoSeNaoBloqueado('Pong', '/frontend/html/pong.html');
-  };
-  document.getElementById('btn-2048').onclick = function() {
-    entrarNoJogoSeNaoBloqueado('2048', '/frontend/html/2048.html');
-  };
-  document.getElementById('btn-sudoku').onclick = function() {
-    entrarNoJogoSeNaoBloqueado('Sudoku', '/frontend/html/sudoku.html');
-  };
-}
-
+// Removido setupGameBtns e chamadas aos IDs fixos dos jogos
+// Se quiser lógica para todos os jogos, use:
+// document.querySelectorAll('.jogo-btn').forEach(btn => {
+//   btn.addEventListener('click', function() {
+//     // Sua lógica aqui
+//   });
+// });
 // Botão estatísticas
 function setupEstatisticasBtn() {
   document.getElementById('btn-estatisticas').onclick = () => window.location.href = '/frontend/html/estatisticas.html';
@@ -157,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupHeaderBtns();
   setupProfileModalCloseOnClickOutside();
   setupLogoutBtn();
-  setupGameBtns();
+  // setupGameBtns(); // Removido pois não há mais botões fixos
   setupEstatisticasBtn();
   setupAdminBtn();
 });

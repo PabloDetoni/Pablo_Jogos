@@ -17,11 +17,21 @@ CREATE TABLE admin (
 -- Tabela de Jogos
 CREATE TABLE jogo (
   id SERIAL PRIMARY KEY,
-  titulo TEXT NOT NULL,
-  genero TEXT,
+  titulo VARCHAR(100) NOT NULL,
+  genero VARCHAR(50),
   descricao TEXT,
-  criado_em TIMESTAMP DEFAULT NOW()
+  slug VARCHAR(100) UNIQUE NOT NULL
 );
+
+-- Exemplo de inserção de jogos padrão
+INSERT INTO jogo (titulo, genero, descricao, slug) VALUES
+('PPT', 'Clássico', 'Pedra Papel Tesoura', 'ppt'),
+('Forca', 'Palavras', 'Jogo da Forca', 'forca'),
+('2048', 'Puzzle', 'Jogo 2048', '2048'),
+('Memória', 'Puzzle', 'Jogo da Memória', 'memoria'),
+('Sudoku', 'Puzzle', 'Jogo Sudoku', 'sudoku'),
+('Pong', 'Arcade', 'Jogo Pong', 'pong'),
+('Campo Minado', 'Puzzle', 'Campo Minado', 'campo-minado');
 
 -- Tabela de Ranking Avançado
 CREATE TABLE ranking_avancado (

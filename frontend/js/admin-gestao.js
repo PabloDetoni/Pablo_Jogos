@@ -350,109 +350,276 @@ function validarCamposUsuario() {
 const jogoMessageContainer = document.getElementById('jogoMessageContainer');
 const jogoForm = document.getElementById('jogoForm');
 const formFieldsJogo = document.getElementById('formFieldsJogo');
+const searchJogoIdInput = document.getElementById('searchJogoId');
 const btnBuscarJogo = document.getElementById('btnBuscarJogo');
 const btnIncluirJogo = document.getElementById('btnIncluirJogo');
 const btnAlterarJogo = document.getElementById('btnAlterarJogo');
 const btnExcluirJogo = document.getElementById('btnExcluirJogo');
 const btnSalvarJogo = document.getElementById('btnSalvarJogo');
 const btnCancelarJogo = document.getElementById('btnCancelarJogo');
+const btnVoltarJogo = document.getElementById('btnVoltarJogo');
 let jogoEditando = null;
+let acaoJogo = null;
 
 function showJogoMessage(msg, type = 'success') {
   jogoMessageContainer.innerHTML = `<div class="msg ${type}">${msg}</div>`;
-  setTimeout(() => jogoMessageContainer.innerHTML = '', 3000);
+  setTimeout(() => jogoMessageContainer.innerHTML = '', 4000);
 }
 function limparJogoForm() {
   jogoForm.reset();
-  jogoEditando = null;
+  // Não limpar o campo de busca de ID
+  // jogoEditando = null;
+  acaoJogo = null;
   btnAlterarJogo.style.display = 'none';
   btnExcluirJogo.style.display = 'none';
   btnSalvarJogo.style.display = 'none';
   btnIncluirJogo.style.display = '';
 }
 function preencherJogoForm(jogo) {
+  document.getElementById('id_jogo').value = jogo.id || searchJogoIdInput.value || '';
   document.getElementById('titulo_jogo').value = jogo.titulo || '';
   document.getElementById('genero_jogo').value = jogo.genero || '';
   document.getElementById('descricao_jogo').value = jogo.descricao || '';
 }
-btnBuscarJogo.addEventListener('click', async () => {
-  const id = document.getElementById('searchJogoId').value;
+// ESTADOS DO CRUD JOGO
+function safeDisplay(element, value) {
+  if (element) element.style.display = value;
+}
+function estadoBuscaJogo() {
+  safeDisplay(searchJogoIdInput, '');
+  safeDisplay(formFieldsJogo, 'none');
+  safeDisplay(btnBuscarJogo, '');
+  safeDisplay(btnAlterarJogo, 'none');
+  safeDisplay(btnExcluirJogo, 'none');
+  safeDisplay(btnSalvarJogo, 'none');
+  safeDisplay(btnCancelarJogo, 'none');
+  safeDisplay(btnIncluirJogo, 'none');
+  safeDisplay(btnVoltarJogo, 'none');
+  if (searchJogoIdInput) {
+    searchJogoIdInput.readOnly = false;
+    // Não limpar o valor do campo
+  }
+  showJogoMessage('Digite um ID e clique em Buscar.', 'info');
+}
+function estadoNovoJogo() {
+  safeDisplay(searchJogoIdInput, '');
+  safeDisplay(formFieldsJogo, '');
+  safeDisplay(btnBuscarJogo, 'none');
+  safeDisplay(btnAlterarJogo, 'none');
+  safeDisplay(btnExcluirJogo, 'none');
+  safeDisplay(btnSalvarJogo, '');
+  safeDisplay(btnCancelarJogo, '');
+  safeDisplay(btnIncluirJogo, 'none');
+  safeDisplay(btnVoltarJogo, 'none');
+  if (searchJogoIdInput) {
+    searchJogoIdInput.readOnly = false;
+    searchJogoIdInput.style.display = '';
+  }
+  // Sempre atribui o valor do campo de busca ao campo id_jogo
+  const idBusca = searchJogoIdInput.value;
+  const idJogoInput = document.getElementById('id_jogo');
+  if (idJogoInput) idJogoInput.value = idBusca;
+  showJogoMessage('Novo jogo: preencha os dados e clique em Salvar.', 'info');
+}
+function estadoEncontradoJogo() {
+  safeDisplay(searchJogoIdInput, '');
+  safeDisplay(formFieldsJogo, '');
+  safeDisplay(btnBuscarJogo, 'none');
+  safeDisplay(btnAlterarJogo, '');
+  safeDisplay(btnExcluirJogo, '');
+  safeDisplay(btnSalvarJogo, 'none');
+  safeDisplay(btnCancelarJogo, '');
+  safeDisplay(btnIncluirJogo, 'none');
+  safeDisplay(btnVoltarJogo, 'none');
+  if (searchJogoIdInput) searchJogoIdInput.readOnly = true;
+  showJogoMessage('Jogo encontrado. Você pode alterar ou excluir.', 'success');
+}
+function estadoEditandoJogo() {
+  safeDisplay(searchJogoIdInput, '');
+  safeDisplay(formFieldsJogo, '');
+  safeDisplay(btnBuscarJogo, 'none');
+  safeDisplay(btnAlterarJogo, 'none');
+  safeDisplay(btnExcluirJogo, 'none');
+  safeDisplay(btnSalvarJogo, '');
+  safeDisplay(btnCancelarJogo, '');
+  safeDisplay(btnIncluirJogo, 'none');
+  safeDisplay(btnVoltarJogo, '');
+  if (searchJogoIdInput) searchJogoIdInput.readOnly = true;
+  showJogoMessage('Alterando jogo: edite os campos e clique em Salvar.', 'warning');
+}
+function estadoExcluindoJogo() {
+  safeDisplay(searchJogoIdInput, '');
+  safeDisplay(formFieldsJogo, '');
+  safeDisplay(btnBuscarJogo, 'none');
+  safeDisplay(btnAlterarJogo, 'none');
+  safeDisplay(btnExcluirJogo, 'none');
+  safeDisplay(btnSalvarJogo, '');
+  safeDisplay(btnCancelarJogo, '');
+  safeDisplay(btnIncluirJogo, 'none');
+  safeDisplay(btnVoltarJogo, '');
+  if (searchJogoIdInput) searchJogoIdInput.readOnly = true;
+  showJogoMessage('Excluindo jogo: clique em Salvar para confirmar ou Voltar/Cancelar.', 'warning');
+}
+if (btnVoltarJogo) {
+  btnVoltarJogo.onclick = () => {
+    if (jogoEditando) {
+      preencherJogoForm(jogoEditando);
+      estadoEncontradoJogo();
+      acaoJogo = null;
+    } else {
+      jogoForm.reset();
+      estadoBuscaJogo();
+      acaoJogo = null;
+    }
+  };
+}
+
+// INICIO DO FLUXO CRUD JOGO
+estadoBuscaJogo();
+
+btnBuscarJogo.onclick = async () => {
+  const id = searchJogoIdInput.value;
   if (!id) return showJogoMessage('Informe o ID para buscar', 'error');
+  searchJogoIdInput.readOnly = true;
   try {
-    const res = await fetch(`/jogo/${id}`);
+    const res = await fetch(`${API_URL}/jogo/${id}`);
     if (!res.ok) throw new Error('Jogo não encontrado');
     const jogo = await res.json();
     jogoEditando = jogo;
     preencherJogoForm(jogo);
-    btnAlterarJogo.style.display = '';
-    btnExcluirJogo.style.display = '';
-    btnSalvarJogo.style.display = 'none';
-    btnIncluirJogo.style.display = 'none';
+    estadoEncontradoJogo();
+    acaoJogo = null;
   } catch (err) {
-    showJogoMessage('Jogo não encontrado', 'error');
+    // Não limpar o campo de busca, apenas preparar para novo jogo
+    jogoEditando = null;
+    jogoForm.reset();
+    // Mantém o valor digitado no campo de busca
+    searchJogoIdInput.value = id;
+    // Preenche o campo id_jogo com o valor buscado
+    const idJogoInput = document.getElementById('id_jogo');
+    if (idJogoInput) idJogoInput.value = id;
+    estadoNovoJogo();
+    acaoJogo = 'novo';
   }
-});
-btnIncluirJogo.addEventListener('click', () => {
+};
+btnIncluirJogo.onclick = () => {
   jogoEditando = null;
   jogoForm.reset();
+  // Sempre atribui o valor do campo de busca ao campo id_jogo
+  const idBusca = searchJogoIdInput.value;
+  const idJogoInput = document.getElementById('id_jogo');
+  if (idJogoInput) idJogoInput.value = idBusca;
   btnSalvarJogo.style.display = '';
   btnIncluirJogo.style.display = 'none';
   btnAlterarJogo.style.display = 'none';
   btnExcluirJogo.style.display = 'none';
-});
-btSalvarJogo.addEventListener('click', async () => {
-  const titulo = document.getElementById('titulo_jogo').value;
-  const genero = document.getElementById('genero_jogo').value;
-  const descricao = document.getElementById('descricao_jogo').value;
+  acaoJogo = 'novo';
+  estadoNovoJogo();
+};
+btnAlterarJogo.onclick = () => {
+  if (!jogoEditando) return;
+  acaoJogo = 'editar';
+  estadoEditandoJogo();
+};
+btnExcluirJogo.onclick = () => {
+  if (!jogoEditando) return;
+  acaoJogo = 'excluir';
+  estadoExcluindoJogo();
+};
+btnSalvarJogo.onclick = async () => {
+  const idInput = document.getElementById('id_jogo');
+  const id = idInput.value.trim();
+  const titulo = document.getElementById('titulo_jogo').value.trim();
+  const genero = document.getElementById('genero_jogo').value.trim();
+  const descricao = document.getElementById('descricao_jogo').value.trim();
+  // Validação do campo id
+  if (!id || isNaN(id) || Number(id) < 1) {
+    idInput.value = searchJogoIdInput.value;
+    return showJogoMessage('Informe um ID válido (número maior que 0)', 'error');
+  }
   if (!titulo) return showJogoMessage('Preencha o título', 'error');
-  try {
-    const res = await fetch('/jogo', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ titulo, genero, descricao })
-    });
-    if (!res.ok) throw new Error('Erro ao incluir jogo');
-    showJogoMessage('Jogo incluído com sucesso!');
-    limparJogoForm();
-  } catch (err) {
-    showJogoMessage('Erro ao incluir jogo', 'error');
+  if (acaoJogo === 'excluir') {
+    if (!jogoEditando) return showJogoMessage('Nenhum jogo selecionado', 'error');
+    if (!confirm('Tem certeza que deseja excluir este jogo?')) return;
+    try {
+      const res = await fetch(`${API_URL}/jogo/${jogoEditando.id}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (data.error && data.error.includes('padrão')) {
+        return showJogoMessage('Esse é um jogo padrão do sistema e não pode ser excluído.', 'error');
+      }
+      if (data.error && data.error.includes('Falha ao remover arquivos')) {
+        return showJogoMessage('Falha ao remover arquivos do jogo!', 'error');
+      }
+      if (!res.ok) return showJogoMessage('Erro ao excluir jogo', 'error');
+      showJogoMessage('Jogo excluído com sucesso!', 'success');
+      limparJogoForm();
+      estadoBuscaJogo();
+      acaoJogo = null;
+    } catch (err) {
+      showJogoMessage('Erro ao excluir jogo', 'error');
+    }
+    return;
   }
-});
-btAlterarJogo.addEventListener('click', async () => {
-  if (!jogoEditando) return;
-  const titulo = document.getElementById('titulo_jogo').value;
-  const genero = document.getElementById('genero_jogo').value;
-  const descricao = document.getElementById('descricao_jogo').value;
-  try {
-    const res = await fetch(`/jogo/${jogoEditando.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ titulo, genero, descricao })
-    });
-    if (!res.ok) throw new Error('Erro ao atualizar jogo');
-    showJogoMessage('Jogo atualizado com sucesso!');
-    limparJogoForm();
-  } catch (err) {
-    showJogoMessage('Erro ao atualizar jogo', 'error');
+  if (acaoJogo === 'editar') {
+    if (!jogoEditando) return showJogoMessage('Nenhum jogo selecionado', 'error');
+    try {
+      const res = await fetch(`${API_URL}/jogo/${jogoEditando.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titulo, genero, descricao })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return showJogoMessage('Erro ao atualizar jogo', 'error');
+      }
+      showJogoMessage('Jogo alterado com sucesso!', 'success');
+      limparJogoForm();
+      estadoBuscaJogo();
+      acaoJogo = null;
+    } catch (err) {
+      showJogoMessage('Erro ao atualizar jogo', 'error');
+    }
+    return;
   }
-});
-btExcluirJogo.addEventListener('click', async () => {
-  if (!jogoEditando) return;
-  if (!confirm('Tem certeza que deseja excluir este jogo?')) return;
-  try {
-    const res = await fetch(`/jogo/${jogoEditando.id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Erro ao excluir jogo');
-    showJogoMessage('Jogo excluído com sucesso!');
-    limparJogoForm();
-  } catch (err) {
-    showJogoMessage('Erro ao excluir jogo', 'error');
+  if (acaoJogo === 'novo') {
+    // Garante que o campo id_jogo sempre recebe o valor do campo de busca
+    document.getElementById('id_jogo').value = searchJogoIdInput.value;
+    try {
+      const res = await fetch(`${API_URL}/jogo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, titulo, genero, descricao })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.error && data.error.includes('Slug duplicado')) {
+          return showJogoMessage('Já existe um jogo com esse nome!', 'error');
+        }
+        if (data.error && data.error.includes('Falha ao criar arquivos')) {
+          return showJogoMessage('Falha ao criar arquivos do jogo!', 'error');
+        }
+        return showJogoMessage('Erro ao incluir jogo', 'error');
+      }
+      showJogoMessage('Jogo incluído com sucesso!', 'success');
+      limparJogoForm();
+      estadoBuscaJogo();
+      acaoJogo = null;
+      if (res.ok) {
+        searchJogoIdInput.value = id;
+        document.getElementById('id_jogo').value = id;
+      }
+    } catch (err) {
+      showJogoMessage('Erro ao incluir jogo', 'error');
+    }
+    return;
   }
-});
-btCancelarJogo.addEventListener('click', () => {
+  showJogoMessage('Escolha uma ação: Alterar ou Excluir.', 'info');
+};
+btnCancelarJogo.onclick = () => {
   limparJogoForm();
-});
-jogoForm.addEventListener('submit', e => e.preventDefault());
-
+  estadoBuscaJogo();
+  acaoJogo = null;
+};
 // --- CRUD Estatísticas ---
 const estatisticaMessageContainer = document.getElementById('estatisticaMessageContainer');
 const estatisticaForm = document.getElementById('estatisticaForm');
@@ -575,8 +742,6 @@ btnExcluirEstatistica.addEventListener('click', async () => {
 btnCancelarEstatistica.addEventListener('click', () => {
   limparEstatisticaForm();
 });
-estatisticaForm.addEventListener('submit', e => e.preventDefault());
-
 // --- CRUD Admins ---
 const adminMessageContainer = document.getElementById('adminMessageContainer');
 const adminForm = document.getElementById('adminForm');

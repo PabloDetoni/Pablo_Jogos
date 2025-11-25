@@ -44,11 +44,16 @@
                 <button type="button" id="btnAlterarJogo" class="btn-secondary" style="display: none;">Alterar</button>
                 <button type="button" id="btnExcluirJogo" class="btn-danger" style="display: none;">Excluir</button>
                 <button type="button" id="btnSalvarJogo" class="btn-save" style="display: none;">Salvar</button>
+                <button type="button" id="btnVoltarJogo" class="btn-back" style="display: none;">Voltar</button>
                 <button type="button" id="btnCancelarJogo" class="btn-cancel">Cancelar</button>
               </div>
             </div>
             <fieldset id="formFieldsJogo">
               <legend>Dados do Jogo</legend>
+              <div class="form-group">
+                <label for="id_jogo">ID:</label>
+                <input type="number" id="id_jogo" name="id_jogo" min="1" required readonly style="background:#f5f5f5;">
+              </div>
               <div class="form-group">
                 <label for="titulo_jogo">Título:</label>
                 <input type="text" id="titulo_jogo" name="titulo_jogo" required>
