@@ -4,8 +4,8 @@ const { Pool } = require('pg');
 const dbConfig = {
   host: 'localhost',
   port: 5432, // Porta padrão do PostgreSQL
-  user: 'postgres', // Usuário do PostgreSQL
-  password: 'postgres', // Senha do PostgreSQL
+  user: 'pablodetoni', // Usuário do PostgreSQL
+  password: '123mudar', // Senha do PostgreSQL
   database: 'pablo_jogos',
   ssl: false, // Defina como true se usar SSL
   idleTimeoutMillis: 30000, // Timeout para conexões ociosas

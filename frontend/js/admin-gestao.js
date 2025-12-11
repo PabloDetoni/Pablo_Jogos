@@ -655,93 +655,106 @@ function preencherEstatisticaForm(est) {
   document.getElementById('erros_estatistica').value = est.erros || '';
   formFieldsEstatistica.style.display = '';
 }
-btnBuscarEstatistica.addEventListener('click', async () => {
-  const id = document.getElementById('searchEstatisticaId').value;
-  if (!id) return showEstatisticaMessage('Informe o ID para buscar', 'error');
-  try {
-    const res = await fetch(`/estatistica/${id}`);
-    if (!res.ok) throw new Error('Estatística não encontrada');
-    const est = await res.json();
-    estatisticaEditando = est;
-    preencherEstatisticaForm(est);
-    btnAlterarEstatistica.style.display = '';
-    btnExcluirEstatistica.style.display = '';
-    btnSalvarEstatistica.style.display = 'none';
+// Proteção para event listeners em elementos que podem não existir
+if (btnBuscarEstatistica) {
+  btnBuscarEstatistica.onclick = async () => {
+    const id = document.getElementById('searchEstatisticaId').value;
+    if (!id) return showEstatisticaMessage('Informe o ID para buscar', 'error');
+    try {
+      const res = await fetch(`${API_URL}/estatistica/${id}`);
+      if (!res.ok) throw new Error('Estatística não encontrada');
+      const est = await res.json();
+      estatisticaEditando = est;
+      preencherEstatisticaForm(est);
+      btnAlterarEstatistica.style.display = '';
+      btnExcluirEstatistica.style.display = '';
+      btnSalvarEstatistica.style.display = 'none';
+      btnIncluirEstatistica.style.display = 'none';
+    } catch (err) {
+      showEstatisticaMessage('Estatística não encontrada', 'error');
+    }
+  };
+}
+if (btnIncluirEstatistica) {
+  btnIncluirEstatistica.onclick = () => {
+    estatisticaEditando = null;
+    estatisticaForm.reset();
+    formFieldsEstatistica.style.display = '';
+    btnSalvarEstatistica.style.display = '';
     btnIncluirEstatistica.style.display = 'none';
-  } catch (err) {
-    showEstatisticaMessage('Estatística não encontrada', 'error');
-  }
-});
-btnIncluirEstatistica.addEventListener('click', () => {
-  estatisticaEditando = null;
-  estatisticaForm.reset();
-  formFieldsEstatistica.style.display = '';
-  btnSalvarEstatistica.style.display = '';
-  btnIncluirEstatistica.style.display = 'none';
-  btnAlterarEstatistica.style.display = 'none';
-  btnExcluirEstatistica.style.display = 'none';
-});
-btnSalvarEstatistica.addEventListener('click', async () => {
-  const id_usuario = document.getElementById('id_usuario_estatistica').value;
-  const id_jogo = document.getElementById('id_jogo_estatistica').value;
-  const id_dificuldade = document.getElementById('id_dificuldade_estatistica').value;
-  const vitorias = document.getElementById('vitorias_estatistica').value;
-  const vitorias_consecutivas = document.getElementById('vitorias_consecutivas_estatistica').value;
-  const pontuacao = document.getElementById('pontuacao_estatistica').value;
-  const menor_tempo = document.getElementById('menor_tempo_estatistica').value;
-  const erros = document.getElementById('erros_estatistica').value;
-  if (!id_usuario || !id_jogo) return showEstatisticaMessage('Preencha os campos obrigatórios', 'error');
-  try {
-    const res = await fetch('/estatistica', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_usuario, id_jogo, id_dificuldade, vitorias, vitorias_consecutivas, pontuacao, menor_tempo, erros })
-    });
-    if (!res.ok) throw new Error('Erro ao incluir estatística');
-    showEstatisticaMessage('Estatística incluída com sucesso!');
+    btnAlterarEstatistica.style.display = 'none';
+    btnExcluirEstatistica.style.display = 'none';
+  };
+}
+if (btnSalvarEstatistica) {
+  btnSalvarEstatistica.onclick = async () => {
+    const id_usuario = document.getElementById('id_usuario_estatistica').value;
+    const id_jogo = document.getElementById('id_jogo_estatistica').value;
+    const id_dificuldade = document.getElementById('id_dificuldade_estatistica').value;
+    const vitorias = document.getElementById('vitorias_estatistica').value;
+    const vitorias_consecutivas = document.getElementById('vitorias_consecutivas_estatistica').value;
+    const pontuacao = document.getElementById('pontuacao_estatistica').value;
+    const menor_tempo = document.getElementById('menor_tempo_estatistica').value;
+    const erros = document.getElementById('erros_estatistica').value;
+    if (!id_usuario || !id_jogo) return showEstatisticaMessage('Preencha os campos obrigatórios', 'error');
+    try {
+      const res = await fetch(`${API_URL}/estatistica`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_usuario, id_jogo, id_dificuldade, vitorias, vitorias_consecutivas, pontuacao, menor_tempo, erros })
+      });
+      if (!res.ok) throw new Error('Erro ao incluir estatística');
+      showEstatisticaMessage('Estatística incluída com sucesso!');
+      limparEstatisticaForm();
+    } catch (err) {
+      showEstatisticaMessage('Erro ao incluir estatística', 'error');
+    }
+  };
+}
+if (btnAlterarEstatistica) {
+  btnAlterarEstatistica.onclick = async () => {
+    if (!estatisticaEditando) return showEstatisticaMessage('Nenhum estatística selecionada', 'error');
+    const id_usuario = document.getElementById('id_usuario_estatistica').value;
+    const id_jogo = document.getElementById('id_jogo_estatistica').value;
+    const id_dificuldade = document.getElementById('id_dificuldade_estatistica').value;
+    const vitorias = document.getElementById('vitorias_estatistica').value;
+    const vitorias_consecutivas = document.getElementById('vitorias_consecutivas_estatistica').value;
+    const pontuacao = document.getElementById('pontuacao_estatistica').value;
+    const menor_tempo = document.getElementById('menor_tempo_estatistica').value;
+    const erros = document.getElementById('erros_estatistica').value;
+    try {
+      const res = await fetch(`${API_URL}/estatistica/${estatisticaEditando.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_usuario, id_jogo, id_dificuldade, vitorias, vitorias_consecutivas, pontuacao, menor_tempo, erros })
+      });
+      if (!res.ok) throw new Error('Erro ao atualizar estatística');
+      showEstatisticaMessage('Estatística atualizada com sucesso!');
+      limparEstatisticaForm();
+    } catch (err) {
+      showEstatisticaMessage('Erro ao atualizar estatística', 'error');
+    }
+  };
+}
+if (btnExcluirEstatistica) {
+  btnExcluirEstatistica.onclick = async () => {
+    if (!estatisticaEditando) return;
+    if (!confirm('Tem certeza que deseja excluir esta estatística?')) return;
+    try {
+      const res = await fetch(`${API_URL}/estatistica/${estatisticaEditando.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Erro ao excluir estatística');
+      showEstatisticaMessage('Estatística excluída com sucesso!');
+      limparEstatisticaForm();
+    } catch (err) {
+      showEstatisticaMessage('Erro ao excluir estatística', 'error');
+    }
+  };
+}
+if (btnCancelarEstatistica) {
+  btnCancelarEstatistica.onclick = () => {
     limparEstatisticaForm();
-  } catch (err) {
-    showEstatisticaMessage('Erro ao incluir estatística', 'error');
-  }
-});
-btnAlterarEstatistica.addEventListener('click', async () => {
-  if (!estatisticaEditando) return;
-  const id_usuario = document.getElementById('id_usuario_estatistica').value;
-  const id_jogo = document.getElementById('id_jogo_estatistica').value;
-  const id_dificuldade = document.getElementById('id_dificuldade_estatistica').value;
-  const vitorias = document.getElementById('vitorias_estatistica').value;
-  const vitorias_consecutivas = document.getElementById('vitorias_consecutivas_estatistica').value;
-  const pontuacao = document.getElementById('pontuacao_estatistica').value;
-  const menor_tempo = document.getElementById('menor_tempo_estatistica').value;
-  const erros = document.getElementById('erros_estatistica').value;
-  try {
-    const res = await fetch(`/estatistica/${estatisticaEditando.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_usuario, id_jogo, id_dificuldade, vitorias, vitorias_consecutivas, pontuacao, menor_tempo, erros })
-    });
-    if (!res.ok) throw new Error('Erro ao atualizar estatística');
-    showEstatisticaMessage('Estatística atualizada com sucesso!');
-    limparEstatisticaForm();
-  } catch (err) {
-    showEstatisticaMessage('Erro ao atualizar estatística', 'error');
-  }
-});
-btnExcluirEstatistica.addEventListener('click', async () => {
-  if (!estatisticaEditando) return;
-  if (!confirm('Tem certeza que deseja excluir esta estatística?')) return;
-  try {
-    const res = await fetch(`/estatistica/${estatisticaEditando.id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Erro ao excluir estatística');
-    showEstatisticaMessage('Estatística excluída com sucesso!');
-    limparEstatisticaForm();
-  } catch (err) {
-    showEstatisticaMessage('Erro ao excluir estatística', 'error');
-  }
-});
-btnCancelarEstatistica.addEventListener('click', () => {
-  limparEstatisticaForm();
-});
+  };
+}
 // --- CRUD Admins ---
 const adminMessageContainer = document.getElementById('adminMessageContainer');
 const adminForm = document.getElementById('adminForm');
@@ -830,4 +843,318 @@ btnExcluirAdmin.addEventListener('click', async () => {
 btnCancelarAdmin.addEventListener('click', () => {
   limparAdminForm();
 });
-adminForm.addEventListener('submit', e => e.preventDefault());
+// adminForm.addEventListener('submit', e => e.preventDefault());
+// --- MODAIS FLUXO CRUD ESTATÍSTICAS E ALTERAR PARTIDAS ---
+// Declarar os estados no topo do arquivo, ANTES de qualquer função ou uso
+let crudModalState = {
+  step: 'init',
+  tipo: null,
+  busca: '',
+  resultado: null,
+  lista: [],
+  erro: '',
+};
+let partidasModalState = {
+  step: 'selecao',
+  jogo: null,
+  usuario: null,
+  erro: '',
+};
+// Utiliza variáveis de estado para garantir navegação e validação perfeitas
+const modalCrud = document.getElementById('modal-alterar-crud');
+const modalCrudContent = document.getElementById('modalCrudContent');
+const closeModalCrud = document.getElementById('closeModalCrud');
+const modalPartidas = document.getElementById('modal-alterar-partidas');
+const modalPartidasContent = document.getElementById('modalPartidasContent');
+const closeModalPartidas = document.getElementById('closeModalPartidas');
+
+// Estados do modal CRUD Estatísticas
+// let crudModalState = {
+//   step: 'init', // init | id | nome | resultado | resumo
+//   tipo: null, // 'jogo' ou 'usuario'
+//   busca: '',
+//   resultado: null,
+//   lista: [],
+//   erro: '',
+// };
+// Estados do modal Alterar Partidas
+// let partidasModalState = {
+//   step: 'selecao', // selecao | jogo | usuario | resumo
+//   jogo: null,
+//   usuario: null,
+//   erro: '',
+// };
+// Funções utilitárias
+function openModalCrud(tipo) {
+  crudModalState = { step: 'init', tipo, busca: '', resultado: null, lista: [], erro: '' };
+  modalCrud.style.display = 'flex';
+  renderModalCrud();
+}
+function closeModalCrudFn() {
+  modalCrud.style.display = 'none';
+  crudModalState = { step: 'init', tipo: null, busca: '', resultado: null, lista: [], erro: '' };
+}
+closeModalCrud.onclick = closeModalCrudFn;
+modalCrud.onclick = e => { if (e.target === modalCrud) closeModalCrudFn(); };
+function renderModalCrud() {
+  // Renderiza cada etapa conforme o fluxo
+  let html = '';
+  if (crudModalState.step === 'init') {
+    html = `<h3>Alterar informações de ${crudModalState.tipo === 'jogo' ? 'Jogo' : 'Usuário'}</h3>
+      <div class="modal-actions">
+        <button class="btn-primary" id="btnCrudBuscarId">Buscar por ID</button>
+        <button class="btn-secondary" id="btnCrudBuscarNome">Buscar por Nome</button>
+        <button class="btn-cancel" id="btnCrudVoltar">Voltar</button>
+      </div>`;
+  } else if (crudModalState.step === 'id') {
+    html = `<h3>Buscar por ID</h3>
+      <input type="number" id="crudIdInput" placeholder="Digite o ID">
+      <div class="modal-actions">
+        <button class="btn-primary" id="btnCrudPesquisarId">Pesquisar</button>
+        <button class="btn-cancel" id="btnCrudVoltar">Voltar</button>
+      </div>
+      ${crudModalState.erro ? `<div class="modal-error">${crudModalState.erro}</div>` : ''}`;
+  } else if (crudModalState.step === 'nome') {
+    html = `<h3>Buscar por Nome</h3>
+      <input type="text" id="crudNomeInput" placeholder="Digite o nome">
+      <ul class="modal-list" id="crudNomeList"></ul>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnCrudVoltar">Voltar</button>
+      </div>
+      ${crudModalState.erro ? `<div class="modal-error">${crudModalState.erro}</div>` : ''}`;
+  } else if (crudModalState.step === 'resultado') {
+    if (!crudModalState.resultado) {
+      html = `<div class="modal-error">${crudModalState.erro || 'Não encontrado.'}</div>
+        <div class="modal-actions"><button class="btn-cancel" id="btnCrudVoltar">Voltar</button></div>`;
+    } else {
+      html = `<h3>Dados Selecionados</h3>
+        <div class="modal-summary">
+          ${crudModalState.tipo === 'jogo' ?
+            `<b>ID:</b> ${crudModalState.resultado.id}<br><b>Título:</b> ${crudModalState.resultado.titulo}` :
+            `<b>ID:</b> ${crudModalState.resultado.id}<br><b>Nome:</b> ${crudModalState.resultado.nome}`}
+        </div>
+        <div class="modal-actions">
+          <button class="btn-primary" id="btnCrudConfirmar">Confirmar Seleção</button>
+          <button class="btn-cancel" id="btnCrudVoltar">Voltar</button>
+        </div>`;
+    }
+  }
+  modalCrudContent.innerHTML = html;
+  // Eventos
+  if (crudModalState.step === 'init') {
+    document.getElementById('btnCrudBuscarId').onclick = () => { crudModalState.step = 'id'; crudModalState.erro = ''; renderModalCrud(); };
+    document.getElementById('btnCrudBuscarNome').onclick = () => { crudModalState.step = 'nome'; crudModalState.erro = ''; renderModalCrud(); };
+    document.getElementById('btnCrudVoltar').onclick = closeModalCrudFn;
+  } else if (crudModalState.step === 'id') {
+    document.getElementById('btnCrudPesquisarId').onclick = async () => {
+      const id = document.getElementById('crudIdInput').value;
+      if (!id || Number(id) < 1) { crudModalState.erro = 'ID inválido.'; renderModalCrud(); return; }
+      // Busca por API
+      let res;
+      try {
+        res = await fetch(`${API_URL}/${crudModalState.tipo}/${id}`);
+        if (!res.ok) throw new Error('Não encontrado');
+        const data = await res.json();
+        crudModalState.resultado = data;
+        crudModalState.step = 'resultado';
+        crudModalState.erro = '';
+      } catch {
+        crudModalState.resultado = null;
+        crudModalState.step = 'resultado';
+        crudModalState.erro = 'Não encontrado.';
+      }
+      renderModalCrud();
+    };
+    document.getElementById('btnCrudVoltar').onclick = () => { crudModalState.step = 'init'; crudModalState.erro = ''; renderModalCrud(); };
+  } else if (crudModalState.step === 'nome') {
+    const nomeInput = document.getElementById('crudNomeInput');
+    nomeInput.oninput = async () => {
+      const nome = nomeInput.value.trim();
+      if (!nome) { crudModalState.lista = []; updateNomeList(); return; }
+      // Busca por nome (API)
+      let res;
+      try {
+        res = await fetch(`${API_URL}/${crudModalState.tipo}?nome=${encodeURIComponent(nome)}`);
+        if (!res.ok) throw new Error('Erro');
+        const lista = await res.json();
+        crudModalState.lista = Array.isArray(lista) ? lista : [];
+      } catch { crudModalState.lista = []; }
+      updateNomeList();
+    };
+    function updateNomeList() {
+      const ul = document.getElementById('crudNomeList');
+      ul.innerHTML = crudModalState.lista.length ? crudModalState.lista.map(item => `<li data-id="${item.id}">${crudModalState.tipo === 'jogo' ? item.titulo : item.nome}</li>`).join('') : '<li style="color:#aaa;">Nenhum resultado</li>';
+      Array.from(ul.querySelectorAll('li[data-id]')).forEach(li => {
+        li.onclick = async () => {
+          // Busca dados completos
+          let res;
+          try {
+            res = await fetch(`${API_URL}/${crudModalState.tipo}/${li.dataset.id}`);
+            if (!res.ok) throw new Error('Não encontrado');
+            const data = await res.json();
+            crudModalState.resultado = data;
+            crudModalState.step = 'resultado';
+            crudModalState.erro = '';
+            renderModalCrud();
+          } catch {
+            crudModalState.resultado = null;
+            crudModalState.step = 'resultado';
+            crudModalState.erro = 'Não encontrado.';
+            renderModalCrud();
+          }
+        };
+      });
+    }
+    updateNomeList();
+    document.getElementById('btnCrudVoltar').onclick = () => { crudModalState.step = 'init'; crudModalState.erro = ''; renderModalCrud(); };
+  } else if (crudModalState.step === 'resultado') {
+    if (crudModalState.resultado) {
+      document.getElementById('btnCrudConfirmar').onclick = () => {
+        // Fecha modal e retorna para fluxo principal
+        closeModalCrudFn();
+        // Aqui você pode disparar evento ou callback para informar seleção
+        window.dispatchEvent(new CustomEvent('crudSelecionado', { detail: { tipo: crudModalState.tipo, dados: crudModalState.resultado } }));
+      };
+    }
+    document.getElementById('btnCrudVoltar').onclick = () => { crudModalState.step = 'init'; crudModalState.resultado = null; crudModalState.erro = ''; renderModalCrud(); };
+  }
+}
+// --- FLUXO MODAL ALTERAR PARTIDAS ---
+function openModalPartidas() {
+  partidasModalState = { step: 'selecao', jogo: null, usuario: null, erro: '' };
+  modalPartidas.style.display = 'flex';
+  renderModalPartidas();
+}
+function closeModalPartidasFn() {
+  modalPartidas.style.display = 'none';
+  partidasModalState = { step: 'selecao', jogo: null, usuario: null, erro: '' };
+}
+closeModalPartidas.onclick = closeModalPartidasFn;
+modalPartidas.onclick = e => { if (e.target === modalPartidas) closeModalPartidasFn(); };
+function renderModalPartidas() {
+  let html = '';
+  if (partidasModalState.step === 'selecao') {
+    html = `<h3>Alterar Partidas</h3>
+      <div class="modal-summary">
+        ${partidasModalState.jogo ? `<b>Jogo selecionado:</b> ${partidasModalState.jogo.titulo}<br>` : ''}
+        ${partidasModalState.usuario ? `<b>Usuário selecionado:</b> ${partidasModalState.usuario.nome}<br>` : ''}
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" id="btnEscolherJogo">Escolher Jogo</button>
+        <button class="btn-secondary" id="btnEscolherUsuario">Escolher Usuário</button>
+        <button class="btn-cancel" id="btnPartidasVoltar">Voltar</button>
+      </div>`;
+    if (partidasModalState.jogo && partidasModalState.usuario) {
+      html += `<div class="modal-actions"><button class="btn-save" id="btnBuscarPartidas">Buscar Partidas</button></div>`;
+    }
+  } else if (partidasModalState.step === 'jogo') {
+    html = `<h3>Escolher Jogo</h3>
+      <input type="text" id="partidasJogoNome" placeholder="Digite o nome do jogo">
+      <ul class="modal-list" id="partidasJogoList"></ul>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnPartidasVoltar">Voltar</button>
+      </div>`;
+  } else if (partidasModalState.step === 'usuario') {
+    html = `<h3>Escolher Usuário</h3>
+      <input type="text" id="partidasUsuarioNome" placeholder="Digite o nome do usuário">
+      <ul class="modal-list" id="partidasUsuarioList"></ul>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnPartidasVoltar">Voltar</button>
+      </div>`;
+  } else if (partidasModalState.step === 'resumo') {
+    html = `<h3>Resumo</h3>
+      <div class="modal-summary">
+        <b>Jogo:</b> ${partidasModalState.jogo.titulo}<br>
+        <b>Usuário:</b> ${partidasModalState.usuario.nome}
+      </div>
+      <div class="modal-actions">
+        <button class="btn-save" id="btnBuscarPartidas">Buscar Partidas</button>
+        <button class="btn-cancel" id="btnPartidasVoltar">Voltar</button>
+      </div>`;
+  }
+  modalPartidasContent.innerHTML = html;
+  // Eventos
+  if (partidasModalState.step === 'selecao') {
+    document.getElementById('btnEscolherJogo').onclick = () => { partidasModalState.step = 'jogo'; renderModalPartidas(); };
+    document.getElementById('btnEscolherUsuario').onclick = () => { partidasModalState.step = 'usuario'; renderModalPartidas(); };
+    document.getElementById('btnPartidasVoltar').onclick = () => {
+      // Limpa seleção do Jogo/Usuário conforme contexto
+      if (partidasModalState.jogo && !partidasModalState.usuario) { partidasModalState.jogo = null; }
+      else if (!partidasModalState.jogo && partidasModalState.usuario) { partidasModalState.usuario = null; }
+      else { closeModalPartidasFn(); }
+      renderModalPartidas();
+    };
+    if (partidasModalState.jogo && partidasModalState.usuario) {
+      document.getElementById('btnBuscarPartidas').onclick = () => {
+        partidasModalState.step = 'resumo';
+        renderModalPartidas();
+      };
+    }
+  } else if (partidasModalState.step === 'jogo') {
+    const nomeInput = document.getElementById('partidasJogoNome');
+    nomeInput.oninput = async () => {
+      const nome = nomeInput.value.trim();
+      let lista = [];
+      if (nome) {
+        try {
+          const res = await fetch(`${API_URL}/jogo?nome=${encodeURIComponent(nome)}`);
+          if (res.ok) lista = await res.json();
+        } catch {}
+      }
+      const ul = document.getElementById('partidasJogoList');
+      ul.innerHTML = lista.length ? lista.map(j => `<li data-id="${j.id}">${j.titulo}</li>`).join('') : '<li style="color:#aaa;">Nenhum resultado</li>';
+      Array.from(ul.querySelectorAll('li[data-id]')).forEach(li => {
+        li.onclick = async () => {
+          try {
+            const res = await fetch(`${API_URL}/jogo/${li.dataset.id}`);
+            if (!res.ok) throw new Error();
+            const jogo = await res.json();
+            partidasModalState.jogo = jogo;
+            partidasModalState.step = 'selecao';
+            renderModalPartidas();
+          } catch {}
+        };
+      });
+    };
+    document.getElementById('btnPartidasVoltar').onclick = () => { partidasModalState.step = 'selecao'; renderModalPartidas(); };
+    nomeInput.oninput();
+  } else if (partidasModalState.step === 'usuario') {
+    const nomeInput = document.getElementById('partidasUsuarioNome');
+    nomeInput.oninput = async () => {
+      const nome = nomeInput.value.trim();
+      let lista = [];
+      if (nome) {
+        try {
+          const res = await fetch(`${API_URL}/usuario?nome=${encodeURIComponent(nome)}`);
+          if (res.ok) lista = await res.json();
+        } catch {}
+      }
+      const ul = document.getElementById('partidasUsuarioList');
+      ul.innerHTML = lista.length ? lista.map(u => `<li data-id="${u.id}">${u.nome}</li>`).join('') : '<li style="color:#aaa;">Nenhum resultado</li>';
+      Array.from(ul.querySelectorAll('li[data-id]')).forEach(li => {
+        li.onclick = async () => {
+          try {
+            const res = await fetch(`${API_URL}/usuario/${li.dataset.id}`);
+            if (!res.ok) throw new Error();
+            const usuario = await res.json();
+            partidasModalState.usuario = usuario;
+            partidasModalState.step = 'selecao';
+            renderModalPartidas();
+          } catch {}
+        };
+      });
+    };
+    document.getElementById('btnPartidasVoltar').onclick = () => { partidasModalState.step = 'selecao'; renderModalPartidas(); };
+    nomeInput.oninput();
+  } else if (partidasModalState.step === 'resumo') {
+    document.getElementById('btnBuscarPartidas').onclick = () => {
+      // Aqui você pode disparar evento ou callback para buscar partidas
+      window.dispatchEvent(new CustomEvent('partidasSelecionadas', { detail: { jogo: partidasModalState.jogo, usuario: partidasModalState.usuario } }));
+      closeModalPartidasFn();
+    };
+    document.getElementById('btnPartidasVoltar').onclick = () => { partidasModalState.step = 'selecao'; renderModalPartidas(); };
+  }
+}
+// Exemplo de como abrir os modais (substitua pelos seus gatilhos reais)
+window.openModalCrud = openModalCrud;
+window.openModalPartidas = openModalPartidas;
