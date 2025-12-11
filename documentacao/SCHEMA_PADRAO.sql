@@ -31,7 +31,8 @@ INSERT INTO jogo (titulo, genero, descricao, slug) VALUES
 ('Memória', 'Puzzle', 'Jogo da Memória', 'memoria'),
 ('Sudoku', 'Puzzle', 'Jogo Sudoku', 'sudoku'),
 ('Pong', 'Arcade', 'Jogo Pong', 'pong'),
-('Campo Minado', 'Puzzle', 'Campo Minado', 'campo-minado');
+('Campo Minado', 'Puzzle', 'Campo Minado', 'campo-minado'),
+('Velha', 'Clássico', 'Jogo da Velha', 'velha');
 
 -- Tabela de Ranking Avançado
 CREATE TABLE ranking_avancado (
@@ -43,7 +44,8 @@ CREATE TABLE ranking_avancado (
   valor INTEGER,                  -- Pontuação, vitórias, sequência, etc
   tempo INTEGER,                  -- Para rankings de menor tempo (em segundos)
   erros INTEGER,                  -- Para rankings que usam erros
-  created_at TIMESTAMP DEFAULT NOW() -- Data/hora de criação do registro
+  created_at TIMESTAMP DEFAULT NOW(), -- Data/hora de criação do registro
+  atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Para rastrear alterações
 );
 
 -- Tabela de Partidas
@@ -54,8 +56,42 @@ CREATE TABLE partida (
   resultado VARCHAR(20),
   dificuldade VARCHAR(50),
   tempo INTEGER,
-  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  pontucao INTEGER,
+  erros INTEGER,
+  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Para rastrear alterações
+  excluido BOOLEAN DEFAULT FALSE -- Para marcação lógica de exclusão
 );
 
 CREATE INDEX idx_ranking_jogo_tipo_dif ON ranking_avancado (id_jogo, tipo, dificuldade);
 CREATE INDEX idx_ranking_usuario ON ranking_avancado (id_usuario);
+
+-- Criar triggers para atualizar automaticamente o ranking ao alterar/excluir partidas
+CREATE OR REPLACE FUNCTION atualizar_ranking()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Lógica para recalcular o ranking com base nas alterações na tabela de partidas
+  -- Exemplo: Atualizar o ranking com a melhor pontuação ou menor tempo
+  UPDATE ranking_avancado
+  SET valor = (
+    SELECT MAX(pontucao)
+    FROM partida
+    WHERE partida.id_jogo = NEW.id_jogo AND partida.id_usuario = NEW.id_usuario AND excluido = FALSE
+  ),
+  tempo = (
+    SELECT MIN(tempo)
+    FROM partida
+    WHERE partida.id_jogo = NEW.id_jogo AND partida.id_usuario = NEW.id_usuario AND excluido = FALSE
+  ),
+  atualizado_em = NOW()
+  WHERE id_jogo = NEW.id_jogo AND id_usuario = NEW.id_usuario;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para atualizar ranking ao inserir/alterar/excluir partidas
+CREATE TRIGGER trigger_atualizar_ranking
+AFTER INSERT OR UPDATE OR DELETE ON partida
+FOR EACH ROW
+EXECUTE FUNCTION atualizar_ranking();

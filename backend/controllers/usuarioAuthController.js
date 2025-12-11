@@ -31,15 +31,16 @@ async function ensureAdmin() {
 
 // Garante que os jogos principais existem no banco
 async function ensureJogos() {
-  const jogosPadrao = [
-    { titulo: 'PPT', genero: 'Clássico', descricao: 'Pedra Papel Tesoura' },
-    { titulo: 'Forca', genero: 'Palavras', descricao: 'Jogo da Forca' },
-    { titulo: '2048', genero: 'Puzzle', descricao: 'Jogo 2048' },
-    { titulo: 'Memória', genero: 'Puzzle', descricao: 'Jogo da Memória' },
-    { titulo: 'Sudoku', genero: 'Puzzle', descricao: 'Jogo Sudoku' },
-    { titulo: 'Pong', genero: 'Arcade', descricao: 'Jogo Pong' },
-    { titulo: 'Campo Minado', genero: 'Puzzle', descricao: 'Campo Minado' },
-    { titulo: 'Jogo da Velha', genero: 'Clássico', descricao: 'Jogo da Velha' }
+  const jogosPadrao = [ 
+    { titulo: 'PPT', genero: 'Clássico', descricao: 'Pedra Papel Tesoura', slug: 'ppt' },
+    { titulo: 'Forca', genero: 'Palavras', descricao: 'Jogo da Forca', slug: 'forca'},
+    { titulo: '2048', genero: 'Puzzle', descricao: 'Jogo 2048', slug: '2048'},
+    { titulo: 'Memória', genero: 'Puzzle', descricao: 'Jogo da Memória', slug: 'memoria'},
+    { titulo: 'Sudoku', genero: 'Puzzle', descricao: 'Jogo Sudoku', slug: 'sudoku'},
+    { titulo: 'Pong', genero: 'Arcade', descricao: 'Jogo Pong', slug: 'pong'},
+    { titulo: 'Campo Minado', genero: 'Puzzle', descricao: 'Campo Minado', slug: 'campo_minado'},
+    { titulo: 'Velha', genero: 'Clássico', descricao: 'Jogo da Velha', slug: 'velha'}
+  
   ];
   for (const jogo of jogosPadrao) {
     const { rows } = await Jogo.getAll();
