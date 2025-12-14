@@ -1,0 +1,49 @@
+<!-- velha.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jogo da Velha</title>
+  <link rel="stylesheet" href="/frontend/css/jogos/velha.css" />
+</head>
+<body>
+  <div id="menu-inicial">
+    <h1>Jogo da Velha</h1>
+    <label>Modo de Jogo:</label><br />
+    <select id="modoJogo" onchange="alternarDificuldade()">
+      <option value="2">2 Jogadores</option>
+      <option value="ia">Contra IA</option>
+    </select>
+    <br /><br />
+    <div id="dificuldade-container" style="display: none;">
+      <label>Dificuldade:</label><br />
+      <select id="dificuldadeIA">
+        <option value="facil">Fácil</option>
+        <option value="medio">Média</option> 
+        <option value="dificil">Difícil</option>
+      </select>
+      <br /><br />
+    </div>
+    <button onclick="iniciarJogo()">Iniciar</button>
+  </div>
+
+  <div id="jogo" style="display:none; text-align:center;">
+    <h1>Jogo da Velha</h1>
+    <p id="mensagem"></p>
+    <div id="tabuleiro-velha" class="tabuleiro-velha"></div>
+    <!-- Botão Reiniciar aparece apenas durante o jogo -->
+    <button onclick="reiniciarJogo()">Reiniciar</button>
+  </div>
+
+  <div class="botoes-footer" style="text-align:center; margin-top:20px;">
+    <button onclick="window.location.href='/frontend/html/estrutura/index.html'">Voltar</button>
+    <button onclick="window.location.href='/frontend/html/estrutura/estatisticas.html'">Estatísticas</button>
+  </div>
+
+  <script src="/frontend/js/estrutura/utils.js"></script>
+  <script src="/frontend/js/estrutura/rankings.js"></script>
+  <script src="/frontend/js/jogos/velha.js"></script>
+  <script src="/frontend/js/estrutura/stats.js"></script>
+</body>
+</html>

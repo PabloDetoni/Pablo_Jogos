@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sudoku</title>
+  <link rel="stylesheet" href="/frontend/css/jogos/sudoku.css" />
+</head>
+<body>
+  <!-- MENU INICIAL -->
+  <div id="menu-inicial">
+    <h1>Sudoku</h1>
+    <label for="dificuldade">Dificuldade:</label><br />
+    <select id="dificuldade">
+      <option value="facil">Fácil</option>
+      <option value="medio">Médio</option>
+      <option value="dificil">Difícil</option>
+      <option value="mtDificil">Muito Difícil</option>
+    </select>
+    <br /><br />
+    <button id="btn-iniciar">Iniciar Partida</button>
+  </div>
+
+  <!-- BLOCO PRINCIPAL DO JOGO -->
+  <div id="sudoku-bloco-principal" style="display:none;">
+    <div id="sudoku-topbar">
+      <div id="sudoku-dificuldade">Fácil</div>
+      <div id="sudoku-erros">Erros: <span id="erros-atual">0</span>/3</div>
+      <div id="sudoku-cronometro">00:00</div>
+    </div>
+    <div id="sudoku-board"></div>
+
+    <!-- Botão Novo Jogo (aparece ao final) -->
+    <div id="novo-jogo-footer" style="display:none;justify-content:center;margin: 18px 0;">
+      <button onclick="window.location.href='sudoku.html'">Novo Jogo</button>
+    </div>
+
+    <div id="sudoku-footer">
+      <div id="sudoku-numeros">
+        <!-- Botões 1 a 9 serão criados pelo JS -->
+      </div>
+      <button id="btn-rascunho" aria-pressed="false" tabindex="0">Rascunho</button>
+      <button id="btn-apagar" tabindex="0">Apagar</button>
+      <button id="btn-dica" tabindex="0">Dica (<span id="dicas-restantes">3</span>)</button>
+    </div>
+  </div>
+
+  <!-- BOTÕES DE FUNDO (sempre visíveis) -->
+  <div class="botoes-footer">
+    <button onclick="window.location.href='/frontend/html/estrutura/index.html'">Voltar</button>
+    <button onclick="window.location.href='/frontend/html/estrutura/estatisticas.html'">Estatísticas</button>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/frontend/js/estrutura/utils.js"></script>
+  <script src="/frontend/js/estrutura/rankings.js"></script>
+  <script src="/frontend/js/jogos/sudoku.js"></script>
+  <script src="/frontend/js/estrutura/stats.js"></script>
+  <script>
+    // Controle de tela inicial
+    document.addEventListener("DOMContentLoaded", ()=>{
+      document.getElementById('btn-iniciar').addEventListener('click', () => {
+        const dif = document.getElementById('dificuldade').value;
+        document.getElementById('menu-inicial').style.display = 'none';
+        document.getElementById('sudoku-bloco-principal').style.display = 'flex';
+        sudoku.iniciarJogo(dif);
+      });
+    });
+  </script>
+</body>
+</html>

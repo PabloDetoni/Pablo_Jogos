@@ -3,7 +3,7 @@ const app = express();
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const db = require('./database');
-const usuarioAuthController = require('./controllers/usuarioAuthController');
+const initializerController = require('./controllers/initializerController');
 
 const HOST = 'localhost';
 const PORT_FIXA = 3001;
@@ -11,6 +11,10 @@ const PORT_FIXA = 3001;
 const caminhoFrontend = path.join(__dirname, '../frontend');
 console.log('Caminho frontend:', caminhoFrontend);
 app.use(express.static(caminhoFrontend));
+// Serve a pasta frontend também sob o prefixo /frontend — isso permite que
+// URLs como /frontend/css/... e /frontend/js/... funcionem corretamente
+// sem alterar a estrutura dos arquivos.
+app.use('/frontend', express.static(caminhoFrontend));
 app.use(cookieParser());
 
 app.use((req, res, next) => {
@@ -142,10 +146,8 @@ const startServer = async () => {
       process.exit(1);
     }
     console.log('✅ PostgreSQL conectado com sucesso');
-    // Garante que o admin existe
-    await usuarioAuthController.ensureAdmin();
-    // Garante que os jogos principais existem
-    await usuarioAuthController.ensureJogos();
+    // Garante que admin e jogos padrões existem
+    await initializerController.init();
     const PORT = process.env.PORT || PORT_FIXA;
     app.listen(PORT, () => {
       console.log(`🚀 Servidor rodando em http://${HOST}:${PORT}`);

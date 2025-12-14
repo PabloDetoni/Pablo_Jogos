@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estatísticas de Jogos</title>
+  <link rel="stylesheet" href="/frontend/css/estrutura/stats.css" />
+</head>
+
+<body onload="carregarStats()">
+  <h1>Estatísticas Gerais</h1>
+  <div id="estatisticas-container">
+
+    <section>
+      <h2>Jogo da Velha</h2>
+      <p>Tempo total jogado: <span id="velha-tempo">0</span></p>
+      <p>Vitórias: <span id="velha-vitorias">0</span></p>
+      <p>Derrotas: <span id="velha-derrotas">0</span></p>
+      <p>Empates: <span id="velha-empates">0</span></p>
+    </section>
+
+    <section>
+      <h2>Forca</h2>
+      <p>Tempo total jogado: <span id="forca-tempo">0</span></p>
+      <p>Vitórias: <span id="forca-vitorias">0</span></p>
+      <p>Derrotas: <span id="forca-derrotas">0</span></p>
+    </section>
+
+    <section>
+      <h2>Pedra, Papel e Tesoura</h2>
+      <p>Tempo total jogado: <span id="ppt-tempo">0</span></p>
+      <p>Vitórias: <span id="ppt-vitorias">0</span></p>
+      <p>Derrotas: <span id="ppt-derrotas">0</span></p>
+      <p>Empates: <span id="ppt-empates">0</span></p>
+    </section>
+
+    <section>
+      <h2>Sudoku</h2>
+      <p>Tempo total jogado: <span id="sudoku-tempo">0</span></p>
+      <p>Vitórias: <span id="sudoku-vitorias">0</span></p>
+      <p>Derrotas: <span id="sudoku-derrotas">0</span></p>
+      <p>Menor Tempo (Fácil): <span id="sudoku-melhortempo-facil">-</span></p>
+      <p>Menor Tempo (Médio): <span id="sudoku-melhortempo-medio">-</span></p>
+      <p>Menor Tempo (Difícil): <span id="sudoku-melhortempo-dificil">-</span></p>
+      <p>Menor Tempo (Muito Difícil): <span id="sudoku-melhortempo-mtDificil">-</span></p>
+    </section>
+
+    <section>
+      <h2>Campo Minado</h2>
+      <p>Tempo total jogado: <span id="campo_minado-tempo">0</span></p>
+      <p>Vitórias: <span id="campo_minado-vitorias">0</span></p>
+      <p>Derrotas: <span id="campo_minado-derrotas">0</span></p>
+      <p>Menor Tempo (Fácil): <span id="campo_minado-melhortempo-facil">-</span></p>
+      <p>Menor Tempo (Médio): <span id="campo_minado-melhortempo-medio">-</span></p>
+      <p>Menor Tempo (Difícil): <span id="campo_minado-melhortempo-dificil">-</span></p>
+    </section>
+
+    <section>
+      <h2>Pong</h2>
+      <p>Tempo total jogado: <span id="pong-tempo">0</span></p>
+      <p>Vitórias: <span id="pong-vitorias">0</span></p>
+      <p>Derrotas: <span id="pong-derrotas">0</span></p>
+      <p>Menor Tempo (Fácil): <span id="pong-melhortempo-facil">-</span></p>
+      <p>Menor Tempo (Médio): <span id="pong-melhortempo-medio">-</span></p>
+      <p>Menor Tempo (Difícil): <span id="pong-melhortempo-dificil">-</span></p>
+    </section>
+
+    <section>
+      <h2>Jogo da Memória</h2>
+      <p>Tempo total jogado: <span id="memoria-tempo">0</span></p>
+      <p>Vitórias: <span id="memoria-vitorias">0</span></p>
+      <p>Derrotas: <span id="memoria-derrotas">0</span></p>
+      <p>Menor Tempo (Fácil): <span id="memoria-melhortempo-facil">-</span></p>
+      <p>Menor Tempo (Médio): <span id="memoria-melhortempo-medio">-</span></p>
+      <p>Menor Tempo (Difícil): <span id="memoria-melhortempo-dificil">-</span></p>
+    </section>
+
+    <section>
+      <h2>2048</h2>
+      <p>Tempo total jogado: <span id="2048-tempo">0</span></p>
+      <p>Maior Pontuação: <span id="2048-highscore">0</span></p>
+    </section>
+
+  </div>
+
+  <div class="botoes-footer" style="text-align:center; margin-top:20px;">
+    <button onclick="resetarStats()">Limpar Estatísticas</button>
+    <button onclick="window.location.href='index.html'">Voltar ao Início</button>
+  </div>
+
+  <script src="/frontend/js/estrutura/utils.js"></script>
+  <script src="/frontend/js/estrutura/stats.js"></script>
+</body>
+
+</html>

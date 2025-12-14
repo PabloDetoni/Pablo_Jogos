@@ -1,27 +1,25 @@
+require('dotenv').config();
 const { Pool } = require('pg');
 
-// Configuração da conexão com o banco de dados PostgreSQL
+// Configuração da conexão com o banco de dados PostgreSQL (lida de backend/.env ou usa valores padrão)
 const dbConfig = {
-  host: 'localhost',
-  port: 5432, // Porta padrão do PostgreSQL
-  user: 'postgres', // Usuário do PostgreSQL
-  password: 'postgres', // Senha do PostgreSQL
-  database: 'pablo_jogos',
-  ssl: false, // Defina como true se usar SSL
-  idleTimeoutMillis: 30000, // Timeout para conexões ociosas
-  connectionTimeoutMillis: 2000, // Timeout para estabelecer conexão
+  host: process.env.PGHOST || 'localhost',
+  port: Number(process.env.PGPORT || 5432),
+  user: process.env.PGUSER || 'pablodetoni',
+  password: process.env.PGPASSWORD || '123mudar',
+  database: process.env.PGDATABASE || 'pablo_jogos',
+  // Se PGSSL=true no .env, ativa ssl com rejectUnauthorized false (útil para alguns ambientes locais/containers)
+  ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : false
 };
 
-const schema = 'public'; // Defina o schema padrão
-
-// Pool de conexões para melhor performance
+// Pool de conexões para melhor performance — opções do pool também podem ser ajustadas via .env
 const pool = new Pool({
   ...dbConfig,
-  max: 10, // Máximo de conexões no pool
-  min: 0,  // Mínimo de conexões no pool
-  idle: 10000, // Tempo em ms antes de fechar uma conexão ociosa
-  acquire: 30000, // Tempo máximo em ms para tentar obter uma conexão
-  evict: 1000 // Intervalo em ms para verificar conexões que devem ser removidas
+  max: Number(process.env.PG_POOL_MAX || 10),
+  // tempo em ms antes de fechar uma conexão ociosa
+  idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS || 10000),
+  // tempo máximo em ms para estabelecer conexão
+  connectionTimeoutMillis: Number(process.env.PG_CONN_TIMEOUT_MS || 30000)
 });
 
 // Tratamento de erros do pool
@@ -39,7 +37,7 @@ const testConnection = async () => {
     client.release();
     return true;
   } catch (err) {
-    console.error('Erro ao conectar com o PostgreSQL:', err);
+    console.error('Erro ao conectar com o PostgreSQL:', err.message || err);
     return false;
   }
 };

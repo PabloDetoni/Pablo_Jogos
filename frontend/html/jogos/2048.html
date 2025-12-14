@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2048</title>
+  <link rel="stylesheet" href="/frontend/css/jogos/2048.css" />
+</head>
+<body>
+  <div id="container-2048">
+    <h1>2048</h1>
+    <div class="score-container">
+      <span>Pontuação: </span><span id="score">0</span>
+      <button id="restart-btn" onclick="reiniciarJogo()">Reiniciar</button>
+    </div>
+    <div id="tabuleiro-2048" class="tabuleiro-2048">
+      <!-- As células serão geradas pelo JS -->
+    </div>
+    <div id="mensagem-final" style="display:none;">
+      <p id="mensagem"></p>
+      <button onclick="reiniciarJogo()">Jogar Novamente</button>
+    </div>
+    <div class="botoes-footer">
+      <button onclick="window.location.href='/frontend/html/estrutura/index.html'">Voltar</button>
+      <button onclick="window.location.href='/frontend/html/estrutura/estatisticas.html'">Estatísticas</button>
+    </div>
+  </div>
+  <script src="/frontend/js/estrutura/utils.js"></script>
+  <script src="/frontend/js/estrutura/stats.js"></script>
+  <script src="/frontend/js/estrutura/rankings.js"></script>
+  <script src="/frontend/js/jogos/2048.js"></script>
+</body>
+</html>

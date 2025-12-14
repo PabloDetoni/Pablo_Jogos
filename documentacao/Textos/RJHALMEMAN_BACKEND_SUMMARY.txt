@@ -1,0 +1,27 @@
+Resumo do repositório de referência (rjhalmeman/dw1-modelo-aval-3bim) - backend
+
+Visão geral rápida
+- Stack: Node.js + Express + PostgreSQL (pg Pool).
+- Arquitetura simples e didática: separação clara entre server, routes e controllers.
+- server.js: inicializa express, middlewares (static frontend, cookie-parser, JSON, CORS custom), registra todas as rotas e implementa health check e tratamento de encerramento (SIGINT/SIGTERM).
+- database.js: cria Pool, exporta helpers: pool, query(text, params), transaction(callback) e testConnection(); usa parametrização ($1) nas queries.
+- routes/: arquivo por recurso (ex.: pessoaRoutes.js, questaoRoutes.js). Cada rota importa o controller correspondente e define endpoints REST (GET/POST/PUT/DELETE) seguindo padrão uniforme.
+- controllers/: controller por recurso implementando lógica CRUD; usa async/await, tratamento básico de erros, validação leve e respostas HTTP apropriadas (200/201/400/404/500). Alguns controllers servem arquivos estáticos do frontend.
+
+Padrões úteis a manter no seu projeto
+- Usar query(...) do database.js para todas as operações DB (parâmetros $1...).
+- Manter controllers finos: validação básica + chamadas ao DB + status codes claros.
+- Registrar rotas em server.js com namespace (ex.: app.use('/usuario', usuarioRoutes)).
+- Health check e teste de conexão antes de subir o servidor.
+
+Sobre apagar o BackBase(Radames)
+- Se você já incorporou as partes necessárias (estrutura de pastas, convenções e arquivos adaptados) e não precisa do código original, pode remover a pasta BackBase(Radames). Faça backup antes.
+
+O que o professor pediu (resumo fiel):
+- login com credenciais mantidas por cookies ou session
+- menu principal, com nome de usuario logado e opcao de logout
+- 4 CRUDs que ja foram descritos (Jogo, Usuario, Perfil 1:N, Partida/Estatisticas N:M, Admin 1:1)
+- servidor de dados "dividido" em varias pastas (server, routes, controllers)
+
+Próximo passo sugerido
+- Remover BackBase(Radames) apenas depois de garantir que os novos arquivos e rotas estão funcionando no seu projeto. Posso gerar scaffold (routes + controllers + SQL) e registrar em server.js quando autorizar.

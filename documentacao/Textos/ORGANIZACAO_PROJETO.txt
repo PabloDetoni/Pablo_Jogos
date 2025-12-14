@@ -1,0 +1,72 @@
+ORGANIZAÇÃO DO PROJETO — REGRAS PRINCIPAIS
+
+IMPORTANTE: ESTE PROJETO DEVE CONTER APENAS TRÊS ÁREAS PRINCIPAIS: BACKEND, FRONTEND E DOCUMENTACAO. TUDO QUE NÃO PERTENCER A UMA DESTAS TRÊS PASTAS DEVE SER MOVIDO, ARQUIVADO OU REMOVIDO.
+
+1) VISÃO GERAL RÁPIDA
+- Objetivo: projeto didático de jogos online (Node.js/Express + PostgreSQL no BACKEND, frontend estático no FRONTEND).
+- Regra de ouro: apenas as pastas BACKEND, FRONTEND e DOCUMENTACAO existem no nível superior do repositório.
+
+2) ESTRUTURA OBRIGATÓRIA (NÍVEL SUPERIOR)
+- /BACKEND  -> tudo relacionado ao servidor, APIs, banco de dados, scripts de inicialização e utilitários do servidor.
+- /FRONTEND -> toda a aplicação estática (html, css, js, assets: img, CSVs, etc.).
+- /DOCUMENTACAO -> explicações, manuais, scripts de migração e arquivos de texto explicativos. Tudo em texto legível (MD ou TXT).
+
+OBS: Nomes das pastas devem estar em minúsculas no sistema (aqui usamos maiúsculas apenas para ênfase no texto), o diretório físico atual está em `backend/`, `frontend/`, `documentacao/`.
+
+3) O QUE COLOCO EM CADA PASTA (DETALHAMENTO)
+
+BACKEND (conteúdo mínimo esperado)
+- server2.js (entrypoint do servidor) — deve ser o script start no package.json.
+- database.js (pool e helpers query/transaction/testConnection).
+- routes/ (arquivo por recurso, ex: jogoRoutes.js, usuarioRoutes.js, partidaRoutes.js, adminRoutes.js).
+- controllers/ (lógica das rotas; controllers finos que chamam models e retornam status apropriados).
+- models/ (opcional, helpers DB reutilizáveis: getAll, create, getById).
+- utils/ (scripts helpers, ex: jogoFileManager.js, exportável e usado por controllers).
+- setup/ (apenas arquivos de suporte: README, scripts de teste/local setup — já criado como `backend/setup`).
+- package.json, package-lock.json, .env (variáveis de ambiente), node_modules/ (ou .gitignore para ignorar) — mantidos na raiz do BACKEND.
+
+FRONTEND (conteúdo mínimo esperado)
+- html/ (pasta com `estrutura/` para templates e `jogos/` para páginas geradas de cada jogo)
+- css/ (idem: `estrutura/` e `jogos/`)
+- js/ (idem: `estrutura/` e `jogos/`)
+- img/, CSV/ ou assets/ — recursos usados pelos jogos.
+
+DOCUMENTACAO (conteúdo mínimo esperado)
+- Textos/ (resumos, instruções, checklist, arquitetura). Ex.: `ORGANIZACAO_PROJETO.txt`, `RJHALMEMAN_BACKEND_SUMMARY.txt`.
+- SCHEMA_PADRAO.sql e demais scripts para inicializar o banco.
+
+4) ITENS ENCONTRADOS NO REPOSITÓRIO ATUAL (RECOMENDAÇÕES)
+- Arquivos que já estão corretos/úteis e devem permanecer no BACKEND:
+  - `server2.js`, `database.js`, `controllers/`, `routes/`, `models/`, `utils/`.
+  - `setup/` (contém `testa_db.js` e doc) — OK.
+- Arquivos movidos para DOCUMENTACAO:
+  - `documentacao/Textos/*` (já existem resumos e texto longo) — OK.
+- Itens removidos (já tratados):
+  - `legacy_backend/` (removido) — estava redundante.
+  - arquivos de teste vazios e `server.js` vazio — removidos.
+- Arquivos a revisar / consolidar:
+  - `preencherSlugs.js` — removido, pois a criação de slugs foi padronizada no model `jogoModel.create`.
+  - `jogoFileManager.js` — ajustado para gerar arquivos a partir de templates em `frontend/.../estrutura` e salvar em `frontend/.../jogos`.
+  - `package.json` do BACKEND: atualmente aponta `start: node server.js` — deve ser alterado para `node server2.js`.
+  - `database.js` contém credenciais hardcoded — recomendável migrar para `.env` (já existe `.env` com variáveis PG*).
+
+5) AÇÕES RECOMENDADAS IMEDIATAS (CHECKLIST)
+- [ ] Atualizar `backend/package.json` para usar `node server2.js` como start.
+- [ ] Garantir que `.env` esteja preenchido (já existe `backend/.env`). Usar `dotenv` em `database.js` para ler variáveis em vez de valores hardcoded.
+- [ ] Padronizar templates frontend: mover arquivo(s) de template para `frontend/html/estrutura`, `frontend/css/estrutura`, `frontend/js/estrutura` e gerar arquivos finais em `frontend/html/jogos`, etc.
+- [ ] Remover tudo que não estiver dentro de BACKEND / FRONTEND / DOCUMENTACAO no nível superior. Se precisar manter itens extras, mover para uma dessas três pastas.
+- [ ] Fazer commit das mudanças e testar `npm start` dentro de `backend/`.
+
+6) IMPORTANTE — PROCEDIMENTOS AO RODAR O PROJETO EM MÁQUINA NOVA
+- Copiar `.env` (com credenciais locais ou variáveis de desenvolvimento) para `backend/.env`.
+- Rodar `npm install` dentro de `backend/`.
+- Rodar `npm start` dentro de `backend/` (após atualizarmos o start para server2.js).
+- Verificar `http://localhost:3001/health` para checar conexão com o banco.
+
+7) DOCUMENTAÇÃO DE IMPLEMENTAÇÃO
+- Colocar neste diretório `documentacao/Textos/` quaisquer instruções detalhadas sobre como configurar o banco, ou comandos SQL em `SCHEMA_PADRAO.sql`.
+
+8) NOTAS FINAIS
+- Esta organização tem por objetivo simplificar a entrega e tornar claro onde cada coisa deve estar. Sempre que criar um novo arquivo, pergunte: "Isso é BACKEND, FRONTEND ou DOCUMENTACAO?" — caso contrário, deve ser movido para uma dessas pastas.
+
+Arquivo gerado automaticamente por organizador. Se quiser, aplico as mudanças pendentes (atualizar package.json, adaptar database.js para dotenv, mover templates frontend).

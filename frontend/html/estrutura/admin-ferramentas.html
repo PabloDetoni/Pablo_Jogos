@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ferramentas</title>
+  <link rel="stylesheet" href="/frontend/css/estrutura/style.css" />
+  <link rel="stylesheet" href="/frontend/css/estrutura/admin.css" />
+  <link rel="stylesheet" href="/frontend/css/estrutura/admin-ferramentas.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="page-title-bar">
+      <h1 class="page-title-fixed">Ferramentas</h1>
+    </div>
+  </header>
+  <div class="admin-layout">
+    <nav class="admin-sidepanel">
+      <ul>
+        <li><a href="admin-dashboard.html">Dashboard</a></li>
+        <li><a href="admin-gestao.html">Gestão</a></li>
+        <li><a href="admin-visualizacao.html">Visualização</a></li>
+        <li><a href="admin-ferramentas.html" class="active">Ferramentas</a></li>
+        <li><button id="btn-logout">Sair do Painel</button></li>
+      </ul>
+    </nav>
+    <main class="admin-main-content">
+      <section>
+        <h2>Relatórios</h2>
+        <button class="admin-btn">Gerar Relatório</button>
+      </section>
+      <section>
+        <h2>Backups</h2>
+        <button class="admin-btn">Fazer Backup</button>
+      </section>
+      <section>
+        <h2>Reset do Sistema</h2>
+        <button class="admin-btn btn-danger">Resetar Tudo</button>
+      </section>
+    </main>
+  </div>
+  <script src="/frontend/js/estrutura/admin-ferramentas.js"></script>
+</body>
+</html>

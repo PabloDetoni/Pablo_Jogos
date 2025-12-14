@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard do Administrador</title>
+  <link rel="stylesheet" href="/frontend/css/estrutura/style.css" />
+  <link rel="stylesheet" href="/frontend/css/estrutura/admin.css" />
+  <link rel="stylesheet" href="/frontend/css/estrutura/admin-dashboard.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="page-title-bar">
+      <h1 class="page-title-fixed">Dashboard do Administrador</h1>
+    </div>
+  </header>
+  <div class="admin-layout">
+    <nav class="admin-sidepanel">
+      <ul>
+        <li><a href="admin-dashboard.html" class="active">Dashboard</a></li>
+        <li><a href="admin-gestao.html">Gestão</a></li>
+        <li><a href="admin-visualizacao.html">Visualização</a></li>
+        <li><a href="admin-ferramentas.html">Ferramentas</a></li>
+        <li><button id="btn-logout">Sair do Painel</button></li>
+      </ul>
+    </nav>
+    <main class="admin-main-content">
+      <section>
+        <h2>Visão Geral</h2>
+        <div class="dashboard-cards">
+          <div class="dashboard-card" id="dashboard-total-usuarios">
+            <h3>Usuários</h3>
+            <span class="dashboard-value">--</span>
+          </div>
+          <div class="dashboard-card" id="dashboard-total-jogos">
+            <h3>Jogos</h3>
+            <span class="dashboard-value">--</span>
+          </div>
+          <div class="dashboard-card" id="dashboard-total-partidas">
+            <h3>Partidas</h3>
+            <span class="dashboard-value">--</span>
+          </div>
+        </div>
+        <div class="dashboard-extra">
+          <h3>Atividades Recentes</h3>
+          <ul id="dashboard-logs">
+            <li>Carregando...</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/frontend/js/estrutura/admin-dashboard.js"></script>
+</body>
+</html>
