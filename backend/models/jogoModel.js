@@ -26,10 +26,17 @@ const Jogo = {
     // Verifica unicidade do slug
     const existe = await db.query('SELECT 1 FROM jogo WHERE slug = $1', [slug]);
     if (existe.rows.length) throw new Error('Slug já existe');
-    return db.query(
-      'INSERT INTO jogo (id, titulo, genero, descricao, slug) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [id, titulo, genero, descricao, slug]
-    );
+    if (id) {
+      return db.query(
+        'INSERT INTO jogo (id, titulo, genero, descricao, slug) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [id, titulo, genero, descricao, slug]
+      );
+    } else {
+      return db.query(
+        'INSERT INTO jogo (titulo, genero, descricao, slug) VALUES ($1, $2, $3, $4) RETURNING *',
+        [titulo, genero, descricao, slug]
+      );
+    }
   },
   async update(id, { titulo, genero, descricao }) {
     // Não altera o slug!
