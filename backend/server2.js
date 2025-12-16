@@ -73,6 +73,8 @@ const trophyTypeRoutes = require('./routes/trophyTypeRoutes');
 console.log('trophyTypeRoutes OK');
 const trophyRoutes = require('./routes/trophyRoutes');
 console.log('trophyRoutes OK');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+console.log('dashboardRoutes OK');
 
 app.use('/jogo', jogoRoutes);
 app.use('/usuario', usuarioRoutes);
@@ -82,6 +84,7 @@ app.use('/rankings', rankingAvancadoRoutes);
 app.use('/api/partida', partidaRoutes);
 app.use('/trophy_type', trophyTypeRoutes);
 app.use('/trophy', trophyRoutes);
+app.use('/dashboard', dashboardRoutes);
 console.log('Todas as rotas aplicadas');
 
 // Rota padrão
