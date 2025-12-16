@@ -26,7 +26,10 @@ const Jogo = {
     // Verifica unicidade do slug
     const existe = await db.query('SELECT 1 FROM jogo WHERE slug = $1', [slug]);
     if (existe.rows.length) throw new Error('Slug já existe');
-    if (id) {
+
+    // Se foi passado um id explicitamente, insere incluindo o id (útil para migrações);
+    // caso contrário, permite que o banco gere o id automaticamente (SERIAL/IDENTITY).
+    if (id !== undefined && id !== null) {
       return db.query(
         'INSERT INTO jogo (id, titulo, genero, descricao, slug) VALUES ($1, $2, $3, $4, $5) RETURNING *',
         [id, titulo, genero, descricao, slug]

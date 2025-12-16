@@ -6,7 +6,11 @@ const partidaController = require('../controllers/partidaController');
 
 // Rota para registrar uma nova partida
 router.post('/', partidaController.registrarPartida);
-
-// Outras rotas de partida podem ser adicionadas aqui
+// Listar todas partidas
+router.get('/', partidaController.listarPartidas);
+// Listar partidas por usuário
+router.get('/usuario/:id_usuario', partidaController.listarPorUsuario);
+// Listar partidas por jogo
+router.get('/jogo/:id_jogo', partidaController.listarPorJogo);
 
 module.exports = router;

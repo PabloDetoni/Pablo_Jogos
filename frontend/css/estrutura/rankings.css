@@ -137,6 +137,106 @@ label {
   font-weight: bold;
 }
 
+/* ==================== SEÇÃO DE TROFÉUS ==================== */
+.trofeus-section {
+  background: linear-gradient(135deg, #fffbe6 0%, #fff9c4 100%);
+  margin-top: 30px;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.2);
+  border: 2px solid #ffd700;
+}
+
+.trofeus-section h2 {
+  margin-top: 0;
+  color: #b8860b;
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.trofeus-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trofeu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  padding: 14px 18px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.trofeu-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.trofeu-item.trofeu-bloqueado {
+  background: #f5f5f5;
+  opacity: 0.7;
+}
+
+.trofeu-icone {
+  font-size: 2rem;
+  min-width: 40px;
+  text-align: center;
+}
+
+.trofeu-jogador {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.trofeu-separador {
+  color: #999;
+  margin: 0 4px;
+}
+
+.trofeu-nome {
+  font-style: italic;
+  color: #666;
+  font-size: 1rem;
+}
+
+.trofeu-status-bloqueado {
+  font-size: 0.85rem;
+  color: #c62828;
+  margin-left: auto;
+  font-weight: bold;
+}
+
+.trofeus-empty, .trofeus-loading {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+}
+
+/* Responsivo para troféus */
+@media (max-width: 600px) {
+  .trofeu-item {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+  .trofeu-icone {
+    font-size: 1.5rem;
+    min-width: 30px;
+  }
+  .trofeu-jogador {
+    font-size: 1rem;
+  }
+  .trofeu-nome {
+    font-size: 0.9rem;
+  }
+}
+
 /* Responsivo */
 @media (max-width: 900px) {
   #rankings-container {

@@ -254,59 +254,16 @@ async function registrarPontuacaoRankingForca() {
   // Padroniza resultado para API (sem acento)
   let resultadoApi = venceuPartida ? 'vitoria' : 'derrota';
   const apiBase = (window.API_URL || 'http://localhost:3001');
-  await fetch(apiBase + '/api/partida', {
-     method: 'POST',
-     headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify({
-       jogo: 'Forca',
-       resultado: resultadoApi,
-       usuario: user.nome, // Corrigido de 'nome' para 'usuario'
-       dificuldade: dificuldadeLabel,
-       tempo: typeof tempoForca === 'number' ? tempoForca : null
-     })
-   });
-
-  // Garante que rankings.js foi carregado
-  if (typeof window.adicionarPontuacaoRanking !== 'function') {
-    alert('Erro: rankings.js não foi carregado antes de forca.js! Ranking não será registrado.');
-    return;
-  }
-
-  let seqKey = `forca_seq_vitoria_${user.nome}_${dificuldadeLabel}`;
-  let seqAtual = Number(localStorage.getItem(seqKey)) || 0;
-  if (venceuPartida) {
-    // Ranking geral
-    await window.adicionarPontuacaoRanking("Forca", user.nome, {
-      tipo: "mais_vitorias_total",
-      dificuldade: null,
-      valor: 1
-    });
-    // Ranking por dificuldade
-    await window.adicionarPontuacaoRanking("Forca", user.nome, {
-      tipo: "mais_vitorias_dificuldade",
+  // Salva partida real para estatísticas
+  try {
+    await window.enviarPartidaSeguro({
+      jogo: 'Forca',
+      resultado: resultadoApi,
+      usuario: user.nome,
       dificuldade: dificuldadeLabel,
-      valor: 1
+      erros: typeof tentativasRestantes === 'number' ? (6 - tentativasRestantes) : null,
+      data: new Date().toISOString()
     });
-    // Ranking por sequência de vitórias consecutivas
-    seqAtual += 1;
-    await window.adicionarPontuacaoRanking("Forca", user.nome, {
-      tipo: "mais_vitorias_consecutivas",
-      dificuldade: dificuldadeLabel,
-      valor: seqAtual
-    });
-  } else {
-    // Zera sequência se perder
-    seqAtual = 0;
-    // Atualiza ranking de sequência para 0 (opcional, mantém coerência)
-    await window.adicionarPontuacaoRanking("Forca", user.nome, {
-      tipo: "mais_vitorias_consecutivas",
-      dificuldade: dificuldadeLabel,
-      valor: seqAtual
-    });
-  }
-  localStorage.setItem(seqKey, seqAtual);
+  } catch(e) { console.warn('Erro ao enviar partida da Forca para /api/partida:', e); }
+  // Rankings agora são calculados a partir da tabela partida — não chamar adicionarPontuacaoRanking aqui.
 }
-
-// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
-// Exemplo:
-// adicionarPontuacaoRanking('Forca', user.nome, { tipo: 'mais_vitorias_total', valor: 1, dificuldade: dificuldadeSelecionada });

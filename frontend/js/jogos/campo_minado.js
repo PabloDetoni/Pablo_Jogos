@@ -368,47 +368,19 @@ async function registrarPontuacaoRankingCampoMinado(vitoria) {
   let dificuldadeLabel = 
     dificuldadeAtual === 'facil' ? 'Fácil' : 
     dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
-  await fetch('http://localhost:3001/api/partida', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  try {
+    await window.enviarPartidaSeguro({
       jogo: 'Campo Minado',
       resultado: vitoria ? 'vitoria' : 'derrota',
-      nome: user.nome,
+      usuario: user.nome,
       tempo: typeof timerSec === 'number' ? timerSec : null,
-      erros: 0, // Se quiser implementar contagem de erros, troque aqui
-      dificuldade: dificuldadeLabel
-    })
-  });
-  if (vitoria) {
-    // 1. Ranking geral (mais vitórias totais)
-    await window.adicionarPontuacaoRanking("Campo Minado", user.nome, {
-      tipo: "mais_vitorias_total",
-      dificuldade: "",
-      valor: 1
-    });
-    // 2. Ranking por dificuldade (mais vitórias por dificuldade)
-    await window.adicionarPontuacaoRanking("Campo Minado", user.nome, {
-      tipo: "mais_vitorias_dificuldade",
+      erros: 0,
       dificuldade: dificuldadeLabel,
-      valor: 1
+      data: new Date().toISOString()
     });
-    // 3. Ranking menor tempo por dificuldade (só envia se tempo > 0)
-    if (typeof timerSec === 'number' && timerSec > 0) {
-      await window.adicionarPontuacaoRanking("Campo Minado", user.nome, {
-        tipo: "menor_tempo",
-        dificuldade: dificuldadeLabel,
-        tempo: timerSec,
-        erros: 0,
-        valor: 1
-      });
-    }
-  }
+  } catch(e) { console.warn('Erro ao enviar partida do Campo Minado para /api/partida:', e); }
+  // Rankings agora são calculados a partir da tabela partida — não chamar adicionarPontuacaoRanking aqui.
 }
-
-// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
-// Exemplo:
-// adicionarPontuacaoRanking('Campo Minado', user.nome, { tipo: 'menor_tempo', valor: null, dificuldade: dificuldadeSelecionada, tempo: tempoFinal, erros: errosCometidos });
 
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);

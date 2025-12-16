@@ -293,48 +293,27 @@ function checarVencedor() {
 
 // INTEGRAÇÃO RANKING - envia score ao terminar jogo
 async function registrarPontuacaoRankingPong(vitoria) {
-  // Salva partida real para estatísticas
+  // Salva partida real para estatísticas — NÃO INSERE entradas de ranking diretamente aqui.
+  // Rankings agora devem ser computados a partir da tabela de partidas (centralizado em rankings.js).
   let dificuldadeLabel =
     dificuldadeAtual === 'facil' ? 'Fácil' :
     dificuldadeAtual === 'medio' ? 'Médio' :
     dificuldadeAtual === 'dificil' ? 'Difícil' : dificuldadeAtual;
 
   let resultadoApi = vitoria ? 'vitoria' : 'derrota';
-  await fetch('http://localhost:3001/api/partida', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  try {
+    await window.enviarPartidaSeguro({
       jogo: 'Pong',
       resultado: resultadoApi,
-      nome: user.nome,
+      usuario: user.nome,
       tempo: typeof tempoPong === 'number' ? tempoPong : null,
-      dificuldade: dificuldadeLabel
-    })
-  });
-
-  if (vitoria) {
-    // 1. Ranking geral (mais vitórias totais)
-    await window.adicionarPontuacaoRanking("Pong", user.nome, {
-      tipo: "mais_vitorias_total",
-      dificuldade: null,
-      valor: 1
-    });
-    // 2. Ranking por dificuldade (mais vitórias por dificuldade)
-    await window.adicionarPontuacaoRanking("Pong", user.nome, {
-      tipo: "mais_vitorias_dificuldade",
       dificuldade: dificuldadeLabel,
-      valor: 1
+      erros: null,
+      data: new Date().toISOString()
     });
-    // 3. Ranking menor tempo por dificuldade (só envia se tempoPong > 0)
-    if (typeof tempoPong === 'number' && tempoPong > 0) {
-      await window.adicionarPontuacaoRanking("Pong", user.nome, {
-        tipo: "menor_tempo",
-        dificuldade: dificuldadeLabel,
-        tempo: tempoPong,
-        valor: 1
-      });
-    }
-  }
+  } catch (e) { console.warn('Erro ao enviar partida do Pong para /api/partida:', e); }
+
+  // NÃO chamar window.adicionarPontuacaoRanking aqui — manter cálculo de rankings centralizado.
 }
 
 // Chame esta função ao finalizar o jogo para registrar a pontuação no ranking

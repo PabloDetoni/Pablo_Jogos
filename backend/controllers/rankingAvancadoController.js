@@ -1,101 +1,163 @@
-// Controller para ranking avançado (tabela ranking_avancado)
+// Controller para ranking avançado — agora calcula rankings a partir da tabela `partida` em vez de usar `ranking_avancado`
 const db = require('../database');
 
+// Normalizadores e helpers
+function normalizeString(s) {
+  if (s === undefined || s === null) return '';
+  try {
+    return s.toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/[^a-z0-9 ]/g, '').trim();
+  } catch (e) {
+    return s.toString().toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+  }
+}
+function tokensOf(s) { return (s && s.toString()) ? (s.toString().toLowerCase().match(/[a-z0-9]+/g) || []) : []; }
+
 module.exports = {
-  // Busca os 10 melhores para o ranking solicitado
+  // Busca ranking calculado a partir de partidas
   async buscarRanking(req, res) {
     let { jogo, tipo, dificuldade, usuario, status, dataInicial, dataFinal } = req.body;
-    // Normaliza dificuldade: null para rankings gerais
     if (dificuldade === undefined || dificuldade === '' || dificuldade === 'null') dificuldade = null;
-    let query = `SELECT r.id, u.nome, u.status, r.valor, r.tempo, r.erros, r.created_at
-      FROM ranking_avancado r
-      JOIN usuario u ON u.id = r.id_usuario
-      JOIN jogo j ON j.id = r.id_jogo
-      WHERE j.titulo = $1 AND r.tipo = $2`;
-    const params = [jogo, tipo];
-    let idx = 3;
-    if (dificuldade !== null) {
-      query += ` AND r.dificuldade = $${idx++}`;
-      params.push(dificuldade);
-    } else {
-      query += ' AND r.dificuldade IS NULL';
-    }
-    if (usuario) {
-      query += ` AND (u.nome ILIKE $${idx} OR u.id::text = $${idx})`;
-      params.push(usuario);
-      idx++;
-    }
-    if (status) {
-      query += ` AND u.status = $${idx++}`;
-      params.push(status);
-    }
-    if (dataInicial) {
-      query += ` AND r.created_at >= $${idx++}`;
-      params.push(dataInicial);
-    }
-    if (dataFinal) {
-      query += ` AND r.created_at <= $${idx++}`;
-      params.push(dataFinal);
-    }
-    // Ordenação dinâmica
-    if (tipo === 'menor_tempo') {
-      query += ' ORDER BY r.tempo ASC NULLS LAST';
-    } else {
-      query += ' ORDER BY r.valor DESC NULLS LAST';
-    }
-    query += ' LIMIT 100';
+
     try {
-      const { rows } = await db.query(query, params);
-      res.json({ ranking: rows });
+      // Busca partidas com joins necessários
+      const q = `SELECT p.*, u.nome as usuario_nome, u.status as usuario_status, j.titulo as jogo_titulo
+        FROM partida p
+        LEFT JOIN usuario u ON u.id = p.id_usuario
+        LEFT JOIN jogo j ON j.id = p.id_jogo
+        ORDER BY p.data DESC`;
+      const { rows: partidasRaw } = await db.query(q);
+
+      // Normaliza e converte numeric fields
+      const partidas = partidasRaw.map(p => {
+        const copy = Object.assign({}, p);
+        copy._titulo = (p.jogo_titulo || p.titulo || '').toString();
+        copy._jogo = (p.jogo || '').toString();
+        copy._tituloNorm = normalizeString(copy._titulo);
+        copy._jogoNorm = normalizeString(copy._jogo);
+        copy._dificNorm = p.dificuldade ? normalizeString(p.dificuldade) : null;
+        copy.tempo = (p.tempo !== undefined && p.tempo !== null && p.tempo !== '') ? Number(p.tempo) : null;
+        if (isNaN(copy.tempo)) copy.tempo = null;
+        copy.pontuacao = (p.pontuacao !== undefined && p.pontuacao !== null && p.pontuacao !== '') ? Number(p.pontuacao) : null;
+        if (isNaN(copy.pontuacao)) copy.pontuacao = null;
+        copy.erros = (p.erros !== undefined && p.erros !== null && p.erros !== '') ? Number(p.erros) : null;
+        if (isNaN(copy.erros)) copy.erros = null;
+        return copy;
+      });
+
+      // Filters
+      const jogoFiltro = (jogo || '').toString();
+      const jogoFiltroNorm = normalizeString(jogoFiltro);
+      const jogoFiltroTokens = tokensOf(jogoFiltro);
+      const dificuldadeFiltroNorm = dificuldade == null ? null : normalizeString(dificuldade);
+
+      const partidasDoJogo = partidas.filter(p => {
+        if (!jogoFiltroNorm) return false;
+        if (p._tituloNorm === jogoFiltroNorm || p._jogoNorm === jogoFiltroNorm) return true;
+        if (p._tituloNorm.includes(jogoFiltroNorm) || p._jogoNorm.includes(jogoFiltroNorm)) return true;
+        if (jogoFiltroNorm.includes(p._tituloNorm) || jogoFiltroNorm.includes(p._jogoNorm)) return true;
+        const tTitulo = tokensOf(p._titulo);
+        const tJogo = tokensOf(p._jogo);
+        if (jogoFiltroTokens.length && jogoFiltroTokens.some(t => tTitulo.includes(t) || tJogo.includes(t))) return true;
+        return false;
+      });
+
+      const partidasFiltradas = partidasDoJogo.filter(p => {
+        if (dificuldadeFiltroNorm === null) return true;
+        const pd = p.dificuldade || null;
+        if (pd === null) return false;
+        const pdNorm = normalizeString(pd);
+        if (pdNorm === dificuldadeFiltroNorm) return true;
+        const pdTokens = tokensOf(pd);
+        const dfTokens = tokensOf(dificuldade);
+        if (dfTokens.length && dfTokens.some(t => pdTokens.includes(t))) return true;
+        return false;
+      });
+
+      // Agrupar por usuário
+      const agruparPorUsuario = (rows) => {
+        const map = new Map();
+        for (const r of rows) {
+          const nome = (r.usuario_nome || r.nome || r.usuario || 'Desconhecido').toString();
+          if (!map.has(nome)) map.set(nome, []);
+          map.get(nome).push(r);
+        }
+        return map;
+      };
+
+      // Compute rankings similar to frontend logic
+      if (tipo === 'pontuacao') {
+        const withScore = partidasFiltradas.filter(p => p.pontuacao !== null);
+        withScore.sort((a,b) => (b.pontuacao || 0) - (a.pontuacao || 0));
+        const out = withScore.map(r => ({ nome: r.usuario_nome || r.nome || r.usuario || 'Desconhecido', valor: r.pontuacao, tempo: r.tempo, erros: r.erros, status: r.usuario_status || 'ativo' }));
+        return res.json({ ranking: out });
+      }
+
+      if (tipo === 'menor_tempo') {
+        const valid = partidasFiltradas.filter(p => typeof p.tempo === 'number' && !isNaN(p.tempo));
+        const map = agruparPorUsuario(valid);
+        const arr = [];
+        for (const [nome, rows] of map.entries()) {
+          const minErros = rows.reduce((acc, cur) => Math.min(acc, (cur.erros != null ? Number(cur.erros) : Infinity)), Infinity);
+          const candidatos = rows.filter(r => (r.erros != null ? Number(r.erros) : Infinity) === minErros);
+          const minTempo = candidatos.reduce((acc, cur) => Math.min(acc, (cur.tempo != null ? Number(cur.tempo) : Infinity)), Infinity);
+          if (minTempo !== Infinity) arr.push({ nome, tempo: minTempo, erros: (minErros === Infinity ? null : minErros), valor: null, status: (rows[0].usuario_status || 'ativo') });
+        }
+        arr.sort((a,b) => {
+          const ea = a.erros == null ? Infinity : a.erros;
+          const eb = b.erros == null ? Infinity : b.erros;
+          if (ea !== eb) return ea - eb;
+          return (a.tempo || Infinity) - (b.tempo || Infinity);
+        });
+        return res.json({ ranking: arr });
+      }
+
+      if (tipo === 'mais_vitorias_total' || tipo === 'mais_vitorias_dificuldade') {
+        const vitorias = new Map();
+        for (const p of partidasFiltradas) {
+          if ((p.resultado || '').toString().toLowerCase() === 'vitoria') {
+            const nome = (p.usuario_nome || p.nome || p.usuario || 'Desconhecido').toString();
+            vitorias.set(nome, (vitorias.get(nome) || 0) + 1);
+          }
+        }
+        const arr = Array.from(vitorias.entries()).map(([nome, valor]) => ({ nome, valor, status: 'ativo' }));
+        arr.sort((a,b) => b.valor - a.valor);
+        return res.json({ ranking: arr });
+      }
+
+      if (tipo === 'mais_vitorias_consecutivas') {
+        const map = agruparPorUsuario(partidasFiltradas);
+        const arr = [];
+        for (const [nome, rows] of map.entries()) {
+          const ordenadas = rows.slice().sort((a,b) => new Date(a.data) - new Date(b.data));
+          let maxSeq = 0, curSeq = 0;
+          for (const r of ordenadas) {
+            if ((r.resultado || '').toString().toLowerCase() === 'vitoria') {
+              curSeq++;
+              if (curSeq > maxSeq) maxSeq = curSeq;
+            } else {
+              curSeq = 0;
+            }
+          }
+          if (maxSeq > 0) arr.push({ nome, valor: maxSeq, status: 'ativo' });
+        }
+        arr.sort((a,b) => b.valor - a.valor);
+        return res.json({ ranking: arr });
+      }
+
+      // Fallback: mais ativos
+      const map = agruparPorUsuario(partidasFiltradas);
+      const arr = Array.from(map.entries()).map(([nome, rows]) => ({ nome, valor: rows.length, status: 'ativo' }));
+      arr.sort((a,b) => b.valor - a.valor);
+      return res.json({ ranking: arr });
+
     } catch (err) {
-      res.status(500).json({ error: 'Erro ao buscar ranking avançado' });
+      console.error('[RankingAvancado] Erro ao calcular ranking a partir de partidas:', err);
+      return res.status(500).json({ error: 'Erro ao buscar ranking avançado' });
     }
   },
 
-  // Adiciona ou atualiza o ranking do usuário
+  // endpoint de adicionar/atualizar foi descontinuado: recomendamos calcular a partir de partidas
   async adicionarOuAtualizar(req, res) {
-    let { jogo, nome, tipo, dificuldade, valor, tempo, erros } = req.body;
-    // Normaliza dificuldade: null para rankings gerais
-    if (dificuldade === undefined || dificuldade === '' || dificuldade === 'null') dificuldade = null;
-    console.log('[RankingAvancado] Valor recebido de dificuldade:', dificuldade, '| tipo:', typeof dificuldade);
-    try {
-      // Busca id_usuario e id_jogo
-      const userRes = await db.query('SELECT id FROM usuario WHERE nome = $1', [nome]);
-      const jogoRes = await db.query('SELECT id FROM jogo WHERE titulo = $1', [jogo]);
-      if (!userRes.rows.length || !jogoRes.rows.length) return res.status(400).json({ error: 'Usuário ou jogo não encontrado' });
-      const id_usuario = userRes.rows[0].id;
-      const id_jogo = jogoRes.rows[0].id;
-      // Verifica se já existe registro
-      let where = 'id_usuario = $1 AND id_jogo = $2 AND tipo = $3';
-      let params = [id_usuario, id_jogo, tipo];
-      let idx = 4;
-      if (dificuldade !== null) { where += ` AND dificuldade = $${idx++}`; params.push(dificuldade); }
-      else { where += ' AND dificuldade IS NULL'; }
-      const existe = await db.query(`SELECT id FROM ranking_avancado WHERE ${where}`, params);
-      if (existe.rows.length) {
-        // Atualiza se for melhor (maior valor ou menor tempo)
-        if (tipo === 'menor_tempo') {
-          const update = 'UPDATE ranking_avancado SET tempo = LEAST(tempo, $2), erros = $3 WHERE id = $1';
-          await db.query(update, [existe.rows[0].id, tempo, erros]);
-        } else if (tipo === 'mais_vitorias_dificuldade' || tipo === 'mais_vitorias_total') {
-          // Acumula vitórias por dificuldade ou total
-          const update = 'UPDATE ranking_avancado SET valor = valor + $2 WHERE id = $1';
-          await db.query(update, [existe.rows[0].id, valor]);
-        } else {
-          const update = 'UPDATE ranking_avancado SET valor = GREATEST(valor, $2) WHERE id = $1';
-          await db.query(update, [existe.rows[0].id, valor]);
-        }
-      } else {
-        // Insere novo
-        await db.query(
-          'INSERT INTO ranking_avancado (id_usuario, id_jogo, tipo, dificuldade, valor, tempo, erros) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-          [id_usuario, id_jogo, tipo, dificuldade, valor, tempo, erros]
-        );
-      }
-      res.json({ success: true });
-    } catch (err) {
-      console.error('[RankingAvancado] Erro ao adicionar/atualizar ranking:', err, '| dificuldade:', dificuldade, '| tipo:', typeof dificuldade);
-      res.status(500).json({ error: 'Erro ao adicionar/atualizar ranking' });
-    }
+    return res.status(410).json({ error: 'Endpoint removido. Rankings agora são calculados a partir de partidas. Use /api/partida para registrar partidas.' });
   }
 };

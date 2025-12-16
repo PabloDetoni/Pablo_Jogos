@@ -1,0 +1,105 @@
+Resumo do projeto - Backend do site de jogos
+
+1) Ideia principal
+- Site de jogos online para aprendizado. Backend em Node.js + Express + PostgreSQL.
+- Objetivo didático: implementar 4 tipos de CRUDs para praticar modelagem relacional:
+  A) CRUDs sem dependência: Jogo, Usuario
+  B) CRUD 1:N: Perfil (um Usuario pode ter muitos Perfis)
+  C) CRUD N:M com atributos: Partida / Estatísticas (ligação Usuario <-> Jogo)
+  D) CRUD 1:1: Admin (apenas promove/rebaixa usuarios; exclusão de admin só aqui)
+
+2) Estrutura proposta do backend (seguindo o modelo de referência)
+- backend/
+  - server.js            -> inicializa servidor, middlewares e registra rotas
+  - database.js          -> Pool pg e helpers query/transaction/testConnection
+  - routes/              -> arquivos de rotas (jogoRoutes.js, usuarioRoutes.js, perfilRoutes.js, partidaRoutes.js, adminRoutes.js)
+  - controllers/         -> controllers correspondentes (usam database.query)
+  - models/ (opcional)   -> camada com funções DB reutilizáveis (getAll, create, getById...)
+
+3) Modelo de dados (resumo SQL mínimo)
+- usuario
+  id_usuario SERIAL PRIMARY KEY
+  nome TEXT NOT NULL
+  email TEXT UNIQUE NOT NULL
+  senha TEXT
+  criado_em TIMESTAMP DEFAULT now()
+
+- jogo
+  id_jogo SERIAL PRIMARY KEY
+  titulo TEXT NOT NULL
+  genero TEXT
+  descricao TEXT
+  slug TEXT UNIQUE
+
+- perfil (1:N: usuario -> perfil)
+  id_perfil SERIAL PRIMARY KEY
+  usuario_id INTEGER NOT NULL REFERENCES usuario(id_usuario) ON DELETE CASCADE
+  display_name TEXT NOT NULL
+  avatar_url TEXT
+  tema TEXT DEFAULT 'claro'
+  configuracoes JSONB DEFAULT '{}' 
+  is_active BOOLEAN DEFAULT false
+  criado_em TIMESTAMP DEFAULT now()
+  -- não colocar UNIQUE(usuario_id) para permitir vários perfis
+
+- partida (N:M com atributos)
+  id_partida SERIAL PRIMARY KEY
+  usuario_id INTEGER NOT NULL REFERENCES usuario(id_usuario) ON DELETE CASCADE
+  jogo_id INTEGER NOT NULL REFERENCES jogo(id_jogo) ON DELETE CASCADE
+  pontuacao INTEGER
+  duracao_seg INTEGER
+  dados JSONB
+  criado_em TIMESTAMP DEFAULT now()
+
+- admin (1:1)
+  id_admin SERIAL PRIMARY KEY
+  usuario_id INTEGER NOT NULL UNIQUE REFERENCES usuario(id_usuario) ON DELETE CASCADE
+  nivel_permissao INTEGER DEFAULT 1
+  criado_em TIMESTAMP DEFAULT now()
+
+4) Rotas principais (padrão REST)
+- Usuario:   GET /usuario, POST /usuario, GET /usuario/:id, PUT /usuario/:id, DELETE /usuario/:id
+- Jogo:      GET /jogo, POST /jogo, GET /jogo/:id, PUT /jogo/:id, DELETE /jogo/:id
+- Perfil:    GET /usuario/:usuario_id/perfis, POST /usuario/:usuario_id/perfis, GET /perfil/:id, PUT /perfil/:id, DELETE /perfil/:id
+- Partida:   GET /partida, POST /partida, GET /partida/:id, PUT /partida/:id, DELETE /partida/:id
+             GET /usuario/:usuario_id/partidas, GET /jogo/:jogo_id/partidas
+- Admin:     GET /admin/:usuario_id, POST /admin/:usuario_id, PUT /admin/:usuario_id, DELETE /admin/:usuario_id
+
+5) Comportamento lógico do CRUD 1:N (Perfil) - por que 1:N
+- DB: perfil.usuario_id NÃO tem UNIQUE -> permite vários perfis por usuário.
+- API: criar novo perfil sempre insere; listar retorna array (vazio se nenhum).
+- Opcional: campo is_active e endpoint para ativar um perfil (em transaction marcar outros como false).
+- Use JSONB em configuracoes para armazenar preferências (tema, controles, idioma, etc.).
+
+6) Observações práticas / próximos passos
+- database.js atual já expõe query/transaction; usar essas funções nos controllers.
+- Validar entradas (id numérico, campos obrigatórios). Para aprendizado, validação manual é aceitável.
+- Para produção futura: mover credenciais para .env, usar hash de senha (bcrypt), adicionar helmet/cors e logger.
+- Posso gerar agora: scripts SQL para criar tabelas + arquivos routes/controllers scaffolding seguindo este plano e registrar rotas em server.js.
+
+Se estiver ok eu aplico as mudanças e crio os arquivos no backend. Depois conversamos sobre campos específicos do Perfil que você vai querer.
+
+---
+
+Resumo do backend
+
+1) Ideia principal
+- Backend do site de jogos online para aprendizado, utilizando Node.js, Express e PostgreSQL.
+- Implementação de 4 tipos de CRUDs para prática de modelagem relacional.
+
+2) Estrutura
+- backend/
+  - server.js
+  - database.js
+  - routes/
+  - controllers/
+  - models/ (opcional)
+
+3) Modelos
+- usuario, jogo, perfil, partida, admin
+
+4) Rotas principais
+- Usuario, Jogo, Perfil, Partida, Admin (padrão REST)
+
+5) Próximos passos
+- Aplicar mudanças, criar arquivos no backend, definir campos específicos do Perfil.

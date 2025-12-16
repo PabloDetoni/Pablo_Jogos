@@ -1,8 +1,9 @@
 // controllers/initializerController.js
-// Responsável por garantir dados iniciais (admin, jogos padrão) e fornecer auth (login/register)
+// Responsável por garantir dados iniciais (admin, jogos padrão, tipos de troféu)
 const Usuario = require('../models/usuarioModel');
 const Admin = require('../models/adminModel');
 const Jogo = require('../models/jogoModel');
+const TrophyType = require('../models/trophyTypeModel');
 
 // Valores padrão — ajuste conforme necessário
 const DEFAULT_ADMIN = {
@@ -11,6 +12,13 @@ const DEFAULT_ADMIN = {
   senha: process.env.DEFAULT_ADMIN_SENHA || 'admin123',
   nivel: Number(process.env.DEFAULT_ADMIN_NIVEL || 1)
 };
+
+// Tipos de troféu padrão
+const TROPHY_TYPES = [
+  { id: 1, chave: 'primeira_vitoria', titulo: 'Primeira Vitória', descricao: 'Conquista ao ganhar a primeira partida' },
+  { id: 2, chave: 'maratona', titulo: 'Maratona', descricao: 'X partidas jogadas' },
+  { id: 3, chave: 'velocidade', titulo: 'Velocidade', descricao: 'Melhor tempo em jogo' }
+];
 
 // Garante que o admin existe no banco (idempotente)
 async function ensureAdmin() {
@@ -62,10 +70,26 @@ async function ensureJogos() {
   }
 }
 
+// Garante tipos de troféu padrão
+async function ensureTrophyTypes() {
+  const { rows: existing } = await TrophyType.getAll();
+  for (const tt of TROPHY_TYPES) {
+    if (!existing.find(e => e.chave === tt.chave)) {
+      try {
+        await TrophyType.create({ id: tt.id, chave: tt.chave, titulo: tt.titulo, descricao: tt.descricao });
+        console.log(`Trophy type '${tt.titulo}' criado`);
+      } catch (err) {
+        console.error(`Erro ao criar trophy type '${tt.titulo}':`, err.message || err);
+      }
+    }
+  }
+}
+
 // Função de inicialização que garante todos os dados necessários
 async function init() {
   await ensureAdmin();
   await ensureJogos();
+  await ensureTrophyTypes();
 }
 
 // Login (mantido para compatibilidade com rotas atuais)
@@ -95,6 +119,7 @@ module.exports = {
   init,
   ensureAdmin,
   ensureJogos,
+  ensureTrophyTypes,
   login,
   register
 };

@@ -1,5 +1,6 @@
 // --- BLOQUEIO DINÂMICO DE JOGO (admin) --- //
-const GAME_NAME = 'Jogo da Velha';
+// Use the exact jogo.titulo from the DB to ensure /game/status and /api/partida match
+const GAME_NAME = 'Velha';
 function checkGameBlocked() {
   fetch('http://localhost:3001/game/status', {
     method: 'POST',
@@ -102,13 +103,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Jogada para humano ou IA
-function jogar(pos, forcado = false) {
+async function jogar(pos, forcado = false) {
   if (tabuleiro[pos] !== '' || jogoEncerrado) return;
   if (modoIA && jogador === 'O' && !forcado) return;
 
   tabuleiro[pos] = jogador;
   criarTabuleiro();
-  verificarVencedor();
+  await verificarVencedor();
 
   if (jogoEncerrado) return;
 
@@ -121,7 +122,7 @@ function jogar(pos, forcado = false) {
 }
 
 // IA joga
-function jogadaIA() {
+async function jogadaIA() {
   let posicao;
   if (dificuldade === 'facil') {
     // random
@@ -135,7 +136,7 @@ function jogadaIA() {
     posicao = jogadaMedia();
 
   }
-  if (posicao !== undefined) jogar(posicao, true);
+  if (posicao !== undefined) await jogar(posicao, true);
 }
 
 // Nova função para o nível Médio
@@ -179,7 +180,7 @@ function checarVencedorParaMinimax(board) {
 }
 
 // Verifica vencedor ou empate
-function verificarVencedor() {
+async function verificarVencedor() {
   const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   for (const [a,b,c] of wins) {
     if (tabuleiro[a] && tabuleiro[a] === tabuleiro[b] && tabuleiro[a] === tabuleiro[c]) {
@@ -192,8 +193,12 @@ function verificarVencedor() {
         else endGameSession('velha', 'derrota');
       }
 
-      // Só registra no ranking se for contra IA
-      if (modoIA) registrarPontuacaoRankingVelha(vencedor);
+      // Registrar partida sempre (antes era somente se modoIA)
+      try {
+        await registrarPontuacaoRankingVelha(vencedor);
+      } catch (e) {
+        console.warn('Falha ao registrar partida da Velha:', e);
+      }
       return;
     }
   }
@@ -201,12 +206,16 @@ function verificarVencedor() {
     jogoEncerrado = true;
     atualizarMensagem('Empate!');
     if (typeof endGameSession === "function") endGameSession('velha', 'empate');
-    // Só registra no ranking se for contra IA
-    if (modoIA) registrarPontuacaoRankingVelha('empate');
+    // Registrar partida mesmo em empate
+    try {
+      await registrarPontuacaoRankingVelha('empate');
+    } catch (e) {
+      console.warn('Falha ao registrar partida da Velha:', e);
+    }
   }
 }
 
-// Função para registrar no ranking avançado (três rankings distintos)
+// Função para grep -nR --line-number -E "api/partida" frontend/js || trueregistrar no ranking avançado (três rankings distintos)
 async function registrarPontuacaoRankingVelha(resultado) {
   // Pega o usuário antes de qualquer uso
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
@@ -215,57 +224,20 @@ async function registrarPontuacaoRankingVelha(resultado) {
   // Padroniza resultado para API
   let resultadoApi = resultado === 'X' ? 'vitoria' : (resultado === 'empate' ? 'empate' : 'derrota');
   // Salva partida real para estatísticas (backend)
-  await fetch('http://localhost:3001/api/partida', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jogo: 'Jogo da Velha',
+  try {
+    await window.enviarPartidaSeguro({
+      jogo: 'Velha',
       resultado: resultadoApi,
-      nome: user.nome,
-      dificuldade: dificuldadeLabel
-    })
-  });
-  // Sequência de vitórias consecutivas (por dificuldade)
-  let seqKey = `velha_seq_vitoria_${user.nome}_${dificuldadeLabel}`;
-  let seqAtual = Number(localStorage.getItem(seqKey)) || 0;
-  let totalKey = `velha_total_vitorias_${user.nome}`;
-  let totalVitorias = Number(localStorage.getItem(totalKey)) || 0;
-  if (resultado === 'X') {
-    // Acumula total de vitórias independente da dificuldade
-    totalVitorias += 1;
-    localStorage.setItem(totalKey, totalVitorias);
-    await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
-      tipo: "mais_vitorias_total",
-      dificuldade: null,
-      valor: totalVitorias
+      usuario: user.nome,
+      dificuldade: dificuldadeLabel,
+      data: new Date().toISOString()
     });
-    // Ranking por dificuldade
-    if (dificuldadeLabel) {
-      await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
-        tipo: "mais_vitorias_dificuldade",
-        dificuldade: dificuldadeLabel,
-        valor: 1
-      });
-    }
-    // Ranking por sequência de vitórias consecutivas por dificuldade
-    seqAtual += 1;
-    // Só atualiza o ranking se a sequência for maior que a anterior
-    let seqMaxKey = `velha_seq_max_${user.nome}_${dificuldadeLabel}`;
-    let seqMax = Number(localStorage.getItem(seqMaxKey)) || 0;
-    if (seqAtual > seqMax && dificuldadeLabel) {
-      localStorage.setItem(seqMaxKey, seqAtual);
-      await window.adicionarPontuacaoRanking("Jogo da Velha", user.nome, {
-        tipo: "mais_vitorias_consecutivas",
-        dificuldade: dificuldadeLabel,
-        valor: seqAtual
-      });
-    }
-  } else {
-    // Zera sequência se perder ou empatar
-    seqAtual = 0;
+  } catch (e) {
+    console.warn('Erro ao enviar partida da Velha para /api/partida:', e);
   }
-  localStorage.setItem(seqKey, seqAtual);
+  // Rankings agora são calculados a partir da tabela partida — não chamar adicionarPontuacaoRanking aqui.
 }
+
 // Helper para atualizar ranking acumulando vitórias
 async function atualizarRankingAdvanced({ jogo, tipo, dificuldade, nome }) {
   // Primeiro, busca o valor atual do ranking para este jogador/tipo/dificuldade

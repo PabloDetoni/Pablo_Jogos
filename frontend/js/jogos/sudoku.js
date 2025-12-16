@@ -500,44 +500,18 @@ const sudoku = (() => {
       dificuldadeAtual === "mtDificil" ? "Muito Difícil" : "";
 
     // Salva partida real para estatísticas
-    await fetch('http://localhost:3001/api/partida', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    try {
+      await window.enviarPartidaSeguro({
         jogo: 'Sudoku',
         resultado: vitoria ? 'vitoria' : 'derrota',
-        nome: user.nome,
+        usuario: user.nome,
         tempo: typeof timer === 'number' ? timer : null,
         erros: erros,
-        dificuldade: dificuldadeLabel
-      })
-    });
-    if (vitoria) {
-      // 1. Ranking geral (mais vitórias totais)
-      await window.adicionarPontuacaoRanking("Sudoku", user.nome, {
-        tipo: "mais_vitorias_total",
-        dificuldade: "",
-        valor: 1
-      });
-
-      // 2. Ranking por dificuldade (mais vitórias por dificuldade)
-      await window.adicionarPontuacaoRanking("Sudoku", user.nome, {
-        tipo: "mais_vitorias_dificuldade",
         dificuldade: dificuldadeLabel,
-        valor: 1
+        data: new Date().toISOString()
       });
-
-      // 3. Ranking menor tempo por dificuldade (só envia se tempo > 0)
-      if (typeof timer === 'number' && timer > 0) {
-        await window.adicionarPontuacaoRanking("Sudoku", user.nome, {
-          tipo: "menor_tempo",
-          dificuldade: dificuldadeLabel,
-          tempo: timer,
-          erros: erros,
-          valor: 1
-        });
-      }
-    }
+    } catch(e) { console.warn('Erro ao enviar partida do Sudoku para /api/partida:', e); }
+    // Rankings agora são calculados a partir da tabela partida — não chamar adicionarPontuacaoRanking aqui.
   }
 
 

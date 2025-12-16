@@ -244,45 +244,16 @@ async function registrarPontuacaoRankingMemoria() {
                          dificuldadeAtual === 'medio' ? 'Médio' : 'Difícil';
 
   // Salva partida real para estatísticas (painel admin)
-  await fetch('http://localhost:3001/api/partida', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  try {
+    await window.enviarPartidaSeguro({
       jogo: 'Memória',
       resultado: 'vitoria',
-      nome: user.nome,
+      usuario: user.nome,
       tempo: typeof timerSec === 'number' ? timerSec : null,
       dificuldade: dificuldadeLabel,
-      erros: errorsCount
-    })
-  });
-
-  // 1. Ranking geral (mais vitórias totais)
-  await window.adicionarPontuacaoRanking("Memória", user.nome, {
-    tipo: "mais_vitorias_total",
-    dificuldade: "",
-    valor: 1
-  });
-
-  // 2. Ranking por dificuldade (mais vitórias por dificuldade)
-  await window.adicionarPontuacaoRanking("Memória", user.nome, {
-    tipo: "mais_vitorias_dificuldade",
-    dificuldade: dificuldadeLabel,
-    valor: 1
-  });
-
-  // 3. Ranking menor tempo por dificuldade (só envia se tempo > 0)
-  if (typeof timerSec === 'number' && timerSec > 0) {
-    await window.adicionarPontuacaoRanking("Memória", user.nome, {
-      tipo: "menor_tempo",
-      dificuldade: dificuldadeLabel,
-      tempo: timerSec,
       erros: errorsCount,
-      valor: 1
+      data: new Date().toISOString()
     });
-  }
+  } catch(e) { console.warn('Erro ao enviar partida da Memória para /api/partida:', e); }
+  // Rankings agora são calculados a partir da tabela partida — não chamar adicionarPontuacaoRanking aqui.
 }
-
-// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
-// Exemplo:
-// adicionarPontuacaoRanking('Memória', user.nome, { tipo: 'mais_vitorias_total', valor: 1, dificuldade: dificuldadeSelecionada, tempo: tempoFinal, erros: errosCometidos });

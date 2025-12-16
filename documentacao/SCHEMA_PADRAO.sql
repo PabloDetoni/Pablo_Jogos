@@ -1,97 +1,118 @@
--- Tabela de Usuários
+-- SCHEMA_PADRAO.sql
+-- Schema completo mínimo solicitado: usuario, jogo, admin, trophy_type, trophy, partida, ranking_avancado
+-- Use este script para (re)criar as tabelas principais do sistema.
+
+-- Usuário
+DROP TABLE IF EXISTS usuario CASCADE;
 CREATE TABLE usuario (
   id SERIAL PRIMARY KEY,
-  nome VARCHAR(20) NOT NULL,
-  email VARCHAR(40) NOT NULL UNIQUE,
-  senha VARCHAR(20) NOT NULL CHECK (char_length(senha) >= 8 AND char_length(senha) <= 20),
-  status VARCHAR(5) NOT NULL CHECK (status IN ('admin', 'user')),
-  criado_em DATE DEFAULT CURRENT_DATE
+  nome VARCHAR(200) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  senha VARCHAR(255) NOT NULL,
+  status VARCHAR(10) NOT NULL DEFAULT 'user', -- 'user' | 'admin'
+  criado_em TIMESTAMP DEFAULT NOW(),
+  atualizado_em TIMESTAMP DEFAULT NOW()
 );
 
--- Tabela de Admins (1:1 com usuário)
-CREATE TABLE admin (
-  id_usuario INTEGER PRIMARY KEY REFERENCES usuario(id),
-  nivel_permissao INTEGER NOT NULL DEFAULT 1
-);
-
--- Tabela de Jogos
+-- Jogo
+DROP TABLE IF EXISTS jogo CASCADE;
 CREATE TABLE jogo (
   id SERIAL PRIMARY KEY,
-  titulo VARCHAR(100) NOT NULL,
-  genero VARCHAR(50),
+  titulo VARCHAR(200) NOT NULL,
+  genero VARCHAR(100),
   descricao TEXT,
-  slug VARCHAR(100) UNIQUE NOT NULL
+  slug VARCHAR(200) UNIQUE NOT NULL,
+  criado_em TIMESTAMP DEFAULT NOW(),
+  atualizado_em TIMESTAMP DEFAULT NOW()
 );
 
--- Exemplo de inserção de jogos padrão
-INSERT INTO jogo (titulo, genero, descricao, slug) VALUES
-('PPT', 'Clássico', 'Pedra Papel Tesoura', 'ppt'),
-('Forca', 'Palavras', 'Jogo da Forca', 'forca'),
-('2048', 'Puzzle', 'Jogo 2048', '2048'),
-('Memória', 'Puzzle', 'Jogo da Memória', 'memoria'),
-('Sudoku', 'Puzzle', 'Jogo Sudoku', 'sudoku'),
-('Pong', 'Arcade', 'Jogo Pong', 'pong'),
-('Campo Minado', 'Puzzle', 'Campo Minado', 'campo-minado'),
-('Velha', 'Clássico', 'Jogo da Velha', 'velha');
+-- Admin (1:1)
+DROP TABLE IF EXISTS admin CASCADE;
+CREATE TABLE admin (
+  id_usuario INTEGER PRIMARY KEY REFERENCES usuario(id) ON DELETE CASCADE,
+  nivel_permissao INTEGER NOT NULL DEFAULT 1,
+  criado_em TIMESTAMP DEFAULT NOW()
+);
 
--- Tabela de Ranking Avançado
-CREATE TABLE ranking_avancado (
+-- Tipos de Troféu (catálogo)
+DROP TABLE IF EXISTS trophy_type CASCADE;
+CREATE TABLE trophy_type (
   id SERIAL PRIMARY KEY,
-  id_usuario INTEGER NOT NULL REFERENCES usuario(id),
-  id_jogo INTEGER NOT NULL REFERENCES jogo(id),
-  tipo VARCHAR(40) NOT NULL,      -- Ex: 'mais_vitorias_total', 'menor_tempo', etc
-  dificuldade VARCHAR(20),        -- Ex: 'Fácil', 'Médio', etc (pode ser NULL)
-  valor INTEGER,                  -- Pontuação, vitórias, sequência, etc
-  tempo INTEGER,                  -- Para rankings de menor tempo (em segundos)
-  erros INTEGER,                  -- Para rankings que usam erros
-  created_at TIMESTAMP DEFAULT NOW(), -- Data/hora de criação do registro
-  atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Para rastrear alterações
+  chave VARCHAR(80) UNIQUE NOT NULL,
+  titulo VARCHAR(200) NOT NULL,
+  descricao TEXT,
+  dados JSONB DEFAULT '{}'::jsonb,
+  criado_em TIMESTAMP DEFAULT NOW()
 );
 
--- Tabela de Partidas
+-- Instâncias de Troféu (cada troféu pertence a um usuário) 1:N (usuario -> trophy)
+DROP TABLE IF EXISTS trophy CASCADE;
+CREATE TABLE trophy (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES usuario(id) ON DELETE CASCADE,
+  trophy_type_id INTEGER REFERENCES trophy_type(id) ON DELETE SET NULL,
+  granted_at TIMESTAMP DEFAULT NOW(),
+  dados JSONB DEFAULT '{}'::jsonb
+);
+CREATE INDEX IF NOT EXISTS idx_trophy_usuario ON trophy (usuario_id);
+CREATE INDEX IF NOT EXISTS idx_trophy_type ON trophy (trophy_type_id);
+
+-- Partidas (N:M com atributos)
+DROP TABLE IF EXISTS partida CASCADE;
 CREATE TABLE partida (
   id SERIAL PRIMARY KEY,
-  id_usuario INTEGER REFERENCES usuario(id),
-  id_jogo INTEGER REFERENCES jogo(id),
-  resultado VARCHAR(20),
+  id_usuario INTEGER REFERENCES usuario(id) ON DELETE SET NULL,
+  id_jogo INTEGER REFERENCES jogo(id) ON DELETE SET NULL,
+  resultado VARCHAR(50),
   dificuldade VARCHAR(50),
-  tempo INTEGER,
-  pontucao INTEGER,
+  tempo INTEGER,         -- em segundos (se aplicável)
+  pontuacao INTEGER,     -- score (se aplicável)
   erros INTEGER,
-  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Para rastrear alterações
-  excluido BOOLEAN DEFAULT FALSE -- Para marcação lógica de exclusão
+  dados JSONB DEFAULT '{}'::jsonb,
+  data TIMESTAMP DEFAULT NOW(),
+  atualizado_em TIMESTAMP DEFAULT NOW(),
+  excluido BOOLEAN DEFAULT FALSE
 );
+CREATE INDEX IF NOT EXISTS idx_partida_usuario ON partida (id_usuario);
+CREATE INDEX IF NOT EXISTS idx_partida_jogo ON partida (id_jogo);
+CREATE INDEX IF NOT EXISTS idx_partida_data ON partida (data);
 
-CREATE INDEX idx_ranking_jogo_tipo_dif ON ranking_avancado (id_jogo, tipo, dificuldade);
-CREATE INDEX idx_ranking_usuario ON ranking_avancado (id_usuario);
+-- ===============================================
+-- TROFÉUS - Tabelas adicionais para o sistema
+-- ===============================================
 
--- Criar triggers para atualizar automaticamente o ranking ao alterar/excluir partidas
-CREATE OR REPLACE FUNCTION atualizar_ranking()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Lógica para recalcular o ranking com base nas alterações na tabela de partidas
-  -- Exemplo: Atualizar o ranking com a melhor pontuação ou menor tempo
-  UPDATE ranking_avancado
-  SET valor = (
-    SELECT MAX(pontucao)
-    FROM partida
-    WHERE partida.id_jogo = NEW.id_jogo AND partida.id_usuario = NEW.id_usuario AND excluido = FALSE
-  ),
-  tempo = (
-    SELECT MIN(tempo)
-    FROM partida
-    WHERE partida.id_jogo = NEW.id_jogo AND partida.id_usuario = NEW.id_usuario AND excluido = FALSE
-  ),
-  atualizado_em = NOW()
-  WHERE id_jogo = NEW.id_jogo AND id_usuario = NEW.id_usuario;
+-- Garante que trophy_type tem os campos extras para cor e ícone no JSONB dados
+-- Exemplo de inserção:
+-- INSERT INTO trophy_type (chave, titulo, descricao, dados) 
+-- VALUES ('mestre_velha', 'Mestre da Velha', 'Dominou o Jogo da Velha', '{"cor_hex": "#ffd700", "icone": "👑"}');
 
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Garante que trophy tem granted_at como padrão para ordenação
+-- A query no controller já retorna os campos necessários:
+-- usuario_nome, usuario_status, trofeu_nome, trofeu_cor, trofeu_icone, data_atribuicao
 
--- Trigger para atualizar ranking ao inserir/alterar/excluir partidas
-CREATE TRIGGER trigger_atualizar_ranking
-AFTER INSERT OR UPDATE OR DELETE ON partida
-FOR EACH ROW
-EXECUTE FUNCTION atualizar_ranking();
+-- ===============================================
+-- Exemplos de inserção de tipos de troféu
+-- ===============================================
+-- INSERT INTO trophy_type (chave, titulo, descricao, dados) VALUES
+--   ('lenda_2048', 'Lenda do 2048', 'Alcançou pontuação épica no 2048', '{"cor_hex": "#ff6b6b", "icone": "🏆"}'),
+--   ('mestre_memoria', 'Mestre da Memória', 'Completou memória em tempo recorde', '{"cor_hex": "#4ecdc4", "icone": "🧠"}'),
+--   ('rei_pong', 'Rei do Pong', 'Invicto no Pong por 10 partidas', '{"cor_hex": "#45b7d1", "icone": "👑"}'),
+--   ('velocista', 'Velocista', 'Menor tempo no Campo Minado difícil', '{"cor_hex": "#96ceb4", "icone": "⚡"}');
+
+-- ===============================================
+-- Exemplo de atribuição de troféu a um usuário
+-- ===============================================
+-- INSERT INTO trophy (usuario_id, trophy_type_id, granted_at)
+-- SELECT u.id, tt.id, NOW()
+-- FROM usuario u, trophy_type tt
+-- WHERE u.nome = 'João' AND tt.chave = 'lenda_2048';
+
+-- Nota: tabela `ranking_avancado` removida por decisão do projeto.
+-- Raciocínio: os rankings serão calculados a partir das consultas sobre a tabela `partida` no momento da visualização.
+-- Se futuramente for necessária otimização, considere criar uma MATERIALIZED VIEW ou uma tabela de cache
+-- atualizada por job ou por lógica no backend. Posso gerar esse artefato quando pedir.
+
+-- Observações:
+-- 1) Este script cria as tabelas principais solicitadas. Execute em um banco vazio ou faça backup antes de aplicar.
+-- 2) Funções/triggers para recalcular ranking automaticamente não estão incluídas aqui; posso gerar quando pedir.
+-- 3) Ajuste permissões/usuários conforme seu ambiente local.

@@ -200,32 +200,19 @@ function reiniciarJogo() {
 
 // Função para registrar a pontuação no ranking ao final do jogo
 async function registrarPontuacaoRanking2048() {
-  // Salva partida real para estatísticas
   const user = JSON.parse(sessionStorage.getItem("user")) || { nome: "Convidado" };
-  await fetch('http://localhost:3001/api/partida', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  // Salva partida real para estatísticas
+  try {
+    await window.enviarPartidaSeguro({
       jogo: '2048',
-      resultado: 'vitoria',
-      nome: user.nome,
-      pontuacao: typeof score === 'number' ? score : null
-    })
-  });
-  let tipo = "pontuacao";
-  let valor = score;
-
-  // Atualiza ranking usando função global
-  await window.adicionarPontuacaoRanking("2048", user.nome, {
-    tipo,
-    dificuldade: "",
-    valor
-  });
+      resultado: null,
+      usuario: user.nome,
+      pontuacao: typeof score === 'number' ? score : null,
+      data: new Date().toISOString()
+    });
+  } catch(e) { console.warn('Erro ao enviar partida do 2048 para /api/partida:', e); }
+  // Rankings agora são calculados a partir da tabela partida — não chamar adicionarPontuacaoRanking aqui.
 }
-
-// Chame esta função ao finalizar o jogo para registrar a pontuação no ranking
-// Exemplo:
-// adicionarPontuacaoRanking('2048', user.nome, { tipo: 'pontuacao', valor: pontuacaoFinal, dificuldade: null });
 
 document.addEventListener('keydown', function(e) {
   if (gameOver) return;

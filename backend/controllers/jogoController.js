@@ -49,7 +49,7 @@ module.exports = {
     async excluir(req, res) {
         const { id } = req.params;
         // Lista de slugs dos jogos padrão
-        const jogosPadrao = ['ppt', 'forca', '2048', 'memoria', 'sudoku', 'pong', 'campo-minado'];
+        const jogosPadrao = ['ppt', 'forca', '2048', 'memoria', 'sudoku', 'pong', 'campo_minado'];
         try {
             // Busca o jogo pelo id
             const { rows } = await Jogo.getById(id);
