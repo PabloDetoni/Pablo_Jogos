@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Visualização</title>
+  <title>Visualização - Admin</title>
   <link rel="stylesheet" href="/frontend/css/estrutura/style.css" />
   <link rel="stylesheet" href="/frontend/css/estrutura/admin.css" />
   <link rel="stylesheet" href="/frontend/css/estrutura/admin-visualizacao.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/frontend/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 </head>
 <body>
   <header class="site-header">
     <div class="page-title-bar">
-      <h1 class="page-title-fixed">Visualização</h1>
+      <h1 class="page-title-fixed">Visualização Administrativa</h1>
     </div>
   </header>
   <div class="admin-layout">
@@ -26,68 +26,122 @@
       </ul>
     </nav>
     <main class="admin-main-content">
+      
+      <!-- ==================== USUÁRIOS ==================== -->
       <section>
         <h2><i class="fa-solid fa-users"></i> Usuários
           <button class="btn-toggle" id="toggle-usuarios"><i class="fa-solid fa-plus"></i></button>
         </h2>
         <div id="visualizacao-usuarios" style="display:none"></div>
       </section>
+      
+      <!-- ==================== JOGOS ==================== -->
       <section>
         <h2><i class="fa-solid fa-gamepad"></i> Jogos
           <button class="btn-toggle" id="toggle-jogos"><i class="fa-solid fa-plus"></i></button>
         </h2>
         <div id="visualizacao-jogos" style="display:none"></div>
       </section>
+      
+      <!-- ==================== TROFÉUS ==================== -->
+      <section>
+        <h2><i class="fa-solid fa-trophy"></i> Troféus Concedidos
+          <button class="btn-toggle" id="toggle-trofeus"><i class="fa-solid fa-plus"></i></button>
+        </h2>
+        <div id="visualizacao-trofeus" style="display:none">
+          <form id="filtros-trofeus" class="filtros-admin" onsubmit="return false;">
+            <label>Usuário:
+              <select id="filtro-trofeu-usuario">
+                <option value="">Todos</option>
+              </select>
+            </label>
+            <label>Tipo de Troféu:
+              <select id="filtro-trofeu-tipo">
+                <option value="">Todos</option>
+              </select>
+            </label>
+            <button id="btn-filtrar-trofeus" type="button"><i class="fa-solid fa-filter"></i> Filtrar</button>
+          </form>
+          <div id="container-tabela-trofeus"></div>
+        </div>
+      </section>
+      
+      <!-- ==================== PARTIDAS DETALHADAS ==================== -->
+      <section>
+        <h2><i class="fa-solid fa-list-check"></i> Partidas Detalhadas
+          <button class="btn-toggle" id="toggle-partidas"><i class="fa-solid fa-plus"></i></button>
+        </h2>
+        <div id="visualizacao-partidas" style="display:none">
+          <form id="filtros-partidas" class="filtros-admin" onsubmit="return false;">
+            <label>Usuário:
+              <select id="filtro-partida-usuario">
+                <option value="">Todos</option>
+              </select>
+            </label>
+            <label>Jogo:
+              <select id="filtro-partida-jogo">
+                <option value="">Todos</option>
+              </select>
+            </label>
+            <label>Dificuldade:
+              <select id="filtro-partida-dificuldade">
+                <option value="">Todas</option>
+              </select>
+            </label>
+            <label>Resultado:
+              <select id="filtro-partida-resultado">
+                <option value="">Todos</option>
+                <option value="vitoria">Vitória</option>
+                <option value="derrota">Derrota</option>
+                <option value="empate">Empate</option>
+              </select>
+            </label>
+            <label>Data Inicial:
+              <input type="date" id="filtro-partida-data-inicial">
+            </label>
+            <label>Data Final:
+              <input type="date" id="filtro-partida-data-final">
+            </label>
+            <label>Exibir:
+              <select id="filtro-partida-limite">
+                <option value="50">50 partidas</option>
+                <option value="100">100 partidas</option>
+                <option value="200">200 partidas</option>
+                <option value="500">500 partidas</option>
+                <option value="1000">1000 partidas</option>
+              </select>
+            </label>
+            <button id="btn-filtrar-partidas" type="button"><i class="fa-solid fa-filter"></i> Filtrar</button>
+          </form>
+          <div id="partidas-info" class="info-box"></div>
+          <div id="container-tabela-partidas"></div>
+        </div>
+      </section>
+      
+      <!-- ==================== RANKING ==================== -->
       <section>
         <h2><i class="fa-solid fa-ranking-star"></i> Ranking
           <button class="btn-toggle" id="toggle-rankings"><i class="fa-solid fa-plus"></i></button>
         </h2>
-        <div id="visualizacao-rankings" style="display:none"></div>
-      </section>
-      <section>
-        <h2><i class="fa-solid fa-star"></i> Ranking Avançado
-          <button class="btn-toggle" id="toggle-rankings-avancados"><i class="fa-solid fa-plus"></i></button>
-        </h2>
-        <div id="visualizacao-rankings-avancados" style="display:none">
-          <form id="filtros-ranking-avancado" class="filtros-admin" onsubmit="return false;">
+        <div id="visualizacao-rankings" style="display:none">
+          <form id="filtros-ranking" class="filtros-admin" onsubmit="return false;">
             <label>Jogo:
-              <select id="filtro-jogo"></select>
+              <select id="filtro-ranking-jogo"></select>
             </label>
-            <label>Tipo Ranking:
-              <select id="filtro-tipo"></select>
+            <label>Tipo de Ranking:
+              <select id="filtro-ranking-tipo"></select>
             </label>
-            <button id="btn-filtros-avancados" type="button" style="margin-left:16px;"><i class="fa-solid fa-sliders"></i> Filtros Avançados</button>
+            <label>Dificuldade:
+              <select id="filtro-ranking-dificuldade">
+                <option value="">Todas</option>
+              </select>
+            </label>
+            <button id="btn-filtrar-ranking" type="button"><i class="fa-solid fa-filter"></i> Filtrar</button>
           </form>
           <div id="container-tabela-ranking"></div>
-          <!-- Modal de filtros avançados -->
-          <div id="modal-filtros-avancados" class="modal-filtros" style="display:none;">
-            <div class="modal-filtros-content">
-              <span class="close-modal-filtros" id="close-modal-filtros">&times;</span>
-              <h3>Filtros Avançados</h3>
-              <label>Dificuldade:
-                <select id="filtro-dificuldade"></select>
-              </label>
-              <label>Usuário:
-                <input type="text" id="filtro-usuario" placeholder="Nome ou ID">
-              </label>
-              <label>Status:
-                <select id="filtro-status">
-                  <option value="">Todos</option>
-                  <option value="ativo">Ativo</option>
-                  <option value="bloqueado">Bloqueado</option>
-                </select>
-              </label>
-              <label>Data Inicial:
-                <input type="date" id="filtro-data-inicial">
-              </label>
-              <label>Data Final:
-                <input type="date" id="filtro-data-final">
-              </label>
-              <button id="btn-aplicar-filtros-avancados" type="button"><i class="fa-solid fa-filter"></i> Aplicar Filtros</button>
-            </div>
-          </div>
         </div>
       </section>
+      
     </main>
   </div>
   <script src="/frontend/js/estrutura/admin-visualizacao.js"></script>

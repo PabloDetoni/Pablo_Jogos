@@ -1,35 +1,23 @@
-// rankings.js - Sistema de Rankings completo
+// rankings.js - Sistema de Rankings (Página pública)
+// Exibe apenas: Ranking + Troféus
 // Fonte única: tabela partida via GET /api/partida
-// Suporte: usuários bloqueados, troféus administrativos, múltiplos tipos de ranking
 
 const API_BASE = window.API_URL || 'http://localhost:3001';
 
-// Cache de partidas (evita múltiplas requisições)
+// ==================== CACHE ====================
 let partidasCache = null;
 let partidasCacheTime = 0;
-const CACHE_TTL = 30000; // 30 segundos
-
-// Cache de usuários (para status bloqueado)
+const CACHE_TTL = 30000;
 let usuariosCache = null;
-
-// ==================== INICIALIZAÇÃO ====================
-document.addEventListener('DOMContentLoaded', async () => {
-  // Verifica bloqueio do usuário atual
-  if (typeof checkUserBlocked === 'function') await checkUserBlocked();
-  if (typeof startBlockedUserPolling === 'function') startBlockedUserPolling();
-  
-  // Só inicializa rankings se os elementos existem
-  if (document.getElementById('jogo-select') && document.getElementById('tipo-ranking')) {
-    await inicializarRankings();
-  }
-});
 
 // ==================== CONFIGURAÇÃO DOS JOGOS ====================
 const jogosRanking = [
   {
-    chave: "Jogo da Velha", nome: "Jogo da Velha",
+    chave: "Jogo da Velha",
+    nome: "Jogo da Velha",
     aliases: ["velha", "jogo da velha", "tic tac toe"],
     dificuldades: ["Fácil", "Médio"],
+    schema: { required: ['resultado'] },
     tipos: [
       { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
@@ -37,18 +25,22 @@ const jogosRanking = [
     ]
   },
   {
-    chave: "PPT", nome: "Pedra Papel Tesoura",
-    aliases: ["ppt", "pedra papel tesoura", "pedra, papel, tesoura"],
+    chave: "PPT",
+    nome: "Pedra Papel Tesoura",
+    aliases: ["ppt", "pedra papel tesoura"],
     dificuldades: [],
+    schema: { required: ['resultado'] },
     tipos: [
       { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "mais_vitorias_consecutivas", label: "Mais vitórias consecutivas", colunas: ["Sequência"] }
     ]
   },
   {
-    chave: "Forca", nome: "Forca",
+    chave: "Forca",
+    nome: "Forca",
     aliases: ["forca", "hangman"],
     dificuldades: ["Fácil", "Médio", "Difícil"],
+    schema: { required: ['resultado'] },
     tipos: [
       { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
@@ -56,17 +48,21 @@ const jogosRanking = [
     ]
   },
   {
-    chave: "2048", nome: "2048",
+    chave: "2048",
+    nome: "2048",
     aliases: ["2048"],
     dificuldades: [],
+    schema: { required: ['pontuacao'] },
     tipos: [
       { chave: "pontuacao", label: "Maior pontuação", colunas: ["Pontuação"] }
     ]
   },
   {
-    chave: "Memória", nome: "Memória",
+    chave: "Memória",
+    nome: "Memória",
     aliases: ["memoria", "memória", "memory"],
     dificuldades: ["Fácil", "Médio", "Difícil"],
+    schema: { required: ['resultado'] },
     tipos: [
       { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
@@ -74,9 +70,11 @@ const jogosRanking = [
     ]
   },
   {
-    chave: "Sudoku", nome: "Sudoku",
+    chave: "Sudoku",
+    nome: "Sudoku",
     aliases: ["sudoku"],
     dificuldades: ["Fácil", "Médio", "Difícil", "Muito Difícil"],
+    schema: { required: ['resultado', 'tempo'] },
     tipos: [
       { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
@@ -84,18 +82,22 @@ const jogosRanking = [
     ]
   },
   {
-    chave: "Pong", nome: "Pong",
+    chave: "Pong",
+    nome: "Pong",
     aliases: ["pong"],
     dificuldades: ["Fácil", "Médio", "Difícil"],
+    schema: { required: ['resultado'] },
     tipos: [
       { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] }
     ]
   },
   {
-    chave: "Campo Minado", nome: "Campo Minado",
-    aliases: ["campo minado", "campo_minado", "minesweeper"],
+    chave: "Campo Minado",
+    nome: "Campo Minado",
+    aliases: ["campo minado", "minesweeper"],
     dificuldades: ["Fácil", "Médio", "Difícil"],
+    schema: { required: ['resultado'] },
     tipos: [
       { chave: "mais_vitorias_total", label: "Mais vitórias (Total)", colunas: ["Vitórias"] },
       { chave: "mais_vitorias_dificuldade", label: "Mais vitórias (Por dificuldade)", porDificuldade: true, colunas: ["Vitórias"] },
@@ -104,45 +106,48 @@ const jogosRanking = [
   }
 ];
 
-let availableGamesList = jogosRanking;
+// ==================== INICIALIZAÇÃO ====================
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('[Rankings] Inicializando...');
+  
+  if (typeof checkUserBlocked === 'function') await checkUserBlocked();
+  if (typeof startBlockedUserPolling === 'function') startBlockedUserPolling();
+  
+  await inicializarRankings();
+  await carregarTrofeus();
+});
 
-// ==================== HELPERS DE NORMALIZAÇÃO ====================
+// ==================== HELPERS ====================
 function normalizeString(s) {
   if (!s && s !== 0) return '';
   return s.toString().toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]/g, '')
-    .trim();
+    .replace(/[^a-z0-9]/g, '').trim();
 }
 
 function matchJogo(jogoConfig, titulo) {
   if (!titulo) return false;
   const tituloNorm = normalizeString(titulo);
-  
-  // Verifica chave principal
   if (normalizeString(jogoConfig.chave) === tituloNorm) return true;
-  
-  // Verifica aliases
   if (jogoConfig.aliases) {
     for (const alias of jogoConfig.aliases) {
-      if (normalizeString(alias) === tituloNorm) return true;
-      if (tituloNorm.includes(normalizeString(alias))) return true;
-      if (normalizeString(alias).includes(tituloNorm)) return true;
+      const aliasNorm = normalizeString(alias);
+      if (aliasNorm === tituloNorm) return true;
+      if (tituloNorm.includes(aliasNorm)) return true;
+      if (aliasNorm.includes(tituloNorm) && tituloNorm.length > 2) return true;
     }
   }
-  
   return false;
 }
 
-function matchDificuldade(dificuldadeFiltro, dificuldadePartida) {
-  if (!dificuldadeFiltro) return true;
-  if (!dificuldadePartida) return false;
-  return normalizeString(dificuldadeFiltro) === normalizeString(dificuldadePartida);
+function matchDificuldade(filtro, partida) {
+  if (!filtro) return true;
+  if (!partida) return false;
+  return normalizeString(filtro) === normalizeString(partida);
 }
 
 function parseData(p) {
-  // Tenta múltiplos campos de data
-  const d = p.data || p.created_at || (p.dados && p.dados.timestamp);
+  const d = p.data || p.created_at;
   return d ? new Date(d).getTime() : 0;
 }
 
@@ -153,32 +158,51 @@ function formatarTempo(segundos) {
   return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
 }
 
+function isPartidaValida(partida, jogoConfig) {
+  if (!partida) return false;
+  if (!jogoConfig || !jogoConfig.schema) return true;
+  const schema = jogoConfig.schema;
+  if (schema.required) {
+    for (const campo of schema.required) {
+      const valor = partida[campo];
+      if (valor === undefined || valor === null || valor === '') return false;
+      if (campo === 'pontuacao' && isNaN(Number(valor))) return false;
+      if (campo === 'tempo' && isNaN(Number(valor))) return false;
+    }
+  }
+  return true;
+}
+
 // ==================== BUSCA DE DADOS ====================
-async function buscarPartidas() {
+async function buscarPartidas(forceRefresh = false) {
   const now = Date.now();
-  if (partidasCache && (now - partidasCacheTime) < CACHE_TTL) {
+  if (!forceRefresh && partidasCache && (now - partidasCacheTime) < CACHE_TTL) {
     return partidasCache;
   }
   
   try {
-    const res = await fetch(`${API_BASE}/api/partida`);
+    const res = await fetch(`${API_BASE}/api/partida?limit=10000`);
     if (!res.ok) throw new Error('Erro ao buscar partidas');
     const data = await res.json();
-    const rows = Array.isArray(data) ? data : (data.rows || []);
     
-    // Normaliza campos numéricos
+    let rows = [];
+    if (Array.isArray(data)) rows = data;
+    else if (data.partidas) rows = data.partidas;
+    else if (data.rows) rows = data.rows;
+    
     partidasCache = rows.map(p => ({
       ...p,
       tempo: p.tempo != null && p.tempo !== '' ? Number(p.tempo) : null,
       pontuacao: p.pontuacao != null && p.pontuacao !== '' ? Number(p.pontuacao) : null,
       erros: p.erros != null && p.erros !== '' ? Number(p.erros) : null,
       usuario_nome: p.usuario_nome || p.nome || p.usuario || 'Desconhecido',
-      jogo_titulo: p.jogo_titulo || p.titulo || p.jogo || ''
+      jogo_titulo: p.jogo_titulo || p.titulo || p.jogo || 'Desconhecido'
     }));
     partidasCacheTime = now;
+    console.log('[Rankings] Partidas carregadas:', partidasCache.length);
     return partidasCache;
   } catch (e) {
-    console.error('Erro ao buscar partidas:', e);
+    console.error('[Rankings] Erro ao buscar partidas:', e);
     return [];
   }
 }
@@ -187,15 +211,18 @@ async function buscarUsuarios() {
   if (usuariosCache) return usuariosCache;
   try {
     const res = await fetch(`${API_BASE}/usuario`);
-    if (!res.ok) return {};
+    if (!res.ok) throw new Error('Erro ao buscar usuários');
     const data = await res.json();
-    const rows = Array.isArray(data) ? data : (data.rows || []);
+    let rows = Array.isArray(data) ? data : (data.usuarios || data.rows || []);
+    
     usuariosCache = {};
     for (const u of rows) {
-      usuariosCache[u.nome] = u.status || 'ativo';
+      usuariosCache[u.nome] = { status: u.status || 'ativo', id: u.id, nome: u.nome };
     }
+    console.log('[Rankings] Usuários carregados:', Object.keys(usuariosCache).length);
     return usuariosCache;
   } catch (e) {
+    console.warn('[Rankings] Erro ao buscar usuários:', e);
     return {};
   }
 }
@@ -205,57 +232,52 @@ async function buscarTrofeus() {
     const res = await fetch(`${API_BASE}/trophy`);
     if (!res.ok) return [];
     const data = await res.json();
-    return Array.isArray(data) ? data : (data.rows || []);
+    let rows = Array.isArray(data) ? data : (data.trofeus || data.rows || []);
+    console.log('[Rankings] Troféus carregados:', rows.length);
+    return rows;
   } catch (e) {
-    console.error('Erro ao buscar troféus:', e);
+    console.error('[Rankings] Erro ao buscar troféus:', e);
     return [];
   }
 }
 
-// ==================== INICIALIZAÇÃO DA UI ====================
+// ==================== RANKING ====================
 async function inicializarRankings() {
   const jogoSelect = document.getElementById('jogo-select');
   const tipoRanking = document.getElementById('tipo-ranking');
   
-  // Preenche select de jogos
-  jogoSelect.innerHTML = jogosRanking.map((j, i) => 
-    `<option value="${i}">${j.nome}</option>`
-  ).join('');
+  if (!jogoSelect || !tipoRanking) {
+    console.warn('[Rankings] Elementos de ranking não encontrados');
+    return;
+  }
   
-  jogoSelect.onchange = atualizarTiposERanking;
+  jogoSelect.innerHTML = jogosRanking.map((j, i) => `<option value="${i}">${j.nome}</option>`).join('');
+  
+  jogoSelect.onchange = () => { atualizarTiposRanking(); carregarRanking(); };
   tipoRanking.onchange = carregarRanking;
   
-  atualizarTiposERanking();
-  
-  // Carrega troféus
-  await carregarTrofeus();
+  atualizarTiposRanking();
+  await carregarRanking();
 }
 
-function atualizarTiposERanking() {
+function atualizarTiposRanking() {
   const jogoSelect = document.getElementById('jogo-select');
   const tipoRanking = document.getElementById('tipo-ranking');
   const idx = Number(jogoSelect.value);
   const jogo = jogosRanking[idx];
   
   if (!jogo || !jogo.tipos || !jogo.tipos.length) {
-    tipoRanking.innerHTML = '<option value="-1">(Sem ranking implementado)</option>';
-    document.getElementById('rankings-container').innerHTML = 
-      '<div class="ranking-section"><em>Esse jogo ainda não tem ranking implementado.</em></div>';
+    tipoRanking.innerHTML = '<option value="-1">(Sem ranking)</option>';
     return;
   }
-  
-  tipoRanking.innerHTML = jogo.tipos.map((t, i) => 
-    `<option value="${i}">${t.label}</option>`
-  ).join('');
-  
-  carregarRanking();
+  tipoRanking.innerHTML = jogo.tipos.map((t, i) => `<option value="${i}">${t.label}</option>`).join('');
 }
 
-// ==================== CÁLCULO DE RANKINGS ====================
 async function carregarRanking() {
   const jogoSelect = document.getElementById('jogo-select');
   const tipoRanking = document.getElementById('tipo-ranking');
   const container = document.getElementById('rankings-container');
+  if (!container) return;
   
   const jogoIdx = Number(jogoSelect.value);
   const tipoIdx = Number(tipoRanking.value);
@@ -270,23 +292,22 @@ async function carregarRanking() {
   container.innerHTML = '<div class="ranking-section"><em>Carregando ranking...</em></div>';
   
   try {
-    // Busca dados
     const [partidas, usuarios] = await Promise.all([buscarPartidas(), buscarUsuarios()]);
     
-    // Filtra partidas do jogo
-    const partidasDoJogo = partidas.filter(p => matchJogo(jogo, p.jogo_titulo));
+    let partidasDoJogo = partidas.filter(p => matchJogo(jogo, p.jogo_titulo));
+    partidasDoJogo = partidasDoJogo.filter(p => isPartidaValida(p, jogo));
+    
+    console.log(`[Rankings] ${jogo.nome}: ${partidasDoJogo.length} partidas válidas`);
     
     let html = '';
     
     if (tipo.porDificuldade && jogo.dificuldades.length > 0) {
-      // Uma tabela para cada dificuldade
       for (const dificuldade of jogo.dificuldades) {
         const partidasDaDificuldade = partidasDoJogo.filter(p => matchDificuldade(dificuldade, p.dificuldade));
         const ranking = calcularRanking(partidasDaDificuldade, tipo.chave, usuarios);
         html += montarTabelaRanking(jogo.nome, tipo, ranking, dificuldade);
       }
     } else {
-      // Uma única tabela (total)
       const ranking = calcularRanking(partidasDoJogo, tipo.chave, usuarios);
       html += montarTabelaRanking(jogo.nome, tipo, ranking);
     }
@@ -294,15 +315,15 @@ async function carregarRanking() {
     container.innerHTML = html || '<div class="ranking-section"><em>Sem dados para exibir.</em></div>';
     
   } catch (e) {
-    console.error('Erro ao carregar ranking:', e);
+    console.error('[Rankings] Erro ao carregar ranking:', e);
     container.innerHTML = '<div class="ranking-section"><em>Erro ao carregar ranking.</em></div>';
   }
 }
 
+// ==================== CÁLCULO DE RANKINGS ====================
 function calcularRanking(partidas, tipoChave, usuarios) {
   if (!partidas.length) return [];
   
-  // Agrupa partidas por usuário
   const porUsuario = new Map();
   for (const p of partidas) {
     const nome = p.usuario_nome;
@@ -314,18 +335,13 @@ function calcularRanking(partidas, tipoChave, usuarios) {
   
   switch (tipoChave) {
     case 'pontuacao': {
-      // Maior pontuação por usuário
       for (const [nome, partidasUser] of porUsuario.entries()) {
-        const melhor = partidasUser
-          .filter(p => p.pontuacao !== null && !isNaN(p.pontuacao))
-          .reduce((max, p) => (p.pontuacao > max ? p.pontuacao : max), -Infinity);
-        
+        const comPontuacao = partidasUser.filter(p => p.pontuacao !== null && !isNaN(p.pontuacao));
+        if (!comPontuacao.length) continue;
+        const melhor = comPontuacao.reduce((max, p) => (p.pontuacao > max ? p.pontuacao : max), -Infinity);
         if (melhor !== -Infinity) {
-          resultado.push({
-            nome,
-            valor: melhor,
-            status: usuarios[nome] === 'bloqueado' ? 'bloqueado' : 'ativo'
-          });
+          const userInfo = usuarios[nome] || {};
+          resultado.push({ nome, valor: melhor, status: userInfo.status === 'bloqueado' ? 'bloqueado' : 'ativo' });
         }
       }
       resultado.sort((a, b) => b.valor - a.valor);
@@ -333,28 +349,24 @@ function calcularRanking(partidas, tipoChave, usuarios) {
     }
     
     case 'menor_tempo': {
-      // Menor tempo por usuário (prioriza menos erros, depois menor tempo)
       for (const [nome, partidasUser] of porUsuario.entries()) {
-        const comTempo = partidasUser.filter(p => p.tempo !== null && !isNaN(p.tempo));
-        if (!comTempo.length) continue;
+        const validas = partidasUser.filter(p => 
+          p.tempo !== null && !isNaN(p.tempo) &&
+          (p.resultado || '').toString().toLowerCase() === 'vitoria'
+        );
+        if (!validas.length) continue;
         
-        // Ordena: erros asc (nulls last), depois tempo asc
-        comTempo.sort((a, b) => {
+        validas.sort((a, b) => {
           const ea = a.erros == null ? Infinity : a.erros;
           const eb = b.erros == null ? Infinity : b.erros;
           if (ea !== eb) return ea - eb;
           return (a.tempo || Infinity) - (b.tempo || Infinity);
         });
         
-        const melhor = comTempo[0];
-        resultado.push({
-          nome,
-          tempo: melhor.tempo,
-          erros: melhor.erros,
-          status: usuarios[nome] === 'bloqueado' ? 'bloqueado' : 'ativo'
-        });
+        const melhor = validas[0];
+        const userInfo = usuarios[nome] || {};
+        resultado.push({ nome, tempo: melhor.tempo, erros: melhor.erros, status: userInfo.status === 'bloqueado' ? 'bloqueado' : 'ativo' });
       }
-      // Ordena resultado final
       resultado.sort((a, b) => {
         const ea = a.erros == null ? Infinity : a.erros;
         const eb = b.erros == null ? Infinity : b.erros;
@@ -366,18 +378,11 @@ function calcularRanking(partidas, tipoChave, usuarios) {
     
     case 'mais_vitorias_total':
     case 'mais_vitorias_dificuldade': {
-      // Conta vitórias por usuário
       for (const [nome, partidasUser] of porUsuario.entries()) {
-        const vitorias = partidasUser.filter(p => 
-          (p.resultado || '').toString().toLowerCase() === 'vitoria'
-        ).length;
-        
+        const vitorias = partidasUser.filter(p => (p.resultado || '').toString().toLowerCase() === 'vitoria').length;
         if (vitorias > 0) {
-          resultado.push({
-            nome,
-            valor: vitorias,
-            status: usuarios[nome] === 'bloqueado' ? 'bloqueado' : 'ativo'
-          });
+          const userInfo = usuarios[nome] || {};
+          resultado.push({ nome, valor: vitorias, status: userInfo.status === 'bloqueado' ? 'bloqueado' : 'ativo' });
         }
       }
       resultado.sort((a, b) => b.valor - a.valor);
@@ -385,11 +390,8 @@ function calcularRanking(partidas, tipoChave, usuarios) {
     }
     
     case 'mais_vitorias_consecutivas': {
-      // Maior sequência de vitórias consecutivas por usuário
       for (const [nome, partidasUser] of porUsuario.entries()) {
-        // Ordena por data
         const ordenadas = partidasUser.slice().sort((a, b) => parseData(a) - parseData(b));
-        
         let maxSeq = 0, curSeq = 0;
         for (const p of ordenadas) {
           if ((p.resultado || '').toString().toLowerCase() === 'vitoria') {
@@ -399,13 +401,9 @@ function calcularRanking(partidas, tipoChave, usuarios) {
             curSeq = 0;
           }
         }
-        
         if (maxSeq > 0) {
-          resultado.push({
-            nome,
-            valor: maxSeq,
-            status: usuarios[nome] === 'bloqueado' ? 'bloqueado' : 'ativo'
-          });
+          const userInfo = usuarios[nome] || {};
+          resultado.push({ nome, valor: maxSeq, status: userInfo.status === 'bloqueado' ? 'bloqueado' : 'ativo' });
         }
       }
       resultado.sort((a, b) => b.valor - a.valor);
@@ -413,13 +411,9 @@ function calcularRanking(partidas, tipoChave, usuarios) {
     }
     
     default: {
-      // Fallback: mais partidas jogadas
       for (const [nome, partidasUser] of porUsuario.entries()) {
-        resultado.push({
-          nome,
-          valor: partidasUser.length,
-          status: usuarios[nome] === 'bloqueado' ? 'bloqueado' : 'ativo'
-        });
+        const userInfo = usuarios[nome] || {};
+        resultado.push({ nome, valor: partidasUser.length, status: userInfo.status === 'bloqueado' ? 'bloqueado' : 'ativo' });
       }
       resultado.sort((a, b) => b.valor - a.valor);
     }
@@ -428,7 +422,7 @@ function calcularRanking(partidas, tipoChave, usuarios) {
   return resultado;
 }
 
-// ==================== MONTAGEM DE HTML ====================
+// ==================== MONTAGEM DE TABELA ====================
 function montarTabelaRanking(nomeJogo, tipoObj, ranking, dificuldade = null) {
   const colunas = tipoObj.colunas || [];
   let posicaoAtivos = 1;
@@ -442,7 +436,7 @@ function montarTabelaRanking(nomeJogo, tipoObj, ranking, dificuldade = null) {
         <thead>
           <tr>
             <th>Posição</th>
-            <th>Nome</th>
+            <th>Jogador</th>
             ${colunas.map(c => `<th>${c}</th>`).join('')}
             <th>Status</th>
           </tr>
@@ -453,11 +447,7 @@ function montarTabelaRanking(nomeJogo, tipoObj, ranking, dificuldade = null) {
             : ranking.map(item => {
                 const isBloqueado = item.status === 'bloqueado';
                 const isUsuarioAtual = usuarioAtual && item.nome === usuarioAtual;
-                
-                // Posição só conta ativos
                 const posicao = isBloqueado ? '--' : `${posicaoAtivos++}º`;
-                
-                // Classes da linha
                 let trClass = '';
                 if (isUsuarioAtual) trClass += 'meu-ranking ';
                 if (isBloqueado) trClass += 'bloqueado';
@@ -487,20 +477,10 @@ function montarTabelaRanking(nomeJogo, tipoObj, ranking, dificuldade = null) {
   `;
 }
 
-// ==================== SEÇÃO DE TROFÉUS ====================
+// ==================== TROFÉUS ====================
 async function carregarTrofeus() {
-  // Cria container de troféus se não existir
   let trofeusContainer = document.getElementById('trofeus-container');
-  if (!trofeusContainer) {
-    const mainContainer = document.getElementById('rankings-container');
-    if (mainContainer) {
-      trofeusContainer = document.createElement('div');
-      trofeusContainer.id = 'trofeus-container';
-      mainContainer.parentNode.insertBefore(trofeusContainer, mainContainer.nextSibling);
-    } else {
-      return;
-    }
-  }
+  if (!trofeusContainer) return;
   
   trofeusContainer.innerHTML = `
     <section class="trofeus-section">
@@ -516,7 +496,7 @@ async function carregarTrofeus() {
       trofeusContainer.innerHTML = `
         <section class="trofeus-section">
           <h2>🏆 Troféus</h2>
-          <div class="trofeus-empty"><em>Nenhum troféu atribuído</em></div>
+          <div class="trofeus-empty"><em>Nenhum troféu atribuído ainda</em></div>
         </section>
       `;
       return;
@@ -548,7 +528,7 @@ async function carregarTrofeus() {
     trofeusContainer.innerHTML = html;
     
   } catch (e) {
-    console.error('Erro ao carregar troféus:', e);
+    console.error('[Rankings] Erro ao carregar troféus:', e);
     trofeusContainer.innerHTML = `
       <section class="trofeus-section">
         <h2>🏆 Troféus</h2>
@@ -558,6 +538,6 @@ async function carregarTrofeus() {
   }
 }
 
-// Exporta funções globais
+// ==================== EXPORTS ====================
 window.carregarRanking = carregarRanking;
 window.carregarTrofeus = carregarTrofeus;

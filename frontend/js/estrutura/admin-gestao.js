@@ -12,6 +12,40 @@ document.querySelectorAll('.gestao-tab').forEach(tab => {
   });
 });
 
+// ============================================================================
+// FUNÇÕES DE UI MELHORADAS
+// ============================================================================
+
+// Função para atualizar barra de status do CRUD
+function updateStatusBar(barId, icon, message, statusClass = '') {
+  const bar = document.getElementById(barId);
+  if (!bar) return;
+  
+  bar.className = 'crud-status-bar';
+  if (statusClass) bar.classList.add(statusClass);
+  
+  bar.innerHTML = `
+    <span class="status-icon">${icon}</span>
+    <span class="status-text">${message}</span>
+  `;
+}
+
+// Toggle visibilidade da senha
+function toggleSenhaVisibility() {
+  const senhaInput = document.getElementById('senha_usuario');
+  const btn = document.querySelector('.btn-toggle-password');
+  if (senhaInput.type === 'password') {
+    senhaInput.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    senhaInput.type = 'password';
+    btn.textContent = '👁️';
+  }
+}
+
+// Expor funções globalmente
+window.toggleSenhaVisibility = toggleSenhaVisibility;
+
 // --- CRUD Usuários ---
 const usuarioMessageContainer = document.getElementById('usuarioMessageContainer');
 const usuarioForm = document.getElementById('usuarioForm');
@@ -85,10 +119,16 @@ let usuarioStatusMsg = null;
 function setUsuarioStatus(msg, type = 'info') {
   usuarioStatusMsg = { msg, type };
   usuarioMessageContainer.innerHTML = `<div class="msg ${type}">${msg}</div>`;
+  
+  // Atualizar também a barra de status visual
+  const icons = { info: '💡', success: '✅', error: '❌', warning: '⚠️' };
+  const statusClasses = { info: '', success: 'status-success', error: 'status-error', warning: 'status-warning' };
+  updateStatusBar('usuarioStatusBar', icons[type] || '💡', msg, statusClasses[type] || '');
 }
 function clearUsuarioStatus() {
   usuarioStatusMsg = null;
   usuarioMessageContainer.innerHTML = '';
+  updateStatusBar('usuarioStatusBar', '💡', 'Digite um ID e clique em Buscar para começar', '');
 }
 
 function estadoBusca() {
@@ -98,13 +138,13 @@ function estadoBusca() {
   btnAlterarUsuario.style.display = 'none';
   btnExcluirUsuario.style.display = 'none';
   btnSalvarUsuario.style.display = 'none';
-  btnCancelarUsuario.style.display = 'none';
+  btnCancelarUsuario.style.display = '';
   btnVoltarUsuario.style.display = 'none';
   idBuscaInput.readOnly = false;
   idUsuarioInput.value = '';
   idUsuarioInput.readOnly = true;
   setUsuarioFormEditable(false);
-  setUsuarioStatus('Digite um ID maior que 0 e clique em Buscar.', 'info');
+  updateStatusBar('usuarioStatusBar', '🔍', 'Digite um ID maior que 0 e clique em Buscar', '');
 }
 
 function estadoNovo() {
@@ -119,7 +159,7 @@ function estadoNovo() {
   idUsuarioInput.value = idBuscaInput.value;
   idUsuarioInput.readOnly = true;
   setUsuarioFormEditable(true);
-  setUsuarioStatus('Novo usuário: preenchendo dados para inserir.', 'info');
+  updateStatusBar('usuarioStatusBar', '✨', 'Usuário não encontrado — preencha os dados para criar um novo', 'status-editing');
 }
 
 function estadoEncontrado() {
@@ -133,7 +173,7 @@ function estadoEncontrado() {
   btnVoltarUsuario.style.display = 'none';
   idUsuarioInput.readOnly = true;
   setUsuarioFormEditable(false);
-  setUsuarioStatus('Usuário encontrado. Você pode alterar ou excluir.', 'success');
+  updateStatusBar('usuarioStatusBar', '✅', 'Usuário encontrado! Escolha: Editar ou Excluir', 'status-success');
 }
 
 function estadoEditando() {
@@ -147,7 +187,7 @@ function estadoEditando() {
   btnVoltarUsuario.style.display = '';
   idUsuarioInput.readOnly = true;
   setUsuarioFormEditable(true);
-  setUsuarioStatus('Alterando usuário: edite os campos e clique em Salvar.', 'warning');
+  updateStatusBar('usuarioStatusBar', '✏️', 'Modo edição: altere os campos e clique em Salvar', 'status-editing');
 }
 
 // --- INÍCIO DO FLUXO ---
@@ -364,6 +404,11 @@ let acaoJogo = null;
 function showJogoMessage(msg, type = 'success') {
   jogoMessageContainer.innerHTML = `<div class="msg ${type}">${msg}</div>`;
   setTimeout(() => jogoMessageContainer.innerHTML = '', 4000);
+  
+  // Atualizar também a barra de status visual
+  const icons = { info: '💡', success: '✅', error: '❌', warning: '⚠️' };
+  const statusClasses = { info: '', success: 'status-success', error: 'status-error', warning: 'status-warning' };
+  updateStatusBar('jogoStatusBar', icons[type] || '💡', msg, statusClasses[type] || '');
 }
 function limparJogoForm() {
   jogoForm.reset();
@@ -392,14 +437,13 @@ function estadoBuscaJogo() {
   safeDisplay(btnAlterarJogo, 'none');
   safeDisplay(btnExcluirJogo, 'none');
   safeDisplay(btnSalvarJogo, 'none');
-  safeDisplay(btnCancelarJogo, 'none');
+  safeDisplay(btnCancelarJogo, '');
   safeDisplay(btnIncluirJogo, 'none');
   safeDisplay(btnVoltarJogo, 'none');
   if (searchJogoIdInput) {
     searchJogoIdInput.readOnly = false;
-    // Não limpar o valor do campo
   }
-  showJogoMessage('Digite um ID e clique em Buscar.', 'info');
+  updateStatusBar('jogoStatusBar', '🔍', 'Digite um ID e clique em Buscar para começar', '');
 }
 function estadoNovoJogo() {
   safeDisplay(searchJogoIdInput, '');
@@ -415,11 +459,10 @@ function estadoNovoJogo() {
     searchJogoIdInput.readOnly = false;
     searchJogoIdInput.style.display = '';
   }
-  // Sempre atribui o valor do campo de busca ao campo id_jogo
   const idBusca = searchJogoIdInput.value;
   const idJogoInput = document.getElementById('id_jogo');
   if (idJogoInput) idJogoInput.value = idBusca;
-  showJogoMessage('Novo jogo: preencha os dados e clique em Salvar.', 'info');
+  updateStatusBar('jogoStatusBar', '✨', 'Jogo não encontrado — preencha os dados para criar um novo', 'status-editing');
 }
 function estadoEncontradoJogo() {
   safeDisplay(searchJogoIdInput, '');
@@ -432,7 +475,7 @@ function estadoEncontradoJogo() {
   safeDisplay(btnIncluirJogo, 'none');
   safeDisplay(btnVoltarJogo, 'none');
   if (searchJogoIdInput) searchJogoIdInput.readOnly = true;
-  showJogoMessage('Jogo encontrado. Você pode alterar ou excluir.', 'success');
+  updateStatusBar('jogoStatusBar', '✅', 'Jogo encontrado! Escolha: Editar ou Excluir', 'status-success');
 }
 function estadoEditandoJogo() {
   safeDisplay(searchJogoIdInput, '');
@@ -445,7 +488,7 @@ function estadoEditandoJogo() {
   safeDisplay(btnIncluirJogo, 'none');
   safeDisplay(btnVoltarJogo, '');
   if (searchJogoIdInput) searchJogoIdInput.readOnly = true;
-  showJogoMessage('Alterando jogo: edite os campos e clique em Salvar.', 'warning');
+  updateStatusBar('jogoStatusBar', '✏️', 'Modo edição: altere os campos e clique em Salvar', 'status-editing');
 }
 function estadoExcluindoJogo() {
   safeDisplay(searchJogoIdInput, '');
@@ -458,7 +501,7 @@ function estadoExcluindoJogo() {
   safeDisplay(btnIncluirJogo, 'none');
   safeDisplay(btnVoltarJogo, '');
   if (searchJogoIdInput) searchJogoIdInput.readOnly = true;
-  showJogoMessage('Excluindo jogo: clique em Salvar para confirmar ou Voltar/Cancelar.', 'warning');
+  updateStatusBar('jogoStatusBar', '⚠️', 'Confirmar exclusão: clique em Salvar para excluir ou Cancelar para desistir', 'status-warning');
 }
 if (btnVoltarJogo) {
   btnVoltarJogo.onclick = () => {
@@ -755,406 +798,1630 @@ if (btnCancelarEstatistica) {
     limparEstatisticaForm();
   };
 }
-// --- CRUD Admins ---
+// --- CRUD Admins (Nova Interface) ---
 const adminMessageContainer = document.getElementById('adminMessageContainer');
-const adminForm = document.getElementById('adminForm');
-const formFieldsAdmin = document.getElementById('formFieldsAdmin');
-const btnBuscarAdmin = document.getElementById('btnBuscarAdmin');
-const btnIncluirAdmin = document.getElementById('btnIncluirAdmin');
-const btnAlterarAdmin = document.getElementById('btnAlterarAdmin');
-const btnExcluirAdmin = document.getElementById('btnExcluirAdmin');
-const btnCancelarAdmin = document.getElementById('btnCancelarAdmin');
+const adminListContainer = document.getElementById('adminListContainer');
+const modalEditarAdmin = document.getElementById('modal-editar-admin');
+const modalEditarAdminContent = document.getElementById('modalEditarAdminContent');
+
 let adminEditando = null;
+
 function showAdminMessage(msg, type = 'success') {
-  adminMessageContainer.innerHTML = `<div class="msg ${type}">${msg}</div>`;
-  setTimeout(() => adminMessageContainer.innerHTML = '', 3000);
+  if (adminMessageContainer) {
+    adminMessageContainer.innerHTML = `<div class="msg ${type}">${msg}</div>`;
+    setTimeout(() => adminMessageContainer.innerHTML = '', 4000);
+  }
 }
-function limparAdminForm() {
-  adminForm
-  btnAlterarAdmin.style.display = 'none';
-  btnExcluirAdmin.style.display = 'none';
-  btnIncluirAdmin.style.display = '';
-}
-function preencherAdminForm(admin) {
-  document.getElementById('nivel_permissao_admin').value = admin.nivel_permissao || '';
-  formFieldsAdmin.style.display = '';
-}
-btnBuscarAdmin.addEventListener('click', async () => {
-  const id_usuario = document.getElementById('searchAdminId').value;
-  if (!id_usuario) return showAdminMessage('Informe o ID do usuário', 'error');
+
+// Carregar lista de admins
+async function carregarListaAdmins() {
+  if (!adminListContainer) return;
+  
+  adminListContainer.innerHTML = '<p class="loading-text">Carregando lista de admins...</p>';
+  
   try {
-    const res = await fetch(`/admin/${id_usuario}`);
+    const res = await fetch(`${API_URL}/admin`);
+    if (!res.ok) throw new Error('Erro ao carregar admins');
+    const admins = await res.json();
+    
+    if (!admins || admins.length === 0) {
+      adminListContainer.innerHTML = '<p class="nenhum-resultado">Nenhum administrador cadastrado.</p>';
+      return;
+    }
+    
+    adminListContainer.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Nível</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${admins.map(admin => {
+            const nivelClass = admin.nivel_permissao >= 8 ? 'nivel-alto' : 
+                              admin.nivel_permissao >= 4 ? 'nivel-medio' : 'nivel-baixo';
+            const nivelIcon = admin.nivel_permissao >= 8 ? '👑' : 
+                             admin.nivel_permissao >= 4 ? '⭐' : '🔹';
+            const isPrincipal = admin.id_usuario === 1;
+            
+            return `
+              <tr data-id="${admin.id_usuario}">
+                <td>${admin.id_usuario}</td>
+                <td><strong>${admin.usuario_nome || 'N/A'}</strong></td>
+                <td>${admin.usuario_email || 'N/A'}</td>
+                <td>
+                  <span class="nivel-badge ${nivelClass}">
+                    ${nivelIcon} Nível ${admin.nivel_permissao}
+                  </span>
+                </td>
+                <td>
+                  <div class="admin-actions">
+                    <button class="btn-edit-admin" onclick="abrirModalEditarAdmin(${admin.id_usuario})" title="Editar permissão">
+                      ✏️ Editar
+                    </button>
+                    <button class="btn-demote-admin" onclick="rebaixarAdmin(${admin.id_usuario}, '${admin.usuario_nome}')" 
+                            title="${isPrincipal ? 'Admin principal não pode ser rebaixado' : 'Rebaixar admin'}"
+                            ${isPrincipal ? 'disabled' : ''}>
+                      👤 Rebaixar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    console.error('Erro ao carregar admins:', err);
+    adminListContainer.innerHTML = '<p class="nenhum-resultado" style="color:#ef4444;">Erro ao carregar lista de administradores.</p>';
+  }
+}
+
+// Abrir modal para editar admin
+async function abrirModalEditarAdmin(idUsuario) {
+  try {
+    const res = await fetch(`${API_URL}/admin/${idUsuario}`);
     if (!res.ok) throw new Error('Admin não encontrado');
     const admin = await res.json();
+    
     adminEditando = admin;
-    preencherAdminForm(admin);
-    btnAlterarAdmin.style.display = '';
-    btnExcluirAdmin.style.display = '';
-    btnIncluirAdmin.style.display = 'none';
+    
+    modalEditarAdminContent.innerHTML = `
+      <h3>✏️ Editar Permissão do Admin</h3>
+      <div class="user-preview">
+        <div class="user-avatar">${(admin.usuario_nome || 'A').charAt(0).toUpperCase()}</div>
+        <div class="user-info">
+          <strong>${admin.usuario_nome || 'N/A'}</strong>
+          <span>ID: ${admin.id_usuario} • ${admin.usuario_email || ''}</span>
+        </div>
+      </div>
+      <form id="formEditarAdmin" class="form-trofeu" style="margin-top: 16px;">
+        <div class="form-group">
+          <label for="editNivelAdmin">Nível de Permissão:</label>
+          <select id="editNivelAdmin">
+            <option value="1" ${admin.nivel_permissao === 1 ? 'selected' : ''}>1 - Básico</option>
+            <option value="2" ${admin.nivel_permissao === 2 ? 'selected' : ''}>2 - Intermediário</option>
+            <option value="3" ${admin.nivel_permissao === 3 ? 'selected' : ''}>3 - Avançado</option>
+            <option value="5" ${admin.nivel_permissao === 5 ? 'selected' : ''}>5 - Moderador</option>
+            <option value="8" ${admin.nivel_permissao === 8 ? 'selected' : ''}>8 - Admin Sênior</option>
+            <option value="10" ${admin.nivel_permissao === 10 ? 'selected' : ''}>10 - Super Admin</option>
+          </select>
+        </div>
+      </form>
+      <div id="editAdminMsg"></div>
+      <div class="modal-actions">
+        <button class="btn-save" onclick="salvarEdicaoAdmin()">💾 Salvar</button>
+        <button class="btn-cancel" onclick="closeModalEditarAdmin()">Cancelar</button>
+      </div>
+    `;
+    
+    modalEditarAdmin.style.display = 'flex';
   } catch (err) {
-    showAdminMessage('Admin não encontrado', 'error');
+    showAdminMessage('Erro ao carregar dados do admin', 'error');
   }
-});
-btnIncluirAdmin.addEventListener('click', async () => {
-  const id_usuario = document.getElementById('searchAdminId').value;
-  const nivel_permissao = document.getElementById('nivel_permissao_admin').value;
-  if (!id_usuario || !nivel_permissao) return showAdminMessage('Preencha todos os campos', 'error');
-  try {
-    const res = await fetch('/admin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_usuario, nivel_permissao })
-    });
-    if (!res.ok) throw new Error('Erro ao promover admin');
-    showAdminMessage('Admin promovido com sucesso!');
-    limparAdminForm();
-  } catch (err) {
-    showAdminMessage('Erro ao promover admin', 'error');
-  }
-});
-btnAlterarAdmin.addEventListener('click', async () => {
+}
+
+function closeModalEditarAdmin() {
+  modalEditarAdmin.style.display = 'none';
+  adminEditando = null;
+}
+
+// Salvar edição de admin
+async function salvarEdicaoAdmin() {
   if (!adminEditando) return;
-  const nivel_permissao = document.getElementById('nivel_permissao_admin').value;
+  
+  const nivel = document.getElementById('editNivelAdmin')?.value;
+  const msgDiv = document.getElementById('editAdminMsg');
+  
+  if (!nivel || Number(nivel) < 1 || Number(nivel) > 10) {
+    if (msgDiv) msgDiv.innerHTML = '<div class="msg error">Nível inválido</div>';
+    return;
+  }
+  
   try {
-    const res = await fetch(`/admin/${adminEditando.id_usuario}`, {
+    const res = await fetch(`${API_URL}/admin/${adminEditando.id_usuario}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nivel_permissao })
+      body: JSON.stringify({ nivel_permissao: Number(nivel) })
     });
-    if (!res.ok) throw new Error('Erro ao alterar permissão');
-    showAdminMessage('Permissão alterada com sucesso!');
-    limparAdminForm();
+    
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Erro ao atualizar');
+    }
+    
+    showAdminMessage('Permissão atualizada com sucesso!', 'success');
+    closeModalEditarAdmin();
+    await carregarListaAdmins();
   } catch (err) {
-    showAdminMessage('Erro ao alterar permissão', 'error');
+    if (msgDiv) msgDiv.innerHTML = `<div class="msg error">${err.message}</div>`;
   }
-});
-btnExcluirAdmin.addEventListener('click', async () => {
-  if (!adminEditando) return;
-  if (!confirm('Tem certeza que deseja remover este admin?')) return;
+}
+
+// Rebaixar admin
+async function rebaixarAdmin(idUsuario, nome) {
+  if (idUsuario === 1) {
+    showAdminMessage('Não é permitido rebaixar o admin principal', 'error');
+    return;
+  }
+  
+  if (!confirm(`Tem certeza que deseja REBAIXAR "${nome}" de admin?\n\nO usuário permanecerá no sistema, apenas perderá os privilégios de administrador.`)) {
+    return;
+  }
+  
   try {
-    const res = await fetch(`/admin/${adminEditando.id_usuario}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Erro ao remover admin');
-    showAdminMessage('Admin removido com sucesso!');
-    limparAdminForm();
+    const res = await fetch(`${API_URL}/admin/${idUsuario}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Erro ao rebaixar');
+    }
+    
+    showAdminMessage('Admin rebaixado com sucesso! O usuário permanece no sistema.', 'success');
+    await carregarListaAdmins();
   } catch (err) {
-    showAdminMessage('Erro ao remover admin', 'error');
+    showAdminMessage(err.message || 'Erro ao rebaixar admin', 'error');
   }
-});
-btnCancelarAdmin.addEventListener('click', () => {
-  limparAdminForm();
-});
-// adminForm.addEventListener('submit', e => e.preventDefault());
-// --- MODAIS FLUXO CRUD ESTATÍSTICAS E ALTERAR PARTIDAS ---
-// Declarar os estados no topo do arquivo, ANTES de qualquer função ou uso
-let crudModalState = {
-  step: 'init',
-  tipo: null,
-  busca: '',
-  resultado: null,
-  lista: [],
-  erro: '',
-};
-let partidasModalState = {
-  step: 'selecao',
-  jogo: null,
-  usuario: null,
-  erro: '',
-};
-// Utiliza variáveis de estado para garantir navegação e validação perfeitas
-const modalCrud = document.getElementById('modal-alterar-crud');
-const modalCrudContent = document.getElementById('modalCrudContent');
-const closeModalCrud = document.getElementById('closeModalCrud');
+}
+
+// Preview do usuário ao digitar ID para promoção
+const promoteUserIdInput = document.getElementById('promoteUserId');
+const promoteUserPreview = document.getElementById('promoteUserPreview');
+let promoteTimeout = null;
+
+if (promoteUserIdInput) {
+  promoteUserIdInput.addEventListener('input', () => {
+    clearTimeout(promoteTimeout);
+    const id = promoteUserIdInput.value;
+    
+    if (!id || Number(id) < 1) {
+      if (promoteUserPreview) promoteUserPreview.style.display = 'none';
+      return;
+    }
+    
+    promoteTimeout = setTimeout(async () => {
+      try {
+        // Verifica se usuário existe
+        const userRes = await fetch(`${API_URL}/usuario/${id}`);
+        if (!userRes.ok) {
+          if (promoteUserPreview) {
+            promoteUserPreview.style.display = 'block';
+            promoteUserPreview.innerHTML = '<span style="color:#ef4444;">❌ Usuário não encontrado</span>';
+          }
+          return;
+        }
+        const usuario = await userRes.json();
+        
+        // Verifica se já é admin
+        const adminRes = await fetch(`${API_URL}/admin/${id}`);
+        const adminData = await adminRes.json();
+        const jaEAdmin = adminRes.ok && adminData.isAdmin;
+        
+        if (promoteUserPreview) {
+          promoteUserPreview.style.display = 'block';
+          if (jaEAdmin) {
+            promoteUserPreview.innerHTML = `
+              <div class="user-avatar">${(usuario.nome || 'U').charAt(0).toUpperCase()}</div>
+              <div class="user-info">
+                <strong>${usuario.nome}</strong>
+                <span style="color:#f59e0b;">⚠️ Este usuário já é admin (Nível ${adminData.nivel_permissao})</span>
+              </div>
+            `;
+          } else {
+            promoteUserPreview.innerHTML = `
+              <div class="user-avatar">${(usuario.nome || 'U').charAt(0).toUpperCase()}</div>
+              <div class="user-info">
+                <strong>${usuario.nome}</strong>
+                <span>✅ Usuário comum - pode ser promovido</span>
+              </div>
+            `;
+          }
+        }
+      } catch (err) {
+        if (promoteUserPreview) {
+          promoteUserPreview.style.display = 'block';
+          promoteUserPreview.innerHTML = '<span style="color:#ef4444;">❌ Erro ao buscar usuário</span>';
+        }
+      }
+    }, 500);
+  });
+}
+
+// Promover novo admin
+const btnPromoverNovoAdmin = document.getElementById('btnPromoverNovoAdmin');
+if (btnPromoverNovoAdmin) {
+  btnPromoverNovoAdmin.addEventListener('click', async () => {
+    const idUsuario = document.getElementById('promoteUserId')?.value;
+    const nivel = document.getElementById('promoteNivel')?.value || 1;
+    
+    if (!idUsuario || Number(idUsuario) < 1) {
+      showAdminMessage('Digite um ID de usuário válido', 'error');
+      return;
+    }
+    
+    try {
+      // Verifica se usuário existe
+      const userRes = await fetch(`${API_URL}/usuario/${idUsuario}`);
+      if (!userRes.ok) {
+        showAdminMessage('Usuário não encontrado', 'error');
+        return;
+      }
+      const usuario = await userRes.json();
+      
+      // Verifica se já é admin
+      const adminRes = await fetch(`${API_URL}/admin/${idUsuario}`);
+      const adminData = await adminRes.json();
+      if (adminRes.ok && adminData.isAdmin) {
+        showAdminMessage('Este usuário já é admin', 'error');
+        return;
+      }
+      
+      // Confirmação
+      if (!confirm(`Promover "${usuario.nome}" a administrador com Nível ${nivel}?`)) return;
+      
+      // Promove
+      const res = await fetch(`${API_URL}/admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_usuario: Number(idUsuario), nivel_permissao: Number(nivel) })
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Erro ao promover');
+      }
+      
+      showAdminMessage(`"${usuario.nome}" foi promovido a admin com sucesso!`, 'success');
+      
+      // Limpa formulário
+      document.getElementById('promoteUserId').value = '';
+      if (promoteUserPreview) promoteUserPreview.style.display = 'none';
+      
+      // Atualiza lista
+      await carregarListaAdmins();
+      
+    } catch (err) {
+      showAdminMessage(err.message || 'Erro ao promover admin', 'error');
+    }
+  });
+}
+
+// Expor funções globalmente
+window.abrirModalEditarAdmin = abrirModalEditarAdmin;
+window.closeModalEditarAdmin = closeModalEditarAdmin;
+window.salvarEdicaoAdmin = salvarEdicaoAdmin;
+window.rebaixarAdmin = rebaixarAdmin;
+
+// ============================================================================
+// MODAL: ALTERAR PARTIDAS (CRUD COMPLETO)
+// ============================================================================
+
 const modalPartidas = document.getElementById('modal-alterar-partidas');
 const modalPartidasContent = document.getElementById('modalPartidasContent');
-const closeModalPartidas = document.getElementById('closeModalPartidas');
 
-// Estados do modal CRUD Estatísticas
-// let crudModalState = {
-//   step: 'init', // init | id | nome | resultado | resumo
-//   tipo: null, // 'jogo' ou 'usuario'
-//   busca: '',
-//   resultado: null,
-//   lista: [],
-//   erro: '',
-// };
-// Estados do modal Alterar Partidas
-// let partidasModalState = {
-//   step: 'selecao', // selecao | jogo | usuario | resumo
-//   jogo: null,
-//   usuario: null,
-//   erro: '',
-// };
-// Funções utilitárias
-function openModalCrud(tipo) {
-  crudModalState = { step: 'init', tipo, busca: '', resultado: null, lista: [], erro: '' };
-  modalCrud.style.display = 'flex';
-  renderModalCrud();
+// Estado do modal de partidas
+let partidasState = {
+  step: 'selecao', // selecao | jogo | usuario | lista | editar | criar
+  jogo: null,
+  usuario: null,
+  partidas: [],
+  partidaSelecionada: null,
+  partidasSelecionadas: [],
+  paginaAtual: 1,
+  totalPaginas: 1,
+  camposJogo: [], // campos válidos para o jogo selecionado
+};
+
+// Função para obter campos permitidos por jogo
+function getCamposParaJogo(jogoTitulo) {
+  if (!jogoTitulo) return ['resultado', 'pontuacao', 'tempo', 'erros', 'dificuldade'];
+  const key = jogoTitulo.toLowerCase();
+  if (key.includes('velha')) return ['resultado', 'dificuldade'];
+  if (key.includes('forca')) return ['resultado', 'erros', 'dificuldade'];
+  if (key.includes('memoria') || key.includes('memória')) return ['resultado', 'tempo', 'erros', 'dificuldade'];
+  if (key === 'ppt' || key.includes('pedra') || key.includes('p.p.t')) return ['resultado'];
+  if (key.includes('2048')) return ['pontuacao'];
+  if (key.includes('sudoku')) return ['resultado', 'tempo', 'erros', 'dificuldade'];
+  if (key.includes('pong')) return ['resultado', 'tempo', 'dificuldade'];
+  if (key.includes('campo') && key.includes('minado')) return ['resultado', 'tempo', 'dificuldade'];
+  return ['resultado', 'pontuacao', 'tempo', 'erros', 'dificuldade'];
 }
-function closeModalCrudFn() {
-  modalCrud.style.display = 'none';
-  crudModalState = { step: 'init', tipo: null, busca: '', resultado: null, lista: [], erro: '' };
-}
-closeModalCrud.onclick = closeModalCrudFn;
-modalCrud.onclick = e => { if (e.target === modalCrud) closeModalCrudFn(); };
-function renderModalCrud() {
-  // Renderiza cada etapa conforme o fluxo
-  let html = '';
-  if (crudModalState.step === 'init') {
-    html = `<h3>Alterar informações de ${crudModalState.tipo === 'jogo' ? 'Jogo' : 'Usuário'}</h3>
-      <div class="modal-actions">
-        <button class="btn-primary" id="btnCrudBuscarId">Buscar por ID</button>
-        <button class="btn-secondary" id="btnCrudBuscarNome">Buscar por Nome</button>
-        <button class="btn-cancel" id="btnCrudVoltar">Voltar</button>
-      </div>`;
-  } else if (crudModalState.step === 'id') {
-    html = `<h3>Buscar por ID</h3>
-      <input type="number" id="crudIdInput" placeholder="Digite o ID">
-      <div class="modal-actions">
-        <button class="btn-primary" id="btnCrudPesquisarId">Pesquisar</button>
-        <button class="btn-cancel" id="btnCrudVoltar">Voltar</button>
-      </div>
-      ${crudModalState.erro ? `<div class="modal-error">${crudModalState.erro}</div>` : ''}`;
-  } else if (crudModalState.step === 'nome') {
-    html = `<h3>Buscar por Nome</h3>
-      <input type="text" id="crudNomeInput" placeholder="Digite o nome">
-      <ul class="modal-list" id="crudNomeList"></ul>
-      <div class="modal-actions">
-        <button class="btn-cancel" id="btnCrudVoltar">Voltar</button>
-      </div>
-      ${crudModalState.erro ? `<div class="modal-error">${crudModalState.erro}</div>` : ''}`;
-  } else if (crudModalState.step === 'resultado') {
-    if (!crudModalState.resultado) {
-      html = `<div class="modal-error">${crudModalState.erro || 'Não encontrado.'}</div>
-        <div class="modal-actions"><button class="btn-cancel" id="btnCrudVoltar">Voltar</button></div>`;
-    } else {
-      html = `<h3>Dados Selecionados</h3>
-        <div class="modal-summary">
-          ${crudModalState.tipo === 'jogo' ?
-            `<b>ID:</b> ${crudModalState.resultado.id}<br><b>Título:</b> ${crudModalState.resultado.titulo}` :
-            `<b>ID:</b> ${crudModalState.resultado.id}<br><b>Nome:</b> ${crudModalState.resultado.nome}`}
-        </div>
-        <div class="modal-actions">
-          <button class="btn-primary" id="btnCrudConfirmar">Confirmar Seleção</button>
-          <button class="btn-cancel" id="btnCrudVoltar">Voltar</button>
-        </div>`;
-    }
-  }
-  modalCrudContent.innerHTML = html;
-  // Eventos
-  if (crudModalState.step === 'init') {
-    document.getElementById('btnCrudBuscarId').onclick = () => { crudModalState.step = 'id'; crudModalState.erro = ''; renderModalCrud(); };
-    document.getElementById('btnCrudBuscarNome').onclick = () => { crudModalState.step = 'nome'; crudModalState.erro = ''; renderModalCrud(); };
-    document.getElementById('btnCrudVoltar').onclick = closeModalCrudFn;
-  } else if (crudModalState.step === 'id') {
-    document.getElementById('btnCrudPesquisarId').onclick = async () => {
-      const id = document.getElementById('crudIdInput').value;
-      if (!id || Number(id) < 1) { crudModalState.erro = 'ID inválido.'; renderModalCrud(); return; }
-      // Busca por API
-      let res;
-      try {
-        res = await fetch(`${API_URL}/${crudModalState.tipo}/${id}`);
-        if (!res.ok) throw new Error('Não encontrado');
-        const data = await res.json();
-        crudModalState.resultado = data;
-        crudModalState.step = 'resultado';
-        crudModalState.erro = '';
-      } catch {
-        crudModalState.resultado = null;
-        crudModalState.step = 'resultado';
-        crudModalState.erro = 'Não encontrado.';
-      }
-      renderModalCrud();
-    };
-    document.getElementById('btnCrudVoltar').onclick = () => { crudModalState.step = 'init'; crudModalState.erro = ''; renderModalCrud(); };
-  } else if (crudModalState.step === 'nome') {
-    const nomeInput = document.getElementById('crudNomeInput');
-    nomeInput.oninput = async () => {
-      const nome = nomeInput.value.trim();
-      if (!nome) { crudModalState.lista = []; updateNomeList(); return; }
-      // Busca por nome (API)
-      let res;
-      try {
-        res = await fetch(`${API_URL}/${crudModalState.tipo}?nome=${encodeURIComponent(nome)}`);
-        if (!res.ok) throw new Error('Erro');
-        const lista = await res.json();
-        crudModalState.lista = Array.isArray(lista) ? lista : [];
-      } catch { crudModalState.lista = []; }
-      updateNomeList();
-    };
-    function updateNomeList() {
-      const ul = document.getElementById('crudNomeList');
-      ul.innerHTML = crudModalState.lista.length ? crudModalState.lista.map(item => `<li data-id="${item.id}">${crudModalState.tipo === 'jogo' ? item.titulo : item.nome}</li>`).join('') : '<li style="color:#aaa;">Nenhum resultado</li>';
-      Array.from(ul.querySelectorAll('li[data-id]')).forEach(li => {
-        li.onclick = async () => {
-          // Busca dados completos
-          let res;
-          try {
-            res = await fetch(`${API_URL}/${crudModalState.tipo}/${li.dataset.id}`);
-            if (!res.ok) throw new Error('Não encontrado');
-            const data = await res.json();
-            crudModalState.resultado = data;
-            crudModalState.step = 'resultado';
-            crudModalState.erro = '';
-            renderModalCrud();
-          } catch {
-            crudModalState.resultado = null;
-            crudModalState.step = 'resultado';
-            crudModalState.erro = 'Não encontrado.';
-            renderModalCrud();
-          }
-        };
-      });
-    }
-    updateNomeList();
-    document.getElementById('btnCrudVoltar').onclick = () => { crudModalState.step = 'init'; crudModalState.erro = ''; renderModalCrud(); };
-  } else if (crudModalState.step === 'resultado') {
-    if (crudModalState.resultado) {
-      document.getElementById('btnCrudConfirmar').onclick = () => {
-        // Fecha modal e retorna para fluxo principal
-        closeModalCrudFn();
-        // Aqui você pode disparar evento ou callback para informar seleção
-        window.dispatchEvent(new CustomEvent('crudSelecionado', { detail: { tipo: crudModalState.tipo, dados: crudModalState.resultado } }));
-      };
-    }
-    document.getElementById('btnCrudVoltar').onclick = () => { crudModalState.step = 'init'; crudModalState.resultado = null; crudModalState.erro = ''; renderModalCrud(); };
-  }
-}
-// --- FLUXO MODAL ALTERAR PARTIDAS ---
+
 function openModalPartidas() {
-  partidasModalState = { step: 'selecao', jogo: null, usuario: null, erro: '' };
+  partidasState = {
+    step: 'selecao',
+    jogo: null,
+    usuario: null,
+    partidas: [],
+    partidaSelecionada: null,
+    partidasSelecionadas: [],
+    paginaAtual: 1,
+    totalPaginas: 1,
+    camposJogo: [],
+  };
   modalPartidas.style.display = 'flex';
   renderModalPartidas();
 }
-function closeModalPartidasFn() {
+
+function closeModalPartidas() {
   modalPartidas.style.display = 'none';
-  partidasModalState = { step: 'selecao', jogo: null, usuario: null, erro: '' };
 }
-closeModalPartidas.onclick = closeModalPartidasFn;
-modalPartidas.onclick = e => { if (e.target === modalPartidas) closeModalPartidasFn(); };
+
+// Mensagem no modal de partidas
+function showPartidasMsg(msg, type = 'info') {
+  const msgDiv = document.getElementById('partidasMsg');
+  if (msgDiv) {
+    msgDiv.innerHTML = `<div class="msg ${type}">${msg}</div>`;
+    setTimeout(() => msgDiv.innerHTML = '', 4000);
+  }
+}
+
+async function carregarPartidas() {
+  if (!partidasState.jogo || !partidasState.usuario) return;
+  try {
+    const res = await fetch(`${API_URL}/api/partida?userId=${partidasState.usuario.id}&gameId=${partidasState.jogo.id}&page=${partidasState.paginaAtual}&limit=20`);
+    if (!res.ok) throw new Error('Erro ao buscar partidas');
+    const data = await res.json();
+    partidasState.partidas = data.partidas || [];
+    partidasState.totalPaginas = data.totalPages || 1;
+    partidasState.camposJogo = getCamposParaJogo(partidasState.jogo.titulo);
+  } catch (err) {
+    partidasState.partidas = [];
+    showPartidasMsg('Erro ao carregar partidas', 'error');
+  }
+}
+
 function renderModalPartidas() {
   let html = '';
-  if (partidasModalState.step === 'selecao') {
-    html = `<h3>Alterar Partidas</h3>
+  
+  if (partidasState.step === 'selecao') {
+    html = `
+      <h3>📊 Alterar Partidas</h3>
+      <p>Selecione um jogo e um usuário para gerenciar as partidas.</p>
       <div class="modal-summary">
-        ${partidasModalState.jogo ? `<b>Jogo selecionado:</b> ${partidasModalState.jogo.titulo}<br>` : ''}
-        ${partidasModalState.usuario ? `<b>Usuário selecionado:</b> ${partidasModalState.usuario.nome}<br>` : ''}
+        <div class="selecao-item ${partidasState.jogo ? 'selecionado' : ''}">
+          <b>🎮 Jogo:</b> ${partidasState.jogo ? partidasState.jogo.titulo : '<em>Não selecionado</em>'}
+          <button class="btn-secondary btn-small" id="btnSelecionarJogo">${partidasState.jogo ? 'Alterar' : 'Selecionar'}</button>
+        </div>
+        <div class="selecao-item ${partidasState.usuario ? 'selecionado' : ''}">
+          <b>👤 Usuário:</b> ${partidasState.usuario ? partidasState.usuario.nome : '<em>Não selecionado</em>'}
+          <button class="btn-secondary btn-small" id="btnSelecionarUsuario">${partidasState.usuario ? 'Alterar' : 'Selecionar'}</button>
+        </div>
+      </div>
+      <div id="partidasMsg"></div>
+      <div class="modal-actions">
+        ${partidasState.jogo && partidasState.usuario ? '<button class="btn-save" id="btnBuscarPartidas">🔍 Buscar Partidas</button>' : ''}
+        <button class="btn-cancel" id="btnFecharPartidas">Fechar</button>
+      </div>
+    `;
+  } else if (partidasState.step === 'jogo') {
+    html = `
+      <h3>🎮 Selecionar Jogo</h3>
+      <input type="text" id="buscaJogoInput" placeholder="Digite o nome do jogo..." class="modal-input">
+      <ul class="modal-list" id="listaJogos"></ul>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnVoltarSelecao">Voltar</button>
+      </div>
+    `;
+  } else if (partidasState.step === 'usuario') {
+    html = `
+      <h3>👤 Selecionar Usuário</h3>
+      <input type="text" id="buscaUsuarioInput" placeholder="Digite o nome do usuário..." class="modal-input">
+      <ul class="modal-list" id="listaUsuarios"></ul>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnVoltarSelecao">Voltar</button>
+      </div>
+    `;
+  } else if (partidasState.step === 'lista') {
+    const campos = partidasState.camposJogo;
+    html = `
+      <h3>📋 Partidas de ${partidasState.usuario.nome} em ${partidasState.jogo.titulo}</h3>
+      <div id="partidasMsg"></div>
+      <div class="partidas-toolbar">
+        <button class="btn-primary btn-small" id="btnNovaPartida">➕ Nova Partida</button>
+        <button class="btn-secondary btn-small" id="btnEditarSelecionadas" style="display:none;">✏️ Editar Selecionadas</button>
+        <button class="btn-danger btn-small" id="btnExcluirSelecionadas" style="display:none;">🗑️ Excluir Selecionadas</button>
+        <button class="btn-danger btn-small" id="btnExcluirTodas">🗑️ Excluir Todas</button>
+      </div>
+      <div class="partidas-lista-container">
+        ${partidasState.partidas.length === 0 ? '<p class="nenhum-resultado">Nenhuma partida encontrada.</p>' : `
+          <table class="partidas-tabela">
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="checkTodas"></th>
+                <th>ID</th>
+                <th>Data</th>
+                ${campos.includes('resultado') ? '<th>Resultado</th>' : ''}
+                ${campos.includes('pontuacao') ? '<th>Pontuação</th>' : ''}
+                ${campos.includes('tempo') ? '<th>Tempo</th>' : ''}
+                ${campos.includes('erros') ? '<th>Erros</th>' : ''}
+                ${campos.includes('dificuldade') ? '<th>Dificuldade</th>' : ''}
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${partidasState.partidas.map(p => `
+                <tr data-id="${p.id}">
+                  <td><input type="checkbox" class="check-partida" data-id="${p.id}"></td>
+                  <td>${p.id}</td>
+                  <td>${new Date(p.data).toLocaleString('pt-BR')}</td>
+                  ${campos.includes('resultado') ? `<td>${p.resultado || '-'}</td>` : ''}
+                  ${campos.includes('pontuacao') ? `<td>${p.pontuacao !== null ? p.pontuacao : '-'}</td>` : ''}
+                  ${campos.includes('tempo') ? `<td>${p.tempo !== null ? p.tempo + 's' : '-'}</td>` : ''}
+                  ${campos.includes('erros') ? `<td>${p.erros !== null ? p.erros : '-'}</td>` : ''}
+                  ${campos.includes('dificuldade') ? `<td>${p.dificuldade || '-'}</td>` : ''}
+                  <td>
+                    <button class="btn-small btn-secondary btn-editar-partida" data-id="${p.id}">✏️</button>
+                    <button class="btn-small btn-danger btn-excluir-partida" data-id="${p.id}">🗑️</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div class="paginacao">
+            <button class="btn-small" id="btnPaginaAnterior" ${partidasState.paginaAtual <= 1 ? 'disabled' : ''}>← Anterior</button>
+            <span>Página ${partidasState.paginaAtual} de ${partidasState.totalPaginas}</span>
+            <button class="btn-small" id="btnProximaPagina" ${partidasState.paginaAtual >= partidasState.totalPaginas ? 'disabled' : ''}>Próxima →</button>
+          </div>
+        `}
       </div>
       <div class="modal-actions">
-        <button class="btn-primary" id="btnEscolherJogo">Escolher Jogo</button>
-        <button class="btn-secondary" id="btnEscolherUsuario">Escolher Usuário</button>
-        <button class="btn-cancel" id="btnPartidasVoltar">Voltar</button>
-      </div>`;
-    if (partidasModalState.jogo && partidasModalState.usuario) {
-      html += `<div class="modal-actions"><button class="btn-save" id="btnBuscarPartidas">Buscar Partidas</button></div>`;
-    }
-  } else if (partidasModalState.step === 'jogo') {
-    html = `<h3>Escolher Jogo</h3>
-      <input type="text" id="partidasJogoNome" placeholder="Digite o nome do jogo">
-      <ul class="modal-list" id="partidasJogoList"></ul>
-      <div class="modal-actions">
-        <button class="btn-cancel" id="btnPartidasVoltar">Voltar</button>
-      </div>`;
-  } else if (partidasModalState.step === 'usuario') {
-    html = `<h3>Escolher Usuário</h3>
-      <input type="text" id="partidasUsuarioNome" placeholder="Digite o nome do usuário">
-      <ul class="modal-list" id="partidasUsuarioList"></ul>
-      <div class="modal-actions">
-        <button class="btn-cancel" id="btnPartidasVoltar">Voltar</button>
-      </div>`;
-  } else if (partidasModalState.step === 'resumo') {
-    html = `<h3>Resumo</h3>
-      <div class="modal-summary">
-        <b>Jogo:</b> ${partidasModalState.jogo.titulo}<br>
-        <b>Usuário:</b> ${partidasModalState.usuario.nome}
+        <button class="btn-cancel" id="btnVoltarSelecao">Voltar</button>
       </div>
+    `;
+  } else if (partidasState.step === 'criar' || partidasState.step === 'editar') {
+    const campos = partidasState.camposJogo;
+    const p = partidasState.partidaSelecionada || {};
+    const isEditar = partidasState.step === 'editar';
+    html = `
+      <h3>${isEditar ? '✏️ Editar' : '➕ Nova'} Partida</h3>
+      <form id="formPartida" class="form-partida">
+        ${isEditar ? `<div class="form-group"><label>ID:</label><input type="text" value="${p.id}" disabled></div>` : ''}
+        <div class="form-group">
+          <label>Data:</label>
+          <input type="datetime-local" id="partidaData" value="${isEditar && p.data ? new Date(p.data).toISOString().slice(0,16) : new Date().toISOString().slice(0,16)}">
+        </div>
+        ${campos.includes('resultado') ? `
+          <div class="form-group">
+            <label>Resultado:</label>
+            <select id="partidaResultado">
+              <option value="">Selecione</option>
+              <option value="vitoria" ${p.resultado === 'vitoria' ? 'selected' : ''}>Vitória</option>
+              <option value="derrota" ${p.resultado === 'derrota' ? 'selected' : ''}>Derrota</option>
+              <option value="empate" ${p.resultado === 'empate' ? 'selected' : ''}>Empate</option>
+            </select>
+          </div>
+        ` : ''}
+        ${campos.includes('pontuacao') ? `
+          <div class="form-group">
+            <label>Pontuação:</label>
+            <input type="number" id="partidaPontuacao" min="0" value="${p.pontuacao || ''}">
+          </div>
+        ` : ''}
+        ${campos.includes('tempo') ? `
+          <div class="form-group">
+            <label>Tempo (segundos):</label>
+            <input type="number" id="partidaTempo" min="0" value="${p.tempo || ''}">
+          </div>
+        ` : ''}
+        ${campos.includes('erros') ? `
+          <div class="form-group">
+            <label>Erros:</label>
+            <input type="number" id="partidaErros" min="0" value="${p.erros || ''}">
+          </div>
+        ` : ''}
+        ${campos.includes('dificuldade') ? `
+          <div class="form-group">
+            <label>Dificuldade:</label>
+            <select id="partidaDificuldade">
+              <option value="">Selecione</option>
+              <option value="facil" ${p.dificuldade === 'facil' ? 'selected' : ''}>Fácil</option>
+              <option value="medio" ${p.dificuldade === 'medio' ? 'selected' : ''}>Médio</option>
+              <option value="dificil" ${p.dificuldade === 'dificil' ? 'selected' : ''}>Difícil</option>
+            </select>
+          </div>
+        ` : ''}
+      </form>
+      <div id="partidasMsg"></div>
       <div class="modal-actions">
-        <button class="btn-save" id="btnBuscarPartidas">Buscar Partidas</button>
-        <button class="btn-cancel" id="btnPartidasVoltar">Voltar</button>
-      </div>`;
+        <button class="btn-save" id="btnSalvarPartida">💾 Salvar</button>
+        <button class="btn-cancel" id="btnCancelarPartida">Cancelar</button>
+      </div>
+    `;
+  } else if (partidasState.step === 'editarMassa') {
+    const campos = partidasState.camposJogo;
+    html = `
+      <h3>✏️ Editar ${partidasState.partidasSelecionadas.length} Partidas</h3>
+      <p>Apenas os campos preenchidos serão atualizados em todas as partidas selecionadas.</p>
+      <form id="formPartidaMassa" class="form-partida">
+        ${campos.includes('resultado') ? `
+          <div class="form-group">
+            <label>Resultado:</label>
+            <select id="massaResultado">
+              <option value="">Não alterar</option>
+              <option value="vitoria">Vitória</option>
+              <option value="derrota">Derrota</option>
+              <option value="empate">Empate</option>
+            </select>
+          </div>
+        ` : ''}
+        ${campos.includes('pontuacao') ? `
+          <div class="form-group">
+            <label>Pontuação:</label>
+            <input type="number" id="massaPontuacao" min="0" placeholder="Não alterar">
+          </div>
+        ` : ''}
+        ${campos.includes('tempo') ? `
+          <div class="form-group">
+            <label>Tempo (segundos):</label>
+            <input type="number" id="massaTempo" min="0" placeholder="Não alterar">
+          </div>
+        ` : ''}
+        ${campos.includes('erros') ? `
+          <div class="form-group">
+            <label>Erros:</label>
+            <input type="number" id="massaErros" min="0" placeholder="Não alterar">
+          </div>
+        ` : ''}
+        ${campos.includes('dificuldade') ? `
+          <div class="form-group">
+            <label>Dificuldade:</label>
+            <select id="massaDificuldade">
+              <option value="">Não alterar</option>
+              <option value="facil">Fácil</option>
+              <option value="medio">Médio</option>
+              <option value="dificil">Difícil</option>
+            </select>
+          </div>
+        ` : ''}
+      </form>
+      <div id="partidasMsg"></div>
+      <div class="modal-actions">
+        <button class="btn-save" id="btnSalvarMassa">💾 Salvar Todas</button>
+        <button class="btn-cancel" id="btnCancelarMassa">Cancelar</button>
+      </div>
+    `;
   }
+  
   modalPartidasContent.innerHTML = html;
-  // Eventos
-  if (partidasModalState.step === 'selecao') {
-    document.getElementById('btnEscolherJogo').onclick = () => { partidasModalState.step = 'jogo'; renderModalPartidas(); };
-    document.getElementById('btnEscolherUsuario').onclick = () => { partidasModalState.step = 'usuario'; renderModalPartidas(); };
-    document.getElementById('btnPartidasVoltar').onclick = () => {
-      // Limpa seleção do Jogo/Usuário conforme contexto
-      if (partidasModalState.jogo && !partidasModalState.usuario) { partidasModalState.jogo = null; }
-      else if (!partidasModalState.jogo && partidasModalState.usuario) { partidasModalState.usuario = null; }
-      else { closeModalPartidasFn(); }
-      renderModalPartidas();
+  bindEventosPartidas();
+}
+
+function bindEventosPartidas() {
+  // Fechar modal
+  const btnFechar = document.getElementById('btnFecharPartidas');
+  if (btnFechar) btnFechar.onclick = closeModalPartidas;
+  
+  // Seleção de jogo/usuário
+  const btnSelJogo = document.getElementById('btnSelecionarJogo');
+  if (btnSelJogo) btnSelJogo.onclick = () => { partidasState.step = 'jogo'; renderModalPartidas(); };
+  
+  const btnSelUsuario = document.getElementById('btnSelecionarUsuario');
+  if (btnSelUsuario) btnSelUsuario.onclick = () => { partidasState.step = 'usuario'; renderModalPartidas(); };
+  
+  // Voltar para seleção
+  const btnVoltar = document.getElementById('btnVoltarSelecao');
+  if (btnVoltar) btnVoltar.onclick = () => { partidasState.step = 'selecao'; renderModalPartidas(); };
+  
+  // Buscar partidas
+  const btnBuscar = document.getElementById('btnBuscarPartidas');
+  if (btnBuscar) btnBuscar.onclick = async () => {
+    await carregarPartidas();
+    partidasState.step = 'lista';
+    renderModalPartidas();
+  };
+  
+  // Busca de jogos
+  const inputJogo = document.getElementById('buscaJogoInput');
+  if (inputJogo) {
+    inputJogo.oninput = async () => {
+      const nome = inputJogo.value.trim();
+      const ul = document.getElementById('listaJogos');
+      if (!nome) { ul.innerHTML = '<li style="color:#aaa;">Digite para buscar...</li>'; return; }
+      try {
+        const res = await fetch(`${API_URL}/jogo?nome=${encodeURIComponent(nome)}`);
+        const lista = res.ok ? await res.json() : [];
+        ul.innerHTML = lista.length 
+          ? lista.map(j => `<li data-id="${j.id}" data-titulo="${j.titulo}">${j.titulo}</li>`).join('')
+          : '<li style="color:#aaa;">Nenhum jogo encontrado</li>';
+        Array.from(ul.querySelectorAll('li[data-id]')).forEach(li => {
+          li.onclick = () => {
+            partidasState.jogo = { id: li.dataset.id, titulo: li.dataset.titulo };
+            partidasState.step = 'selecao';
+            renderModalPartidas();
+          };
+        });
+      } catch { ul.innerHTML = '<li style="color:#aaa;">Erro ao buscar</li>'; }
     };
-    if (partidasModalState.jogo && partidasModalState.usuario) {
-      document.getElementById('btnBuscarPartidas').onclick = () => {
-        partidasModalState.step = 'resumo';
+    inputJogo.focus();
+  }
+  
+  // Busca de usuários
+  const inputUsuario = document.getElementById('buscaUsuarioInput');
+  if (inputUsuario) {
+    inputUsuario.oninput = async () => {
+      const nome = inputUsuario.value.trim();
+      const ul = document.getElementById('listaUsuarios');
+      if (!nome) { ul.innerHTML = '<li style="color:#aaa;">Digite para buscar...</li>'; return; }
+      try {
+        const res = await fetch(`${API_URL}/usuario?nome=${encodeURIComponent(nome)}`);
+        const lista = res.ok ? await res.json() : [];
+        ul.innerHTML = lista.length 
+          ? lista.map(u => `<li data-id="${u.id}" data-nome="${u.nome}">${u.nome}</li>`).join('')
+          : '<li style="color:#aaa;">Nenhum usuário encontrado</li>';
+        Array.from(ul.querySelectorAll('li[data-id]')).forEach(li => {
+          li.onclick = () => {
+            partidasState.usuario = { id: li.dataset.id, nome: li.dataset.nome };
+            partidasState.step = 'selecao';
+            renderModalPartidas();
+          };
+        });
+      } catch { ul.innerHTML = '<li style="color:#aaa;">Erro ao buscar</li>'; }
+    };
+    inputUsuario.focus();
+  }
+  
+  // Nova partida
+  const btnNova = document.getElementById('btnNovaPartida');
+  if (btnNova) btnNova.onclick = () => {
+    partidasState.partidaSelecionada = null;
+    partidasState.step = 'criar';
+    renderModalPartidas();
+  };
+  
+  // Checkbox selecionar todas
+  const checkTodas = document.getElementById('checkTodas');
+  if (checkTodas) {
+    checkTodas.onchange = () => {
+      const checks = document.querySelectorAll('.check-partida');
+      checks.forEach(c => c.checked = checkTodas.checked);
+      atualizarBotoesSelecionadas();
+    };
+  }
+  
+  // Checkboxes individuais
+  document.querySelectorAll('.check-partida').forEach(c => {
+    c.onchange = atualizarBotoesSelecionadas;
+  });
+  
+  // Editar partida individual
+  document.querySelectorAll('.btn-editar-partida').forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      try {
+        const res = await fetch(`${API_URL}/api/partida/${id}`);
+        if (!res.ok) throw new Error();
+        const partida = await res.json();
+        partidasState.partidaSelecionada = partida;
+        partidasState.step = 'editar';
         renderModalPartidas();
-      };
+      } catch { showPartidasMsg('Erro ao carregar partida', 'error'); }
+    };
+  });
+  
+  // Excluir partida individual
+  document.querySelectorAll('.btn-excluir-partida').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Tem certeza que deseja excluir esta partida?')) return;
+      const id = btn.dataset.id;
+      try {
+        const res = await fetch(`${API_URL}/api/partida/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+        showPartidasMsg('Partida excluída!', 'success');
+        await carregarPartidas();
+        renderModalPartidas();
+      } catch { showPartidasMsg('Erro ao excluir partida', 'error'); }
+    };
+  });
+  
+  // Editar selecionadas
+  const btnEditarSel = document.getElementById('btnEditarSelecionadas');
+  if (btnEditarSel) btnEditarSel.onclick = () => {
+    const ids = Array.from(document.querySelectorAll('.check-partida:checked')).map(c => c.dataset.id);
+    if (!ids.length) return showPartidasMsg('Selecione pelo menos uma partida', 'error');
+    partidasState.partidasSelecionadas = ids;
+    partidasState.step = 'editarMassa';
+    renderModalPartidas();
+  };
+  
+  // Excluir selecionadas
+  const btnExcluirSel = document.getElementById('btnExcluirSelecionadas');
+  if (btnExcluirSel) btnExcluirSel.onclick = async () => {
+    const ids = Array.from(document.querySelectorAll('.check-partida:checked')).map(c => c.dataset.id);
+    if (!ids.length) return showPartidasMsg('Selecione pelo menos uma partida', 'error');
+    if (!confirm(`Tem certeza que deseja excluir ${ids.length} partida(s)?`)) return;
+    try {
+      const res = await fetch(`${API_URL}/api/partida?ids=${ids.join(',')}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      showPartidasMsg('Partidas excluídas!', 'success');
+      await carregarPartidas();
+      renderModalPartidas();
+    } catch { showPartidasMsg('Erro ao excluir partidas', 'error'); }
+  };
+  
+  // Excluir todas
+  const btnExcluirTodas = document.getElementById('btnExcluirTodas');
+  if (btnExcluirTodas) btnExcluirTodas.onclick = async () => {
+    if (!confirm(`Tem certeza que deseja excluir TODAS as partidas de ${partidasState.usuario.nome} em ${partidasState.jogo.titulo}?`)) return;
+    try {
+      const res = await fetch(`${API_URL}/api/partida?userId=${partidasState.usuario.id}&gameId=${partidasState.jogo.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      showPartidasMsg('Todas as partidas foram excluídas!', 'success');
+      await carregarPartidas();
+      renderModalPartidas();
+    } catch { showPartidasMsg('Erro ao excluir partidas', 'error'); }
+  };
+  
+  // Paginação
+  const btnPagAnt = document.getElementById('btnPaginaAnterior');
+  if (btnPagAnt) btnPagAnt.onclick = async () => {
+    if (partidasState.paginaAtual > 1) {
+      partidasState.paginaAtual--;
+      await carregarPartidas();
+      renderModalPartidas();
     }
-  } else if (partidasModalState.step === 'jogo') {
-    const nomeInput = document.getElementById('partidasJogoNome');
-    nomeInput.oninput = async () => {
-      const nome = nomeInput.value.trim();
-      let lista = [];
-      if (nome) {
-        try {
-          const res = await fetch(`${API_URL}/jogo?nome=${encodeURIComponent(nome)}`);
-          if (res.ok) lista = await res.json();
-        } catch {}
+  };
+  
+  const btnPagProx = document.getElementById('btnProximaPagina');
+  if (btnPagProx) btnPagProx.onclick = async () => {
+    if (partidasState.paginaAtual < partidasState.totalPaginas) {
+      partidasState.paginaAtual++;
+      await carregarPartidas();
+      renderModalPartidas();
+    }
+  };
+  
+  // Salvar partida (criar ou editar)
+  const btnSalvar = document.getElementById('btnSalvarPartida');
+  if (btnSalvar) btnSalvar.onclick = async () => {
+    const campos = partidasState.camposJogo;
+    const payload = {
+      id_usuario: partidasState.usuario.id,
+      id_jogo: partidasState.jogo.id,
+      jogo: partidasState.jogo.titulo,
+      usuario: partidasState.usuario.nome,
+    };
+    
+    const dataInput = document.getElementById('partidaData');
+    if (dataInput && dataInput.value) payload.data = new Date(dataInput.value).toISOString();
+    
+    if (campos.includes('resultado')) {
+      const v = document.getElementById('partidaResultado')?.value;
+      if (v) payload.resultado = v;
+    }
+    if (campos.includes('pontuacao')) {
+      const v = document.getElementById('partidaPontuacao')?.value;
+      if (v !== '') payload.pontuacao = Number(v);
+    }
+    if (campos.includes('tempo')) {
+      const v = document.getElementById('partidaTempo')?.value;
+      if (v !== '') payload.tempo = Number(v);
+    }
+    if (campos.includes('erros')) {
+      const v = document.getElementById('partidaErros')?.value;
+      if (v !== '') payload.erros = Number(v);
+    }
+    if (campos.includes('dificuldade')) {
+      const v = document.getElementById('partidaDificuldade')?.value;
+      if (v) payload.dificuldade = v;
+    }
+    
+    try {
+      let res;
+      if (partidasState.step === 'editar' && partidasState.partidaSelecionada) {
+        // Atualizar
+        res = await fetch(`${API_URL}/api/partida/${partidasState.partidaSelecionada.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        // Criar
+        res = await fetch(`${API_URL}/api/partida`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
       }
-      const ul = document.getElementById('partidasJogoList');
-      ul.innerHTML = lista.length ? lista.map(j => `<li data-id="${j.id}">${j.titulo}</li>`).join('') : '<li style="color:#aaa;">Nenhum resultado</li>';
-      Array.from(ul.querySelectorAll('li[data-id]')).forEach(li => {
-        li.onclick = async () => {
-          try {
-            const res = await fetch(`${API_URL}/jogo/${li.dataset.id}`);
-            if (!res.ok) throw new Error();
-            const jogo = await res.json();
-            partidasModalState.jogo = jogo;
-            partidasModalState.step = 'selecao';
-            renderModalPartidas();
-          } catch {}
-        };
-      });
-    };
-    document.getElementById('btnPartidasVoltar').onclick = () => { partidasModalState.step = 'selecao'; renderModalPartidas(); };
-    nomeInput.oninput();
-  } else if (partidasModalState.step === 'usuario') {
-    const nomeInput = document.getElementById('partidasUsuarioNome');
-    nomeInput.oninput = async () => {
-      const nome = nomeInput.value.trim();
-      let lista = [];
-      if (nome) {
-        try {
-          const res = await fetch(`${API_URL}/usuario?nome=${encodeURIComponent(nome)}`);
-          if (res.ok) lista = await res.json();
-        } catch {}
+      
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Erro ao salvar');
       }
-      const ul = document.getElementById('partidasUsuarioList');
-      ul.innerHTML = lista.length ? lista.map(u => `<li data-id="${u.id}">${u.nome}</li>`).join('') : '<li style="color:#aaa;">Nenhum resultado</li>';
-      Array.from(ul.querySelectorAll('li[data-id]')).forEach(li => {
-        li.onclick = async () => {
-          try {
-            const res = await fetch(`${API_URL}/usuario/${li.dataset.id}`);
-            if (!res.ok) throw new Error();
-            const usuario = await res.json();
-            partidasModalState.usuario = usuario;
-            partidasModalState.step = 'selecao';
-            renderModalPartidas();
-          } catch {}
-        };
+      
+      showPartidasMsg(partidasState.step === 'editar' ? 'Partida atualizada!' : 'Partida criada!', 'success');
+      await carregarPartidas();
+      partidasState.step = 'lista';
+      renderModalPartidas();
+    } catch (err) {
+      showPartidasMsg(err.message || 'Erro ao salvar partida', 'error');
+    }
+  };
+  
+  // Cancelar edição/criação
+  const btnCancelar = document.getElementById('btnCancelarPartida');
+  if (btnCancelar) btnCancelar.onclick = () => {
+    partidasState.step = 'lista';
+    renderModalPartidas();
+  };
+  
+  // Salvar em massa
+  const btnSalvarMassa = document.getElementById('btnSalvarMassa');
+  if (btnSalvarMassa) btnSalvarMassa.onclick = async () => {
+    const campos = partidasState.camposJogo;
+    const updates = {};
+    
+    if (campos.includes('resultado')) {
+      const v = document.getElementById('massaResultado')?.value;
+      if (v) updates.resultado = v;
+    }
+    if (campos.includes('pontuacao')) {
+      const v = document.getElementById('massaPontuacao')?.value;
+      if (v !== '') updates.pontuacao = Number(v);
+    }
+    if (campos.includes('tempo')) {
+      const v = document.getElementById('massaTempo')?.value;
+      if (v !== '') updates.tempo = Number(v);
+    }
+    if (campos.includes('erros')) {
+      const v = document.getElementById('massaErros')?.value;
+      if (v !== '') updates.erros = Number(v);
+    }
+    if (campos.includes('dificuldade')) {
+      const v = document.getElementById('massaDificuldade')?.value;
+      if (v) updates.dificuldade = v;
+    }
+    
+    if (Object.keys(updates).length === 0) {
+      return showPartidasMsg('Preencha pelo menos um campo para atualizar', 'error');
+    }
+    
+    try {
+      const res = await fetch(`${API_URL}/api/partida/batch/update`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: partidasState.partidasSelecionadas.map(Number), updates })
       });
-    };
-    document.getElementById('btnPartidasVoltar').onclick = () => { partidasModalState.step = 'selecao'; renderModalPartidas(); };
-    nomeInput.oninput();
-  } else if (partidasModalState.step === 'resumo') {
-    document.getElementById('btnBuscarPartidas').onclick = () => {
-      // Aqui você pode disparar evento ou callback para buscar partidas
-      window.dispatchEvent(new CustomEvent('partidasSelecionadas', { detail: { jogo: partidasModalState.jogo, usuario: partidasModalState.usuario } }));
-      closeModalPartidasFn();
-    };
-    document.getElementById('btnPartidasVoltar').onclick = () => { partidasModalState.step = 'selecao'; renderModalPartidas(); };
+      if (!res.ok) throw new Error();
+      showPartidasMsg('Partidas atualizadas!', 'success');
+      await carregarPartidas();
+      partidasState.step = 'lista';
+      renderModalPartidas();
+    } catch { showPartidasMsg('Erro ao atualizar partidas', 'error'); }
+  };
+  
+  // Cancelar edição em massa
+  const btnCancelarMassa = document.getElementById('btnCancelarMassa');
+  if (btnCancelarMassa) btnCancelarMassa.onclick = () => {
+    partidasState.step = 'lista';
+    renderModalPartidas();
+  };
+}
+
+function atualizarBotoesSelecionadas() {
+  const selecionadas = document.querySelectorAll('.check-partida:checked').length;
+  const btnEditar = document.getElementById('btnEditarSelecionadas');
+  const btnExcluir = document.getElementById('btnExcluirSelecionadas');
+  if (btnEditar) btnEditar.style.display = selecionadas > 0 ? '' : 'none';
+  if (btnExcluir) btnExcluir.style.display = selecionadas > 0 ? '' : 'none';
+}
+
+// Expor função globalmente
+window.openModalPartidas = openModalPartidas;
+window.closeModalPartidas = closeModalPartidas;
+
+// ============================================================================
+// MODAL: GERENCIAR CATÁLOGO DE TROFÉUS (CRUD TrophyType) - MELHORADO
+// ============================================================================
+
+const modalTrofeuTipo = document.getElementById('modal-trofeu-tipo');
+const modalTrofeuTipoContent = document.getElementById('modalTrofeuTipoContent');
+
+// Ícones disponíveis para troféus
+const TROFEU_ICONES = ['🏆', '🥇', '🥈', '🥉', '👑', '⭐', '🎖️', '🏅', '💎', '🌟', '🎯', '🔥', '💪', '🎮', '🎲', '🃏'];
+
+// Cores disponíveis para troféus  
+const TROFEU_CORES = ['#FFD700', '#C0C0C0', '#CD7F32', '#4F46E5', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4'];
+
+// Estado do modal de tipos de troféu
+let trofeuTipoState = {
+  step: 'lista', // lista | criar | editar
+  tipos: [],
+  tipoSelecionado: null,
+  iconeEscolhido: '🏆',
+  corEscolhida: '#FFD700',
+};
+
+function openModalTrofeuTipo() {
+  trofeuTipoState = {
+    step: 'lista',
+    tipos: [],
+    tipoSelecionado: null,
+    iconeEscolhido: '🏆',
+    corEscolhida: '#FFD700',
+  };
+  modalTrofeuTipo.style.display = 'flex';
+  carregarTiposTrofeu();
+}
+
+function closeModalTrofeuTipo() {
+  modalTrofeuTipo.style.display = 'none';
+}
+
+function showTrofeuTipoMsg(msg, type = 'info') {
+  const msgDiv = document.getElementById('trofeuTipoMsg');
+  if (msgDiv) {
+    msgDiv.innerHTML = `<div class="msg ${type}">${msg}</div>`;
+    setTimeout(() => msgDiv.innerHTML = '', 4000);
   }
 }
-// Exemplo de como abrir os modais (substitua pelos seus gatilhos reais)
-window.openModalCrud = openModalCrud;
-window.openModalPartidas = openModalPartidas;
+
+async function carregarTiposTrofeu() {
+  try {
+    const res = await fetch(`${API_URL}/trophy/types`);
+    if (!res.ok) throw new Error('Erro ao carregar tipos');
+    trofeuTipoState.tipos = await res.json();
+    renderModalTrofeuTipo();
+  } catch (err) {
+    trofeuTipoState.tipos = [];
+    showTrofeuTipoMsg('Erro ao carregar tipos de troféu', 'error');
+    renderModalTrofeuTipo();
+  }
+}
+
+function renderModalTrofeuTipo() {
+  let html = '';
+  
+  if (trofeuTipoState.step === 'lista') {
+    html = `
+      <h3>🏆 Catálogo de Troféus</h3>
+      <p style="color:#6b7280; margin-bottom:16px;">Gerencie os tipos de troféus disponíveis no sistema.</p>
+      <div id="trofeuTipoMsg"></div>
+      <div class="trofeu-toolbar">
+        <button class="btn-primary" id="btnNovoTipoTrofeu">➕ Criar Novo Troféu</button>
+      </div>
+      <div class="trofeu-lista-container">
+        ${trofeuTipoState.tipos.length === 0 ? '<p class="nenhum-resultado">Nenhum tipo de troféu cadastrado.</p>' : `
+          <table class="trofeu-tabela">
+            <thead>
+              <tr>
+                <th style="width:60px;">Ícone</th>
+                <th>Título</th>
+                <th>Descrição</th>
+                <th style="width:100px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${trofeuTipoState.tipos.map(t => {
+                const icone = t.icone || t.dados?.icone || '🏆';
+                const cor = t.cor_hex || t.dados?.cor_hex || '#FFD700';
+                return `
+                <tr data-id="${t.id}">
+                  <td style="text-align:center;">
+                    <span style="font-size:2rem; color:${cor};">${icone}</span>
+                  </td>
+                  <td>
+                    <strong style="color:${cor};">${t.titulo || '-'}</strong>
+                    <br><small style="color:#9ca3af;">${t.chave || ''}</small>
+                  </td>
+                  <td style="font-size:0.9rem; color:#6b7280;">${t.descricao ? t.descricao.substring(0, 60) + (t.descricao.length > 60 ? '...' : '') : '-'}</td>
+                  <td>
+                    <div style="display:flex; gap:6px;">
+                      <button class="btn-small btn-secondary btn-editar-tipo" data-id="${t.id}" title="Editar">✏️</button>
+                      <button class="btn-small btn-danger btn-excluir-tipo" data-id="${t.id}" title="Excluir">🗑️</button>
+                    </div>
+                  </td>
+                </tr>
+              `}).join('')}
+            </tbody>
+          </table>
+        `}
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnFecharTrofeuTipo">Fechar</button>
+      </div>
+    `;
+  } else if (trofeuTipoState.step === 'criar' || trofeuTipoState.step === 'editar') {
+    const t = trofeuTipoState.tipoSelecionado || {};
+    const isEditar = trofeuTipoState.step === 'editar';
+    const iconeAtual = t.icone || t.dados?.icone || trofeuTipoState.iconeEscolhido;
+    const corAtual = t.cor_hex || t.dados?.cor_hex || trofeuTipoState.corEscolhida;
+    
+    html = `
+      <h3>${isEditar ? '✏️ Editar' : '➕ Criar'} Troféu</h3>
+      
+      <!-- Preview do troféu -->
+      <div class="trofeu-preview-large" id="trofeuPreview" style="color:${corAtual};">
+        ${iconeAtual}
+      </div>
+      
+      <form id="formTipoTrofeu" class="form-trofeu">
+        <div class="form-group">
+          <label>Título do Troféu: *</label>
+          <input type="text" id="tipoTitulo" value="${t.titulo || ''}" required maxlength="100" placeholder="Ex: Campeão de Velocidade">
+        </div>
+        
+        <div class="form-group">
+          <label>Chave única (identificador): *</label>
+          <input type="text" id="tipoChave" value="${t.chave || ''}" required maxlength="50" 
+                 placeholder="Ex: campeao_velocidade" ${isEditar ? 'readonly style="background:#f5f5f5;"' : ''}>
+          ${!isEditar ? '<small style="color:#6b7280;">Use apenas letras minúsculas, números e underline</small>' : ''}
+        </div>
+        
+        <div class="form-group">
+          <label>Descrição:</label>
+          <textarea id="tipoDescricao" rows="2" placeholder="Descrição do troféu...">${t.descricao || ''}</textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>Escolha o Ícone:</label>
+          <div class="icon-selector" id="iconSelector">
+            ${TROFEU_ICONES.map(icon => `
+              <div class="icon-option ${icon === iconeAtual ? 'selected' : ''}" data-icon="${icon}">${icon}</div>
+            `).join('')}
+          </div>
+          <input type="hidden" id="tipoIcone" value="${iconeAtual}">
+        </div>
+        
+        <div class="form-group">
+          <label>Escolha a Cor:</label>
+          <div class="color-selector" id="colorSelector">
+            ${TROFEU_CORES.map(cor => `
+              <div class="color-option ${cor === corAtual ? 'selected' : ''}" data-color="${cor}" style="background:${cor};"></div>
+            `).join('')}
+          </div>
+          <input type="hidden" id="tipoCorHex" value="${corAtual}">
+        </div>
+      </form>
+      
+      <div id="trofeuTipoMsg"></div>
+      <div class="modal-actions">
+        <button class="btn-save" id="btnSalvarTipoTrofeu">💾 ${isEditar ? 'Salvar Alterações' : 'Criar Troféu'}</button>
+        <button class="btn-cancel" id="btnCancelarTipoTrofeu">Cancelar</button>
+      </div>
+    `;
+  }
+  
+  modalTrofeuTipoContent.innerHTML = html;
+  bindEventosTrofeuTipo();
+}
+
+function bindEventosTrofeuTipo() {
+  // Fechar modal
+  const btnFechar = document.getElementById('btnFecharTrofeuTipo');
+  if (btnFechar) btnFechar.onclick = closeModalTrofeuTipo;
+  
+  // Novo tipo
+  const btnNovo = document.getElementById('btnNovoTipoTrofeu');
+  if (btnNovo) btnNovo.onclick = () => {
+    trofeuTipoState.tipoSelecionado = null;
+    trofeuTipoState.iconeEscolhido = '🏆';
+    trofeuTipoState.corEscolhida = '#FFD700';
+    trofeuTipoState.step = 'criar';
+    renderModalTrofeuTipo();
+  };
+  
+  // Editar tipo
+  document.querySelectorAll('.btn-editar-tipo').forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      try {
+        const res = await fetch(`${API_URL}/trophy/types/${id}`);
+        if (!res.ok) throw new Error();
+        const tipo = await res.json();
+        trofeuTipoState.tipoSelecionado = tipo;
+        trofeuTipoState.iconeEscolhido = tipo.icone || tipo.dados?.icone || '🏆';
+        trofeuTipoState.corEscolhida = tipo.cor_hex || tipo.dados?.cor_hex || '#FFD700';
+        trofeuTipoState.step = 'editar';
+        renderModalTrofeuTipo();
+      } catch {
+        showTrofeuTipoMsg('Erro ao carregar tipo de troféu', 'error');
+      }
+    };
+  });
+  
+  // Excluir tipo
+  document.querySelectorAll('.btn-excluir-tipo').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Tem certeza que deseja excluir este tipo de troféu?\n\nTodos os troféus deste tipo atribuídos a usuários também serão removidos!')) return;
+      const id = btn.dataset.id;
+      try {
+        const res = await fetch(`${API_URL}/trophy/types/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Erro ao excluir');
+        }
+        showTrofeuTipoMsg('Tipo de troféu excluído!', 'success');
+        await carregarTiposTrofeu();
+      } catch (err) {
+        showTrofeuTipoMsg(err.message || 'Erro ao excluir tipo de troféu', 'error');
+      }
+    };
+  });
+  
+  // Seleção de ícone
+  document.querySelectorAll('.icon-option').forEach(opt => {
+    opt.onclick = () => {
+      document.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      const icon = opt.dataset.icon;
+      document.getElementById('tipoIcone').value = icon;
+      trofeuTipoState.iconeEscolhido = icon;
+      // Atualiza preview
+      const preview = document.getElementById('trofeuPreview');
+      if (preview) preview.innerHTML = icon;
+    };
+  });
+  
+  // Seleção de cor
+  document.querySelectorAll('.color-option').forEach(opt => {
+    opt.onclick = () => {
+      document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      const cor = opt.dataset.color;
+      document.getElementById('tipoCorHex').value = cor;
+      trofeuTipoState.corEscolhida = cor;
+      // Atualiza preview
+      const preview = document.getElementById('trofeuPreview');
+      if (preview) preview.style.color = cor;
+    };
+  });
+  
+  // Salvar tipo
+  const btnSalvar = document.getElementById('btnSalvarTipoTrofeu');
+  if (btnSalvar) btnSalvar.onclick = async () => {
+    const titulo = document.getElementById('tipoTitulo')?.value.trim();
+    const chave = document.getElementById('tipoChave')?.value.trim();
+    const descricao = document.getElementById('tipoDescricao')?.value.trim();
+    const cor_hex = document.getElementById('tipoCorHex')?.value.trim() || trofeuTipoState.corEscolhida;
+    const icone = document.getElementById('tipoIcone')?.value.trim() || trofeuTipoState.iconeEscolhido;
+    
+    if (!titulo) return showTrofeuTipoMsg('Título é obrigatório', 'error');
+    if (!chave) return showTrofeuTipoMsg('Chave é obrigatória', 'error');
+    
+    // Valida formato da chave
+    if (!/^[a-z0-9_]+$/.test(chave)) {
+      return showTrofeuTipoMsg('Chave deve conter apenas letras minúsculas, números e underline', 'error');
+    }
+    
+    // Payload enviado diretamente com cor_hex e icone no nível raiz
+    // O backend vai montar o JSON dados internamente
+    const payload = {
+      titulo,
+      chave,
+      descricao,
+      cor_hex,
+      icone
+    };
+    
+    try {
+      let res;
+      if (trofeuTipoState.step === 'editar' && trofeuTipoState.tipoSelecionado) {
+        res = await fetch(`${API_URL}/trophy/types/${trofeuTipoState.tipoSelecionado.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        res = await fetch(`${API_URL}/trophy/types`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Erro ao salvar');
+      }
+      
+      showTrofeuTipoMsg(trofeuTipoState.step === 'editar' ? 'Troféu atualizado!' : 'Troféu criado com sucesso!', 'success');
+      trofeuTipoState.step = 'lista';
+      await carregarTiposTrofeu();
+    } catch (err) {
+      showTrofeuTipoMsg(err.message || 'Erro ao salvar tipo de troféu', 'error');
+    }
+  };
+  
+  // Cancelar
+  const btnCancelar = document.getElementById('btnCancelarTipoTrofeu');
+  if (btnCancelar) btnCancelar.onclick = () => {
+    trofeuTipoState.step = 'lista';
+    renderModalTrofeuTipo();
+  };
+}
+
+// Expor funções globalmente
+window.openModalTrofeuTipo = openModalTrofeuTipo;
+window.closeModalTrofeuTipo = closeModalTrofeuTipo;
+
+
+// ============================================================================
+// MODAL: ATRIBUIR TROFÉU A USUÁRIO
+// ============================================================================
+
+const modalTrofeuAtribuir = document.getElementById('modal-trofeu-atribuir');
+const modalTrofeuAtribuirContent = document.getElementById('modalTrofeuAtribuirContent');
+
+// Estado do modal de atribuição
+let trofeuAtribuirState = {
+  step: 'selecao', // selecao | usuario | tipo | lista
+  usuario: null,
+  tipoTrofeu: null,
+  trofeusUsuario: [],
+  tiposDisponiveis: [],
+};
+
+function openModalTrofeuAtribuir() {
+  trofeuAtribuirState = {
+    step: 'selecao',
+    usuario: null,
+    tipoTrofeu: null,
+    trofeusUsuario: [],
+    tiposDisponiveis: [],
+  };
+  modalTrofeuAtribuir.style.display = 'flex';
+  renderModalTrofeuAtribuir();
+}
+
+function closeModalTrofeuAtribuir() {
+  modalTrofeuAtribuir.style.display = 'none';
+}
+
+function showTrofeuAtribuirMsg(msg, type = 'info') {
+  const msgDiv = document.getElementById('trofeuAtribuirMsg');
+  if (msgDiv) {
+    msgDiv.innerHTML = `<div class="msg ${type}">${msg}</div>`;
+    setTimeout(() => msgDiv.innerHTML = '', 4000);
+  }
+}
+
+async function carregarTrofeusUsuario() {
+  if (!trofeuAtribuirState.usuario) return;
+  try {
+    const res = await fetch(`${API_URL}/trophy/usuario/${trofeuAtribuirState.usuario.id}`);
+    if (!res.ok) throw new Error();
+    trofeuAtribuirState.trofeusUsuario = await res.json();
+  } catch {
+    trofeuAtribuirState.trofeusUsuario = [];
+  }
+}
+
+async function carregarTiposDisponiveis() {
+  try {
+    const res = await fetch(`${API_URL}/trophy/types`);
+    if (!res.ok) throw new Error();
+    const todos = await res.json();
+    // Filtra os tipos que o usuário ainda não possui
+    const idsJaPossui = trofeuAtribuirState.trofeusUsuario.map(t => t.trophy_type_id);
+    trofeuAtribuirState.tiposDisponiveis = todos.filter(t => !idsJaPossui.includes(t.id));
+  } catch {
+    trofeuAtribuirState.tiposDisponiveis = [];
+  }
+}
+
+function renderModalTrofeuAtribuir() {
+  let html = '';
+  
+  if (trofeuAtribuirState.step === 'selecao') {
+    html = `
+      <h3>🎖️ Atribuir Troféu a Usuário</h3>
+      <p>Selecione um usuário para gerenciar seus troféus.</p>
+      <div class="modal-summary">
+        <div class="selecao-item ${trofeuAtribuirState.usuario ? 'selecionado' : ''}">
+          <b>👤 Usuário:</b> ${trofeuAtribuirState.usuario ? trofeuAtribuirState.usuario.nome : '<em>Não selecionado</em>'}
+          <button class="btn-secondary btn-small" id="btnSelecionarUsuarioTrofeu">${trofeuAtribuirState.usuario ? 'Alterar' : 'Selecionar'}</button>
+        </div>
+      </div>
+      <div id="trofeuAtribuirMsg"></div>
+      <div class="modal-actions">
+        ${trofeuAtribuirState.usuario ? '<button class="btn-primary" id="btnVerTrofeusUsuario">👁️ Ver Troféus do Usuário</button>' : ''}
+        <button class="btn-cancel" id="btnFecharTrofeuAtribuir">Fechar</button>
+      </div>
+    `;
+  } else if (trofeuAtribuirState.step === 'usuario') {
+    html = `
+      <h3>👤 Selecionar Usuário</h3>
+      <input type="text" id="buscaUsuarioTrofeuInput" placeholder="Digite o nome do usuário..." class="modal-input">
+      <ul class="modal-list" id="listaUsuariosTrofeu"></ul>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnVoltarSelecaoTrofeu">Voltar</button>
+      </div>
+    `;
+  } else if (trofeuAtribuirState.step === 'lista') {
+    html = `
+      <h3>🏆 Troféus de ${trofeuAtribuirState.usuario.nome}</h3>
+      <div id="trofeuAtribuirMsg"></div>
+      <div class="trofeu-toolbar">
+        <button class="btn-primary btn-small" id="btnAtribuirNovoTrofeu">➕ Atribuir Novo Troféu</button>
+      </div>
+      <div class="trofeu-lista-container">
+        ${trofeuAtribuirState.trofeusUsuario.length === 0 ? '<p class="nenhum-resultado">Este usuário não possui troféus.</p>' : `
+          <table class="trofeu-tabela">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Troféu</th>
+                <th>Data de Atribuição</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${trofeuAtribuirState.trofeusUsuario.map(t => `
+                <tr data-id="${t.id}">
+                  <td>${t.id}</td>
+                  <td>
+                    <span class="trofeu-icone">${t.trofeu_icone || '🏆'}</span>
+                    <strong>${t.trofeu_nome || 'Sem nome'}</strong>
+                    <br><small>${t.trofeu_descricao || ''}</small>
+                  </td>
+                  <td>${t.data_atribuicao ? new Date(t.data_atribuicao).toLocaleString('pt-BR') : '-'}</td>
+                  <td>
+                    <button class="btn-small btn-danger btn-revogar-trofeu" data-id="${t.id}">🗑️ Revogar</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `}
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnVoltarSelecaoTrofeu">Voltar</button>
+      </div>
+    `;
+  } else if (trofeuAtribuirState.step === 'tipo') {
+    html = `
+      <h3>🏆 Selecionar Troféu para Atribuir</h3>
+      <p>Atribuindo para: <strong>${trofeuAtribuirState.usuario.nome}</strong></p>
+      <div id="trofeuAtribuirMsg"></div>
+      <div class="trofeu-lista-container">
+        ${trofeuAtribuirState.tiposDisponiveis.length === 0 ? '<p class="nenhum-resultado">Não há troféus disponíveis para atribuir (usuário já possui todos).</p>' : `
+          <table class="trofeu-tabela">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Troféu</th>
+                <th>Descrição</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${trofeuAtribuirState.tiposDisponiveis.map(t => `
+                <tr data-id="${t.id}">
+                  <td>${t.id}</td>
+                  <td>
+                    <span class="trofeu-icone">${t.icone || t.dados?.icone || '🏆'}</span>
+                    <strong>${t.titulo || 'Sem nome'}</strong>
+                  </td>
+                  <td>${t.descricao ? t.descricao.substring(0, 80) + (t.descricao.length > 80 ? '...' : '') : '-'}</td>
+                  <td>
+                    <button class="btn-small btn-primary btn-atribuir-tipo" data-id="${t.id}" data-titulo="${t.titulo}">➕ Atribuir</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `}
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnVoltarListaTrofeus">Voltar</button>
+      </div>
+    `;
+  }
+  
+  modalTrofeuAtribuirContent.innerHTML = html;
+  bindEventosTrofeuAtribuir();
+}
+
+function bindEventosTrofeuAtribuir() {
+  // Fechar modal
+  const btnFechar = document.getElementById('btnFecharTrofeuAtribuir');
+  if (btnFechar) btnFechar.onclick = closeModalTrofeuAtribuir;
+  
+  // Selecionar usuário
+  const btnSelUsuario = document.getElementById('btnSelecionarUsuarioTrofeu');
+  if (btnSelUsuario) btnSelUsuario.onclick = () => {
+    trofeuAtribuirState.step = 'usuario';
+    renderModalTrofeuAtribuir();
+  };
+  
+  // Voltar para seleção
+  const btnVoltar = document.getElementById('btnVoltarSelecaoTrofeu');
+  if (btnVoltar) btnVoltar.onclick = () => {
+    trofeuAtribuirState.step = 'selecao';
+    renderModalTrofeuAtribuir();
+  };
+  
+  // Voltar para lista de troféus
+  const btnVoltarLista = document.getElementById('btnVoltarListaTrofeus');
+  if (btnVoltarLista) btnVoltarLista.onclick = () => {
+    trofeuAtribuirState.step = 'lista';
+    renderModalTrofeuAtribuir();
+  };
+  
+  // Ver troféus do usuário
+  const btnVerTrofeus = document.getElementById('btnVerTrofeusUsuario');
+  if (btnVerTrofeus) btnVerTrofeus.onclick = async () => {
+    await carregarTrofeusUsuario();
+    trofeuAtribuirState.step = 'lista';
+    renderModalTrofeuAtribuir();
+  };
+  
+  // Busca de usuários
+  const inputUsuario = document.getElementById('buscaUsuarioTrofeuInput');
+  if (inputUsuario) {
+    inputUsuario.oninput = async () => {
+      const nome = inputUsuario.value.trim();
+      const ul = document.getElementById('listaUsuariosTrofeu');
+      if (!nome) { ul.innerHTML = '<li style="color:#aaa;">Digite para buscar...</li>'; return; }
+      try {
+        const res = await fetch(`${API_URL}/usuario?nome=${encodeURIComponent(nome)}`);
+        const lista = res.ok ? await res.json() : [];
+        ul.innerHTML = lista.length 
+          ? lista.map(u => `<li data-id="${u.id}" data-nome="${u.nome}">${u.nome} (ID: ${u.id})</li>`).join('')
+          : '<li style="color:#aaa;">Nenhum usuário encontrado</li>';
+        Array.from(ul.querySelectorAll('li[data-id]')).forEach(li => {
+          li.onclick = () => {
+            trofeuAtribuirState.usuario = { id: li.dataset.id, nome: li.dataset.nome };
+            trofeuAtribuirState.step = 'selecao';
+            renderModalTrofeuAtribuir();
+          };
+        });
+      } catch { ul.innerHTML = '<li style="color:#aaa;">Erro ao buscar</li>'; }
+    };
+    inputUsuario.focus();
+  }
+  
+  // Atribuir novo troféu - ir para seleção de tipo
+  const btnAtribuirNovo = document.getElementById('btnAtribuirNovoTrofeu');
+  if (btnAtribuirNovo) btnAtribuirNovo.onclick = async () => {
+    await carregarTiposDisponiveis();
+    trofeuAtribuirState.step = 'tipo';
+    renderModalTrofeuAtribuir();
+  };
+  
+  // Atribuir tipo específico
+  document.querySelectorAll('.btn-atribuir-tipo').forEach(btn => {
+    btn.onclick = async () => {
+      const trophy_type_id = btn.dataset.id;
+      const titulo = btn.dataset.titulo;
+      
+      if (!confirm(`Atribuir o troféu "${titulo}" para ${trofeuAtribuirState.usuario.nome}?`)) return;
+      
+      try {
+        const res = await fetch(`${API_URL}/trophy/assign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            usuario_id: trofeuAtribuirState.usuario.id,
+            trophy_type_id: trophy_type_id
+          })
+        });
+        
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Erro ao atribuir');
+        }
+        
+        showTrofeuAtribuirMsg('Troféu atribuído com sucesso!', 'success');
+        await carregarTrofeusUsuario();
+        trofeuAtribuirState.step = 'lista';
+        renderModalTrofeuAtribuir();
+      } catch (err) {
+        showTrofeuAtribuirMsg(err.message || 'Erro ao atribuir troféu', 'error');
+      }
+    };
+  });
+  
+  // Revogar troféu
+  document.querySelectorAll('.btn-revogar-trofeu').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Tem certeza que deseja revogar este troféu do usuário?')) return;
+      const id = btn.dataset.id;
+      try {
+        const res = await fetch(`${API_URL}/trophy/revoke/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+        showTrofeuAtribuirMsg('Troféu revogado!', 'success');
+        await carregarTrofeusUsuario();
+        renderModalTrofeuAtribuir();
+      } catch {
+        showTrofeuAtribuirMsg('Erro ao revogar troféu', 'error');
+      }
+    };
+  });
+}
+
+// Expor funções globalmente
+window.openModalTrofeuAtribuir = openModalTrofeuAtribuir;
+window.closeModalTrofeuAtribuir = closeModalTrofeuAtribuir;
+
+// ============================================================================
+// CARREGAR LISTA INICIAL DE TROFÉUS NA SEÇÃO (opcional)
+// ============================================================================
+
+async function carregarListaTrofeusGeral() {
+  const container = document.getElementById('trofeuListContainer');
+  if (!container) return;
+  
+  try {
+    const res = await fetch(`${API_URL}/trophy`);
+    if (!res.ok) throw new Error();
+    const trofeus = await res.json();
+    
+    if (trofeus.length === 0) {
+      container.innerHTML = '<p class="nenhum-resultado">Nenhum troféu atribuído ainda.</p>';
+      return;
+    }
+    
+    container.innerHTML = `
+      <h4>Últimos Troféus Atribuídos</h4>
+      <table class="trofeu-tabela compact">
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Troféu</th>
+            <th>Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${trofeus.slice(0, 10).map(t => `
+            <tr>
+              <td>${t.usuario_nome || 'Desconhecido'}</td>
+              <td><span class="trofeu-icone">${t.trofeu_icone || '🏆'}</span> ${t.trofeu_nome || '-'}</td>
+              <td>${t.data_atribuicao ? new Date(t.data_atribuicao).toLocaleDateString('pt-BR') : '-'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch {
+    container.innerHTML = '<p class="nenhum-resultado">Erro ao carregar troféus.</p>';
+  }
+}
+
+// Carregar listas ao entrar nas abas específicas
+document.querySelectorAll('.gestao-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    if (this.dataset.tab === 'crud-trofeu') {
+      carregarListaTrofeusGeral();
+    }
+    if (this.dataset.tab === 'crud-admin') {
+      carregarListaAdmins();
+    }
+  });
+});
+
+// Carregar dados iniciais se a aba já estiver ativa no carregamento da página
+document.addEventListener('DOMContentLoaded', () => {
+  const activeTab = document.querySelector('.gestao-tab.active');
+  if (activeTab && activeTab.dataset.tab === 'crud-admin') {
+    carregarListaAdmins();
+  }
+  if (activeTab && activeTab.dataset.tab === 'crud-trofeu') {
+    carregarListaTrofeusGeral();
+  }
+});

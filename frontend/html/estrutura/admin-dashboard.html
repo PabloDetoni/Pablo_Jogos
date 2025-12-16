@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/frontend/css/estrutura/style.css" />
   <link rel="stylesheet" href="/frontend/css/estrutura/admin.css" />
   <link rel="stylesheet" href="/frontend/css/estrutura/admin-dashboard.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 </head>
 <body>
   <header class="site-header">
@@ -25,27 +26,103 @@
       </ul>
     </nav>
     <main class="admin-main-content">
+      <!-- Métricas Gerais -->
       <section>
-        <h2>Visão Geral</h2>
+        <h2><i class="fa-solid fa-chart-pie"></i> Visão Geral do Sistema</h2>
         <div class="dashboard-cards">
-          <div class="dashboard-card" id="dashboard-total-usuarios">
+          <div class="dashboard-card" id="card-usuarios">
+            <i class="fa-solid fa-users card-icon"></i>
             <h3>Usuários</h3>
-            <span class="dashboard-value">--</span>
+            <span class="dashboard-value" id="total-usuarios">--</span>
           </div>
-          <div class="dashboard-card" id="dashboard-total-jogos">
+          <div class="dashboard-card" id="card-jogos">
+            <i class="fa-solid fa-gamepad card-icon"></i>
             <h3>Jogos</h3>
-            <span class="dashboard-value">--</span>
+            <span class="dashboard-value" id="total-jogos">--</span>
           </div>
-          <div class="dashboard-card" id="dashboard-total-partidas">
+          <div class="dashboard-card" id="card-partidas">
+            <i class="fa-solid fa-play card-icon"></i>
             <h3>Partidas</h3>
-            <span class="dashboard-value">--</span>
+            <span class="dashboard-value" id="total-partidas">--</span>
+          </div>
+          <div class="dashboard-card" id="card-trofeus">
+            <i class="fa-solid fa-trophy card-icon"></i>
+            <h3>Troféus</h3>
+            <span class="dashboard-value" id="total-trofeus">--</span>
+          </div>
+          <div class="dashboard-card" id="card-admins">
+            <i class="fa-solid fa-user-shield card-icon"></i>
+            <h3>Admins</h3>
+            <span class="dashboard-value" id="total-admins">--</span>
           </div>
         </div>
-        <div class="dashboard-extra">
-          <h3>Atividades Recentes</h3>
-          <ul id="dashboard-logs">
-            <li>Carregando...</li>
-          </ul>
+      </section>
+
+      <!-- Métricas de Atividade -->
+      <section>
+        <h2><i class="fa-solid fa-bolt"></i> Destaques de Atividade</h2>
+        <div class="dashboard-highlight-cards">
+          <div class="highlight-card">
+            <div class="highlight-icon"><i class="fa-solid fa-fire"></i></div>
+            <div class="highlight-info">
+              <span class="highlight-label">Usuário mais ativo</span>
+              <span class="highlight-value" id="usuario-mais-partidas">--</span>
+              <span class="highlight-extra" id="usuario-mais-partidas-count"></span>
+            </div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-icon"><i class="fa-solid fa-medal"></i></div>
+            <div class="highlight-info">
+              <span class="highlight-label">Mais troféus</span>
+              <span class="highlight-value" id="usuario-mais-trofeus">--</span>
+              <span class="highlight-extra" id="usuario-mais-trofeus-count"></span>
+            </div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-icon"><i class="fa-solid fa-crown"></i></div>
+            <div class="highlight-info">
+              <span class="highlight-label">Jogo mais jogado</span>
+              <span class="highlight-value" id="jogo-mais-jogado">--</span>
+              <span class="highlight-extra" id="jogo-mais-jogado-count"></span>
+            </div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-icon"><i class="fa-solid fa-clock"></i></div>
+            <div class="highlight-info">
+              <span class="highlight-label">Última partida</span>
+              <span class="highlight-value" id="ultima-partida-jogo">--</span>
+              <span class="highlight-extra" id="ultima-partida-data"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Métricas por Jogo -->
+      <section>
+        <h2><i class="fa-solid fa-chart-bar"></i> Estatísticas por Jogo</h2>
+        <div class="table-responsive">
+          <table class="dashboard-table" id="tabela-metricas-jogos">
+            <thead>
+              <tr>
+                <th>Jogo</th>
+                <th>Partidas</th>
+                <th>% Vitórias</th>
+                <th>% Derrotas</th>
+                <th>% Empates</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-metricas-jogos">
+              <tr><td colspan="5">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Top 3 Ranking Geral -->
+      <section>
+        <h2><i class="fa-solid fa-ranking-star"></i> Top 3 Ranking Geral</h2>
+        <div class="top-ranking-container" id="top-ranking-geral">
+          <div class="top-ranking-loading">Carregando...</div>
         </div>
       </section>
     </main>

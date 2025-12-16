@@ -1,71 +1,315 @@
 /* Dashboard cards e layout extra para admin-dashboard.html */
+
+/* Cards de métricas gerais */
 .dashboard-cards {
   display: flex;
-  gap: 32px;
-  margin-bottom: 38px;
+  gap: 20px;
+  margin-bottom: 32px;
   flex-wrap: wrap;
 }
+
 .dashboard-card {
-  background: linear-gradient(120deg, #6366f1 60%, #818cf8 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
   color: #fff;
-  border-radius: 18px;
-  box-shadow: 0 4px 24px #6366f180;
-  padding: 32px 38px;
-  min-width: 180px;
-  min-height: 90px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+  padding: 24px 28px;
+  min-width: 160px;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 1.13rem;
-  font-weight: 500;
   position: relative;
-  transition: box-shadow 0.18s, transform 0.14s;
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
 }
-.dashboard-card h3 {
-  font-size: 1.2rem;
-  margin-bottom: 8px;
-  color: #e0e7ff;
-  font-weight: 700;
-}
-.dashboard-value {
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: #fff;
-  text-shadow: 0 2px 18px #818cf830, 0 1px 1px #a5b4fc44;
-}
+
 .dashboard-card:hover {
-  box-shadow: 0 8px 36px #6366f1bb;
-  transform: translateY(-4px) scale(1.025);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
 }
-.dashboard-extra {
-  margin-top: 32px;
-  background: linear-gradient(120deg, #e0e7ff 80%, #c7d2fe 100%);
+
+.dashboard-card .card-icon {
+  font-size: 2rem;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.dashboard-card h3 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Cards de destaque de atividade */
+.dashboard-highlight-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.highlight-card {
+  background: #fff;
   border-radius: 14px;
-  box-shadow: 0 2px 18px #818cf830;
-  border: 1.5px solid #818cf8;
-  padding: 24px 18px;
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.1);
+  border: 1px solid #e0e7ff;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-.dashboard-extra h3 {
-  color: #312e81;
-  margin-bottom: 12px;
+
+.highlight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
 }
-#dashboard-logs {
-  list-style: none;
-  padding: 0;
-  color: #23235b;
-  font-size: 1.05rem;
+
+.highlight-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #6366f1;
 }
-#dashboard-logs li {
-  margin-bottom: 7px;
-  padding-left: 8px;
-  border-left: 3px solid #6366f1;
+
+.highlight-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
+
+.highlight-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.highlight-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.highlight-extra {
+  font-size: 0.9rem;
+  color: #6366f1;
+  font-weight: 500;
+}
+
+/* Tabela de métricas por jogo */
+.dashboard-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.1);
+}
+
+.dashboard-table thead th {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+  color: #fff;
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e0e7ff;
+  color: #334155;
+}
+
+.dashboard-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dashboard-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* Barras de progresso */
+.progress-bar {
+  width: 80px;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.progress-fill.vitoria {
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+}
+
+.progress-fill.derrota {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.progress-fill.empate {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.percent-value {
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+/* Top Ranking - Pódio */
+.top-ranking-container {
+  padding: 20px;
+}
+
+.top-ranking-loading {
+  text-align: center;
+  color: #64748b;
+  padding: 40px;
+}
+
+.podium {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 20px;
+}
+
+.podium-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 32px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+  min-width: 140px;
+}
+
+.podium-item:hover {
+  transform: translateY(-4px);
+}
+
+.podium-item.gold {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+  order: 0;
+  padding: 32px 40px;
+}
+
+.podium-item.silver {
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+  box-shadow: 0 4px 16px rgba(100, 116, 139, 0.2);
+  order: -1;
+}
+
+.podium-item.bronze {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.2);
+  order: 1;
+}
+
+.podium-medal {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+}
+
+.podium-position {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.podium-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: center;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.podium-score {
+  font-size: 0.9rem;
+  color: #6366f1;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.no-data {
+  text-align: center;
+  color: #64748b;
+  padding: 40px;
+  font-style: italic;
+}
+
+/* Responsividade */
 @media (max-width: 900px) {
-  .dashboard-cards { flex-direction: column; gap: 18px; }
-  .dashboard-card { min-width: 90vw; padding: 18px 2vw; }
+  .dashboard-cards {
+    flex-direction: column;
+  }
+  
+  .dashboard-card {
+    min-width: 100%;
+  }
+  
+  .podium {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .podium-item {
+    order: 0 !important;
+    width: 100%;
+    max-width: 300px;
+  }
 }
+
 @media (max-width: 600px) {
-  .dashboard-card { font-size: 0.97rem; padding: 10px 7px; }
-  .dashboard-value { font-size: 1.3rem; }
+  .dashboard-value {
+    font-size: 1.8rem;
+  }
+  
+  .highlight-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .progress-bar {
+    width: 60px;
+  }
 }

@@ -1,16 +1,360 @@
 /* admin-ferramentas.css - Estilo para ferramentas administrativas */
-.admin-main-content section {
-  margin-bottom: 38px;
-  background: linear-gradient(120deg, #e0e7ff 80%, #c7d2fe 100%);
-  border-radius: 18px;
-  box-shadow: 0 2px 18px #818cf830;
-  border: 1.5px solid #818cf8;
-  padding: 32px 24px;
+
+/* Seções de ferramentas */
+.tool-section {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.1);
+  border: 1px solid #e0e7ff;
+  padding: 28px;
+  margin-bottom: 24px;
 }
-.admin-main-content h2 {
-  color: #312e81;
-  margin-bottom: 18px;
+
+.tool-section h2 {
+  color: #1e293b;
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-.admin-btn, .btn-danger {
-  margin-top: 12px;
+
+.tool-section h2 i {
+  color: #6366f1;
+}
+
+.tool-description {
+  color: #64748b;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+/* Ações das ferramentas */
+.tool-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Botões */
+.admin-btn {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.btn-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* Status de ferramentas */
+.tool-status {
+  margin-top: 16px;
+  min-height: 20px;
+}
+
+.status-message {
+  padding: 14px 18px;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.status-message i {
+  font-size: 1.2rem;
+  margin-top: 2px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.status-success {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.status-success i { color: #10b981; }
+
+.status-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.status-error i { color: #ef4444; }
+
+.status-warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+.status-warning i { color: #f59e0b; }
+
+.status-info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+}
+
+.status-info i { color: #3b82f6; }
+
+.status-loading {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+/* Formulários de ferramentas */
+.tool-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.form-group label {
+  color: #475569;
+  font-weight: 500;
+  min-width: 200px;
+}
+
+.form-group select {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 1rem;
+  min-width: 200px;
+  background: #fff;
+  color: #1e293b;
+}
+
+.form-group select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Zona de perigo */
+.danger-zone {
+  border-color: #fecaca;
+  background: linear-gradient(135deg, #fef2f2 0%, #fff 100%);
+}
+
+.danger-zone h2 {
+  color: #991b1b;
+}
+
+.danger-zone h2 i {
+  color: #ef4444;
+}
+
+.danger-text {
+  color: #991b1b;
+}
+
+.danger-box {
+  background: #fff;
+  border: 2px solid #fecaca;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 16px;
+}
+
+.danger-box h3 {
+  color: #991b1b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.danger-box ul {
+  margin: 12px 0;
+  padding-left: 24px;
+  color: #64748b;
+}
+
+.danger-box li {
+  margin-bottom: 6px;
+}
+
+.danger-box .keep-list {
+  color: #059669;
+}
+
+.warning-text {
+  color: #6366f1;
+  font-size: 0.95rem;
+  margin: 16px 0;
+}
+
+/* Modal de confirmação */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  padding: 32px;
+  max-width: 500px;
+  width: 90%;
+  animation: modalIn 0.3s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-content h3 {
+  color: #1e293b;
+  font-size: 1.3rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-content h3 i {
+  color: #f59e0b;
+}
+
+.modal-content p {
+  color: #475569;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.modal-input-group {
+  margin-bottom: 20px;
+}
+
+.modal-input-group label {
+  display: block;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.modal-input-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.modal-input-group input:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .tool-actions {
+    flex-direction: column;
+  }
+  
+  .admin-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .form-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .form-group label {
+    min-width: auto;
+  }
+  
+  .form-group select {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .modal-actions .admin-btn {
+    width: 100%;
+  }
 }

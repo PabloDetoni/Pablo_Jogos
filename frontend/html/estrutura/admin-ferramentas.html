@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ferramentas</title>
+  <title>Ferramentas Administrativas</title>
   <link rel="stylesheet" href="/frontend/css/estrutura/style.css" />
   <link rel="stylesheet" href="/frontend/css/estrutura/admin.css" />
   <link rel="stylesheet" href="/frontend/css/estrutura/admin-ferramentas.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 </head>
 <body>
   <header class="site-header">
     <div class="page-title-bar">
-      <h1 class="page-title-fixed">Ferramentas</h1>
+      <h1 class="page-title-fixed">Ferramentas Administrativas</h1>
     </div>
   </header>
   <div class="admin-layout">
@@ -25,20 +26,110 @@
       </ul>
     </nav>
     <main class="admin-main-content">
-      <section>
-        <h2>Relatórios</h2>
-        <button class="admin-btn">Gerar Relatório</button>
+      <!-- Seção de Backup -->
+      <section class="tool-section">
+        <h2><i class="fa-solid fa-database"></i> Backup do Sistema</h2>
+        <p class="tool-description">Gere um backup completo do sistema incluindo usuários, jogos, partidas e troféus.</p>
+        <div class="tool-actions">
+          <button class="admin-btn btn-primary" id="btn-backup-json">
+            <i class="fa-solid fa-file-code"></i> Backup JSON
+          </button>
+          <button class="admin-btn btn-secondary" id="btn-backup-sql">
+            <i class="fa-solid fa-file-lines"></i> Backup SQL
+          </button>
+        </div>
+        <div id="backup-status" class="tool-status"></div>
       </section>
-      <section>
-        <h2>Backups</h2>
-        <button class="admin-btn">Fazer Backup</button>
+
+      <!-- Seção de Manutenção -->
+      <section class="tool-section">
+        <h2><i class="fa-solid fa-wrench"></i> Manutenção</h2>
+        <p class="tool-description">Ferramentas de manutenção e verificação do sistema.</p>
+        <div class="tool-actions">
+          <button class="admin-btn btn-primary" id="btn-verificar-ranking">
+            <i class="fa-solid fa-check-circle"></i> Verificar Integridade do Ranking
+          </button>
+        </div>
+        <div id="manutencao-status" class="tool-status"></div>
       </section>
-      <section>
-        <h2>Reset do Sistema</h2>
-        <button class="admin-btn btn-danger">Resetar Tudo</button>
+
+      <!-- Seção de Limpeza -->
+      <section class="tool-section">
+        <h2><i class="fa-solid fa-broom"></i> Limpeza de Dados</h2>
+        <p class="tool-description">Remova partidas por jogo ou por usuário.</p>
+        
+        <div class="tool-form">
+          <div class="form-group">
+            <label for="select-jogo-limpar">Limpar partidas do jogo:</label>
+            <select id="select-jogo-limpar">
+              <option value="">Selecione um jogo</option>
+            </select>
+            <button class="admin-btn btn-warning" id="btn-limpar-jogo">
+              <i class="fa-solid fa-trash"></i> Limpar Partidas
+            </button>
+          </div>
+          
+          <div class="form-group">
+            <label for="select-usuario-limpar">Limpar partidas do usuário:</label>
+            <select id="select-usuario-limpar">
+              <option value="">Selecione um usuário</option>
+            </select>
+            <button class="admin-btn btn-warning" id="btn-limpar-usuario">
+              <i class="fa-solid fa-trash"></i> Limpar Partidas
+            </button>
+          </div>
+        </div>
+        <div id="limpeza-status" class="tool-status"></div>
+      </section>
+
+      <!-- Seção de Reset (CRÍTICA) -->
+      <section class="tool-section danger-zone">
+        <h2><i class="fa-solid fa-triangle-exclamation"></i> Zona de Perigo</h2>
+        <p class="tool-description danger-text">
+          <strong>ATENÇÃO:</strong> As ações abaixo são irreversíveis e afetam todo o sistema.
+        </p>
+        
+        <div class="danger-box">
+          <h3><i class="fa-solid fa-skull-crossbones"></i> Reset Completo do Sistema</h3>
+          <p>Esta ação irá:</p>
+          <ul>
+            <li>Apagar TODAS as partidas</li>
+            <li>Apagar TODOS os troféus concedidos</li>
+            <li>Apagar TODOS os usuários (exceto admin principal)</li>
+          </ul>
+          <p><strong>Será mantido:</strong></p>
+          <ul class="keep-list">
+            <li>O admin principal (ID 1)</li>
+            <li>Os 8 jogos padrão do sistema</li>
+          </ul>
+          <p class="warning-text">
+            <i class="fa-solid fa-lock"></i> Apenas o admin principal pode executar esta ação.
+          </p>
+          <button class="admin-btn btn-danger" id="btn-reset-sistema">
+            <i class="fa-solid fa-bomb"></i> Resetar Sistema
+          </button>
+        </div>
+        <div id="reset-status" class="tool-status"></div>
       </section>
     </main>
   </div>
+
+  <!-- Modal de Confirmação -->
+  <div id="modal-confirmacao" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <h3 id="modal-titulo"><i class="fa-solid fa-exclamation-triangle"></i> Confirmação</h3>
+      <p id="modal-mensagem"></p>
+      <div class="modal-input-group" id="modal-input-container" style="display:none;">
+        <label for="modal-input">Digite <strong>CONFIRMAR</strong> para prosseguir:</label>
+        <input type="text" id="modal-input" placeholder="CONFIRMAR">
+      </div>
+      <div class="modal-actions">
+        <button class="admin-btn btn-secondary" id="btn-modal-cancelar">Cancelar</button>
+        <button class="admin-btn btn-danger" id="btn-modal-confirmar">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/frontend/js/estrutura/admin-ferramentas.js"></script>
 </body>
 </html>

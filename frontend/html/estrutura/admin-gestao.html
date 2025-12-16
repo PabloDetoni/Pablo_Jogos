@@ -29,142 +29,302 @@
         <button class="gestao-tab active" data-tab="crud-jogo">Jogos</button>
         <button class="gestao-tab" data-tab="crud-usuario">Usuários</button>
         <button class="gestao-tab" data-tab="crud-estatistica">Estatísticas</button>
+        <button class="gestao-tab" data-tab="crud-trofeu">Troféus</button>
         <button class="gestao-tab" data-tab="crud-admin">Admins</button>
       </div>
       <div class="gestao-content">
+        <!-- CRUD JOGO -->
         <section id="crud-jogo" class="gestao-section active">
-          <h2>Gestão de Jogos</h2>
-          <form id="jogoForm" class="crud-form">
+          <h2>🎮 Gestão de Jogos</h2>
+          
+          <!-- Explicação das regras de negócio -->
+          <div class="info-rules-box">
+            <h4>📋 Regras de Jogos</h4>
+            <ul>
+              <li>Cada jogo possui um <strong>ID único</strong> no sistema</li>
+              <li>O <strong>título</strong> gera automaticamente um <strong>slug</strong> único</li>
+              <li>Jogos padrão do sistema <strong>não podem</strong> ser excluídos</li>
+              <li>Ao criar um jogo, arquivos HTML/CSS/JS são gerados automaticamente</li>
+            </ul>
+          </div>
+          
+          <form id="jogoForm" class="crud-form crud-form-enhanced">
+            <div class="crud-status-bar" id="jogoStatusBar">
+              <span class="status-icon">🔍</span>
+              <span class="status-text">Digite um ID e clique em Buscar para começar</span>
+            </div>
+            
             <div class="search-container">
-              <label for="searchJogoId">Buscar por ID:</label>
+              <label for="searchJogoId">Buscar Jogo por ID:</label>
               <div class="search-input-group">
-                <input type="number" id="searchJogoId" placeholder="Digite o ID para buscar">
-                <button type="button" id="btnBuscarJogo">🔍 Buscar</button>
-                <button type="button" id="btnIncluirJogo" class="btn-primary">Incluir</button>
-                <button type="button" id="btnAlterarJogo" class="btn-secondary" style="display: none;">Alterar</button>
-                <button type="button" id="btnExcluirJogo" class="btn-danger" style="display: none;">Excluir</button>
-                <button type="button" id="btnSalvarJogo" class="btn-save" style="display: none;">Salvar</button>
-                <button type="button" id="btnVoltarJogo" class="btn-back" style="display: none;">Voltar</button>
-                <button type="button" id="btnCancelarJogo" class="btn-cancel">Cancelar</button>
+                <input type="number" id="searchJogoId" placeholder="Ex: 1, 2, 3..." min="1">
+                <button type="button" id="btnBuscarJogo" class="btn-search">🔍 Buscar</button>
+                <button type="button" id="btnCancelarJogo" class="btn-cancel">✖️ Limpar</button>
               </div>
             </div>
-            <fieldset id="formFieldsJogo">
-              <legend>Dados do Jogo</legend>
-              <div class="form-group">
-                <label for="id_jogo">ID:</label>
-                <input type="number" id="id_jogo" name="id_jogo" min="1" required readonly style="background:#f5f5f5;">
+            
+            <fieldset id="formFieldsJogo" class="crud-fieldset" style="display: none;">
+              <legend>📝 Dados do Jogo</legend>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="id_jogo">🆔 ID:</label>
+                  <input type="number" id="id_jogo" name="id_jogo" min="1" required readonly class="input-readonly">
+                </div>
+                <div class="form-group form-group-wide">
+                  <label for="titulo_jogo">🏷️ Título: <span class="required">*</span></label>
+                  <input type="text" id="titulo_jogo" name="titulo_jogo" required placeholder="Nome do jogo">
+                </div>
+                <div class="form-group">
+                  <label for="genero_jogo">🎭 Gênero:</label>
+                  <input type="text" id="genero_jogo" name="genero_jogo" placeholder="Ex: Puzzle, Ação...">
+                </div>
+                <div class="form-group form-group-full">
+                  <label for="descricao_jogo">📄 Descrição:</label>
+                  <textarea id="descricao_jogo" name="descricao_jogo" rows="3" placeholder="Descreva o jogo..."></textarea>
+                </div>
               </div>
-              <div class="form-group">
-                <label for="titulo_jogo">Título:</label>
-                <input type="text" id="titulo_jogo" name="titulo_jogo" required>
-              </div>
-              <div class="form-group">
-                <label for="genero_jogo">Gênero:</label>
-                <input type="text" id="genero_jogo" name="genero_jogo">
-              </div>
-              <div class="form-group">
-                <label for="descricao_jogo">Descrição:</label>
-                <textarea id="descricao_jogo" name="descricao_jogo" rows="2"></textarea>
+              
+              <div class="crud-actions-bar">
+                <button type="button" id="btnAlterarJogo" class="btn-secondary" style="display: none;">✏️ Editar</button>
+                <button type="button" id="btnSalvarJogo" class="btn-save" style="display: none;">💾 Salvar</button>
+                <button type="button" id="btnVoltarJogo" class="btn-back" style="display: none;">↩️ Voltar</button>
+                <button type="button" id="btnExcluirJogo" class="btn-danger" style="display: none;">🗑️ Excluir</button>
               </div>
             </fieldset>
+            <button type="button" id="btnIncluirJogo" style="display: none;"></button>
           </form>
           <div id="jogoMessageContainer" class="message-container"></div>
         </section>
+
+        <!-- CRUD USUÁRIO -->
         <section id="crud-usuario" class="gestao-section">
-          <h2>Gestão de Usuários</h2>
-          <form id="usuarioForm" class="crud-form">
+          <h2>👥 Gestão de Usuários</h2>
+          
+          <!-- Explicação das regras de negócio -->
+          <div class="info-rules-box">
+            <h4>📋 Regras de Usuários</h4>
+            <ul>
+              <li>Cada usuário possui <strong>ID único</strong> e <strong>email único</strong></li>
+              <li>O <strong>nome</strong> deve ter no máximo <strong>20 caracteres</strong></li>
+              <li>A <strong>senha</strong> deve ter entre <strong>8 e 20 caracteres</strong></li>
+              <li>O <strong>usuário ID 1</strong> (admin principal) não pode ser excluído</li>
+            </ul>
+          </div>
+          
+          <form id="usuarioForm" class="crud-form crud-form-enhanced">
+            <div class="crud-status-bar" id="usuarioStatusBar">
+              <span class="status-icon">🔍</span>
+              <span class="status-text">Digite um ID e clique em Buscar para começar</span>
+            </div>
+            
             <div class="search-container">
-              <label for="searchUsuarioId">Buscar por ID:</label>
+              <label for="searchUsuarioId">Buscar Usuário por ID:</label>
               <div class="search-input-group">
-                <input type="number" id="searchUsuarioId" placeholder="Digite o ID para buscar">
-                <button type="button" id="btnBuscarUsuario">🔍 Buscar</button>
-                <button type="button" id="btnIncluirUsuario" class="btn-primary" style="display: none;">Inserir</button>
-                <button type="button" id="btnAlterarUsuario" class="btn-secondary" style="display: none;">Alterar</button>
-                <button type="button" id="btnExcluirUsuario" class="btn-danger" style="display: none;">Excluir</button>
-                <button type="button" id="btnSalvarUsuario" class="btn-save" style="display: none;">Salvar</button>
-                <button type="button" id="btnVoltarUsuario" class="btn-back" style="display: none;">Voltar</button>
-                <button type="button" id="btnCancelarUsuario" class="btn-cancel">Cancelar</button>
+                <input type="number" id="searchUsuarioId" placeholder="Ex: 1, 2, 3..." min="1">
+                <button type="button" id="btnBuscarUsuario" class="btn-search">🔍 Buscar</button>
+                <button type="button" id="btnCancelarUsuario" class="btn-cancel">✖️ Limpar</button>
               </div>
             </div>
-            <fieldset id="formFieldsUsuario" style="display: none;">
-              <legend>Dados do Usuário</legend>
-              <div class="form-group">
-                <label for="id_usuario">ID:</label>
-                <input type="number" id="id_usuario" name="id_usuario" min="1" required readonly style="background:#f5f5f5;">
+            
+            <fieldset id="formFieldsUsuario" class="crud-fieldset" style="display: none;">
+              <legend>📝 Dados do Usuário</legend>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="id_usuario">🆔 ID:</label>
+                  <input type="number" id="id_usuario" name="id_usuario" min="1" required readonly class="input-readonly">
+                </div>
+                <div class="form-group">
+                  <label for="nome_usuario">👤 Nome: <span class="required">*</span></label>
+                  <input type="text" id="nome_usuario" name="nome_usuario" required maxlength="20" placeholder="Máx. 20 caracteres">
+                </div>
+                <div class="form-group" style="display: none;">
+                  <label for="status_usuario">📊 Status:</label>
+                  <input type="text" id="status_usuario" name="status_usuario" readonly class="input-readonly">
+                </div>
+                <div class="form-group form-group-wide">
+                  <label for="email_usuario">📧 Email: <span class="required">*</span></label>
+                  <input type="email" id="email_usuario" name="email_usuario" required placeholder="usuario@email.com">
+                </div>
+                <div class="form-group form-group-senha">
+                  <label for="senha_usuario">🔒 Senha: <span class="required">*</span></label>
+                  <input type="password" id="senha_usuario" name="senha_usuario" required minlength="8" maxlength="20" placeholder="8-20 caracteres">
+                  <button type="button" class="btn-toggle-password" onclick="toggleSenhaVisibility()">👁️</button>
+                </div>
               </div>
-              <div class="form-group">
-                <label for="nome_usuario">Nome:</label>
-                <input type="text" id="nome_usuario" name="nome_usuario" required>
-              </div>
-              <div class="form-group">
-                <label for="status_usuario">Status:</label>
-                <input type="text" id="status_usuario" name="status_usuario" required>
-              </div>
-              <div class="form-group">
-                <label for="email_usuario">Email:</label>
-                <input type="email" id="email_usuario" name="email_usuario" required>
-              </div>
-              <div class="form-group">
-                <label for="senha_usuario">Senha:</label>
-                <input type="text" id="senha_usuario" name="senha_usuario" required>
+              
+              <div class="crud-actions-bar">
+                <button type="button" id="btnAlterarUsuario" class="btn-secondary" style="display: none;">✏️ Editar</button>
+                <button type="button" id="btnSalvarUsuario" class="btn-save" style="display: none;">💾 Salvar</button>
+                <button type="button" id="btnVoltarUsuario" class="btn-back" style="display: none;">↩️ Voltar</button>
+                <button type="button" id="btnExcluirUsuario" class="btn-danger" style="display: none;">🗑️ Excluir</button>
               </div>
             </fieldset>
+            <button type="button" id="btnIncluirUsuario" style="display: none;"></button>
           </form>
           <div id="usuarioMessageContainer" class="message-container"></div>
         </section>
+
+        <!-- CRUD ESTATÍSTICAS (Partidas) -->
         <section id="crud-estatistica" class="gestao-section">
-          <h2>Gestão de Estatísticas</h2>
-          <div class="gestao-actions-bar">
-            <button type="button" class="btn-primary" onclick="window.openModalCrud('jogo')">Alterar informações de Jogo</button>
-            <button type="button" class="btn-primary" onclick="window.openModalCrud('usuario')">Alterar informações de Usuário</button>
-            <button type="button" class="btn-primary" onclick="window.openModalPartidas()">Alterar Partidas</button>
+          <h2>📊 Gestão de Estatísticas / Partidas</h2>
+          
+          <!-- Explicação das regras de negócio -->
+          <div class="info-rules-box">
+            <h4>📋 Regras de Partidas</h4>
+            <ul>
+              <li>Cada partida está vinculada a um <strong>usuário</strong> e um <strong>jogo</strong></li>
+              <li>Os campos variam de acordo com o <strong>tipo de jogo</strong></li>
+              <li>Você pode editar partidas <strong>individualmente</strong> ou <strong>em lote</strong></li>
+              <li>Excluir partidas <strong>afeta os rankings</strong> e estatísticas do usuário</li>
+            </ul>
           </div>
+          
+          <!-- Card de ação principal -->
+          <div class="gestao-actions-grid">
+            <div class="action-card action-card-primary" onclick="window.openModalPartidas()">
+              <div class="action-card-icon">📊</div>
+              <div class="action-card-content">
+                <h4>Gerenciar Partidas</h4>
+                <p>Visualizar, criar, editar ou excluir partidas</p>
+              </div>
+              <button type="button" class="btn-primary">Abrir</button>
+            </div>
+          </div>
+          
           <div id="estatisticaMessageContainer" class="message-container"></div>
         </section>
-        <section id="crud-admin" class="gestao-section">
-          <h2>Gestão de Admins</h2>
-          <form id="adminForm" class="crud-form">
-            <div class="search-container">
-              <label for="searchAdminId">Buscar por ID de Usuário:</label>
-              <div class="search-input-group">
-                <input type="number" id="searchAdminId" placeholder="Digite o ID do usuário">
-                <button type="button" id="btnBuscarAdmin">🔍 Buscar</button>
-                <button type="button" id="btnIncluirAdmin" class="btn-primary">Promover</button>
-                <button type="button" id="btnAlterarAdmin" class="btn-secondary" style="display: none;">Alterar Permissão</button>
-                <button type="button" id="btnExcluirAdmin" class="btn-danger" style="display: none;">Remover Admin</button>
-                <button type="button" id="btnCancelarAdmin" class="btn-cancel">Cancelar</button>
+
+        <!-- CRUD TROFÉUS -->
+        <section id="crud-trofeu" class="gestao-section">
+          <h2>🏆 Gestão de Troféus</h2>
+          
+          <!-- Explicação das regras de negócio -->
+          <div class="info-rules-box">
+            <h4>📋 Regras de Troféus</h4>
+            <ul>
+              <li>Um <strong>usuário</strong> pode ter <strong>vários troféus</strong></li>
+              <li>Cada <strong>troféu</strong> pertence a <strong>apenas um usuário</strong></li>
+              <li>Troféus possuem <strong>ícone visual</strong> e <strong>cor</strong> personalizáveis</li>
+            </ul>
+          </div>
+          
+          <!-- Ações principais separadas -->
+          <div class="gestao-actions-grid">
+            <div class="action-card action-card-primary" onclick="window.openModalTrofeuTipo()">
+              <div class="action-card-icon">🏆</div>
+              <div class="action-card-content">
+                <h4>Catálogo de Troféus</h4>
+                <p>Criar, editar e gerenciar os tipos de troféus disponíveis</p>
               </div>
+              <button type="button" class="btn-primary">Gerenciar</button>
             </div>
-            <fieldset id="formFieldsAdmin" style="display: none;">
-              <legend>Dados do Admin</legend>
-              <div class="form-group">
-                <label for="nivel_permissao_admin">Nível de Permissão:</label>
-                <input type="number" id="nivel_permissao_admin" name="nivel_permissao_admin" required>
+            
+            <div class="action-card action-card-secondary" onclick="window.openModalTrofeuAtribuir()">
+              <div class="action-card-icon">🎖️</div>
+              <div class="action-card-content">
+                <h4>Conceder Troféu</h4>
+                <p>Atribuir um troféu a um usuário específico</p>
               </div>
-            </fieldset>
-          </form>
+              <button type="button" class="btn-secondary">Atribuir</button>
+            </div>
+          </div>
+          
+          <!-- Lista de troféus recentes -->
+          <div class="trofeu-section-divider">
+            <h3>📜 Troféus Concedidos Recentemente</h3>
+          </div>
+          <div id="trofeuListContainer"></div>
+          <div id="trofeuMessageContainer" class="message-container"></div>
+        </section>
+
+        <!-- CRUD ADMIN -->
+        <section id="crud-admin" class="gestao-section">
+          <h2>👑 Gestão de Administradores</h2>
+          
+          <!-- Explicação das regras de negócio -->
+          <div class="info-rules-box">
+            <h4>📋 Regras de Admins</h4>
+            <ul>
+              <li>Relação <strong>1:1</strong> entre usuário e admin</li>
+              <li>Todo admin <strong>já deve existir</strong> como usuário</li>
+              <li>Rebaixar admin <strong>não exclui</strong> o usuário</li>
+              <li>Admin principal (ID 1) <strong>não pode</strong> ser rebaixado</li>
+            </ul>
+          </div>
+          
+          <!-- Lista de Admins existentes -->
+          <div class="admin-list-section">
+            <h3>👥 Administradores Atuais</h3>
+            <div id="adminListContainer">
+              <p class="loading-text">Carregando lista de admins...</p>
+            </div>
+          </div>
+          
+          <!-- Seção para promover novo admin -->
+          <div class="admin-promote-section">
+            <h3>➕ Promover Usuário a Admin</h3>
+            <form id="adminPromoteForm" class="crud-form inline-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="promoteUserId">ID do Usuário:</label>
+                  <input type="number" id="promoteUserId" placeholder="Digite o ID" min="1">
+                </div>
+                <div class="form-group">
+                  <label for="promoteNivel">Nível de Permissão:</label>
+                  <select id="promoteNivel">
+                    <option value="1">1 - Básico</option>
+                    <option value="2">2 - Intermediário</option>
+                    <option value="3">3 - Avançado</option>
+                    <option value="5">5 - Moderador</option>
+                    <option value="10">10 - Super Admin</option>
+                  </select>
+                </div>
+                <button type="button" id="btnPromoverNovoAdmin" class="btn-primary">
+                  👑 Tornar Admin
+                </button>
+              </div>
+              <div id="promoteUserPreview" class="user-preview" style="display:none;"></div>
+            </form>
+          </div>
+          
           <div id="adminMessageContainer" class="message-container"></div>
         </section>
       </div>
     </main>
   </div>
-  <!-- MODAL: Alterar Jogo/Usuário (CRUD Estatísticas) -->
-  <div id="modal-alterar-crud" class="gestao-modal-overlay" style="display:none;">
-    <div class="gestao-modal">
-      <button class="modal-close" id="closeModalCrud">&times;</button>
-      <!-- All modal form fields must be inside .gestao-modal for scoped CSS -->
-      <div id="modalCrudContent" class="gestao-modal-content"></div>
-      <!-- Adiciona um container para os botões do Buscar por ID -->
-      <div id="modalCrudActions" class="gestao-modal-actions" style="display:none;"></div>
-    </div>
-  </div>
+
   <!-- MODAL: Alterar Partidas -->
   <div id="modal-alterar-partidas" class="gestao-modal-overlay" style="display:none;">
-    <div class="gestao-modal">
-      <button class="modal-close" id="closeModalPartidas">&times;</button>
+    <div class="gestao-modal gestao-modal-large">
+      <button class="modal-close" onclick="window.closeModalPartidas()">&times;</button>
       <div id="modalPartidasContent" class="gestao-modal-content"></div>
     </div>
   </div>
+
+  <!-- MODAL: Gerenciar Tipos de Troféu -->
+  <div id="modal-trofeu-tipo" class="gestao-modal-overlay" style="display:none;">
+    <div class="gestao-modal gestao-modal-large">
+      <button class="modal-close" onclick="window.closeModalTrofeuTipo()">&times;</button>
+      <div id="modalTrofeuTipoContent" class="gestao-modal-content"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: Atribuir Troféu a Usuário -->
+  <div id="modal-trofeu-atribuir" class="gestao-modal-overlay" style="display:none;">
+    <div class="gestao-modal">
+      <button class="modal-close" onclick="window.closeModalTrofeuAtribuir()">&times;</button>
+      <div id="modalTrofeuAtribuirContent" class="gestao-modal-content"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: Editar Admin -->
+  <div id="modal-editar-admin" class="gestao-modal-overlay" style="display:none;">
+    <div class="gestao-modal gestao-modal-small">
+      <button class="modal-close" onclick="window.closeModalEditarAdmin()">&times;</button>
+      <div id="modalEditarAdminContent" class="gestao-modal-content"></div>
+    </div>
+  </div>
+
   <script src="/frontend/js/estrutura/admin-gestao.js"></script>
 </body>
 </html>

@@ -278,3 +278,193 @@ label {
   background-color: #43a047;
   transform: translateY(-2px);
 }
+
+/* ==================== ÁREAS SEPARADAS ==================== */
+.area-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 900px;
+}
+
+.area-title {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #1e3a8a;
+  font-size: 1.5rem;
+  border-bottom: 2px solid #e3e8f0;
+  padding-bottom: 10px;
+}
+
+.area-desc {
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 18px;
+}
+
+.area-partidas {
+  background: linear-gradient(135deg, #f8faff 0%, #eef3ff 100%);
+  border: 1px solid #d0daf0;
+}
+
+/* ==================== FILTROS ==================== */
+.filtros-ranking,
+.filtros-partidas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: #f0f4f8;
+  border-radius: 8px;
+}
+
+.filtro-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filtro-group label {
+  font-size: 0.95rem;
+  color: #333;
+  white-space: nowrap;
+}
+
+.filtro-group select {
+  padding: 6px 12px;
+  font-size: 0.95rem;
+  border-radius: 5px;
+  border: 1px solid #b0b8cc;
+  background: #fff;
+  color: #1e293b;
+  outline: none;
+  min-width: 120px;
+  transition: border-color 0.2s;
+}
+
+.filtro-group select:focus {
+  border-color: #3949ab;
+}
+
+.btn-filtrar {
+  padding: 8px 18px;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 6px;
+  background: #3949ab;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  margin-left: auto;
+}
+
+.btn-filtrar:hover {
+  background-color: #303f9f;
+  transform: translateY(-1px);
+}
+
+/* ==================== TABELA DE PARTIDAS ==================== */
+#partidas-container {
+  overflow-x: auto;
+}
+
+.partidas-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+.partidas-table th,
+.partidas-table td {
+  border-bottom: 1px solid #ddd;
+  padding: 10px 8px;
+  text-align: left;
+}
+
+.partidas-table th {
+  background: #e8ecf4;
+  color: #1e3a8a;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+.partidas-table tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.partidas-table tr:hover {
+  background: #e3f2fd;
+}
+
+.partidas-table td.vitoria {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.partidas-table td.derrota {
+  color: #c62828;
+  font-weight: bold;
+}
+
+.partidas-table td.empate {
+  color: #f57c00;
+  font-weight: bold;
+}
+
+.partidas-info {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.partidas-info strong {
+  color: #1e3a8a;
+}
+
+/* Responsivo para áreas */
+@media (max-width: 768px) {
+  .area-section {
+    padding: 16px;
+    max-width: 100%;
+  }
+  
+  .filtros-ranking,
+  .filtros-partidas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filtro-group {
+    justify-content: space-between;
+  }
+  
+  .filtro-group select {
+    flex: 1;
+    min-width: auto;
+  }
+  
+  .btn-filtrar {
+    margin-left: 0;
+    width: 100%;
+    margin-top: 8px;
+  }
+  
+  .partidas-table {
+    font-size: 0.8rem;
+  }
+  
+  .partidas-table th,
+  .partidas-table td {
+    padding: 6px 4px;
+  }
+}

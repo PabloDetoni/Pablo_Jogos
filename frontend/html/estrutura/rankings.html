@@ -7,19 +7,38 @@
   <link rel="stylesheet" href="/frontend/css/estrutura/rankings.css" />
 </head>
 <body>
-  <h1>Ranking dos Jogos</h1>
-  <div style="margin-bottom:20px; text-align:center;">
-    <label for="jogo-select"><strong>Jogo:</strong></label>
-    <select id="jogo-select"></select>
-    <label for="tipo-ranking" style="margin-left: 10px;"><strong>Tipo:</strong></label>
-    <select id="tipo-ranking"></select>
+  <h1>🏆 Ranking dos Jogos</h1>
+  
+  <!-- ==================== RANKING ==================== -->
+  <section class="area-section">
+    <h2 class="area-title">📊 Ranking</h2>
+    <p class="area-desc">Visualize os melhores jogadores agregados por tipo de ranking.</p>
+    
+    <div class="filtros-ranking">
+      <div class="filtro-group">
+        <label for="jogo-select"><strong>Jogo:</strong></label>
+        <select id="jogo-select"></select>
+      </div>
+      <div class="filtro-group">
+        <label for="tipo-ranking"><strong>Tipo:</strong></label>
+        <select id="tipo-ranking"></select>
+      </div>
+    </div>
+    
+    <div id="rankings-container">
+      <!-- Rankings agregados aparecem aqui -->
+    </div>
+  </section>
+  
+  <!-- ==================== TROFÉUS ==================== -->
+  <div id="trofeus-container">
+    <!-- Troféus carregados dinamicamente -->
   </div>
-  <div id="rankings-container">
-    <!-- Rankings vão aparecer aqui dinamicamente -->
-  </div>
-  <div class="botoes-footer" style="text-align:center; margin-top:20px;">
+  
+  <div class="botoes-footer">
     <button onclick="window.location.href='index.html'">Voltar ao Início</button>
   </div>
+  
   <script src="/frontend/js/estrutura/utils.js"></script>
   <script src="/frontend/js/estrutura/rankings.js" defer></script>
 </body>
